@@ -9,6 +9,8 @@ all API routers (auth, expenses, predictions, etc.).
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.routes import ml, expenses
+
 # ---------------------------------------------------------------------------
 # App Initialization
 # ---------------------------------------------------------------------------
@@ -23,11 +25,17 @@ app = FastAPI(
 # ---------------------------------------------------------------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],   # Vite dev server
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],   # Vite dev server
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ---------------------------------------------------------------------------
+# Include API Routers
+# ---------------------------------------------------------------------------
+app.include_router(ml.router)
+app.include_router(expenses.router)
 
 # ---------------------------------------------------------------------------
 # Health Check
