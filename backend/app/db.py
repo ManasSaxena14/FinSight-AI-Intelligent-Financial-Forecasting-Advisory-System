@@ -7,6 +7,7 @@ Provides easy access to collections via `get_collection()`.
 
 from motor.motor_asyncio import AsyncIOMotorClient
 from app.config import settings
+import certifi
 import logging
 
 logger = logging.getLogger(__name__)
@@ -19,11 +20,11 @@ class DatabaseManager:
     def connect_to_database(cls, uri: str = None):
         """Initialize MongoDB Async Client."""
         db_uri = uri or settings.MONGODB_URI
-        logger.info(f"Connecting to MongoDB at {db_uri}...")
+        logger.info(f"Connecting to MongoDB at {db_uri[:40]}...")
         try:
-            cls.client = AsyncIOMotorClient(db_uri)
+            cls.client = AsyncIOMotorClient(db_uri, tlsCAFile=certifi.where())
             cls.db = cls.client[settings.DATABASE_NAME]
-            logger.info("Successfully connected to MongoDB!")
+            logger.info(f"Successfully connected to MongoDB! Database: {settings.DATABASE_NAME}")
         except Exception as e:
             logger.error(f"Failed to connect to MongoDB: {e}")
             raise e
@@ -51,3 +52,4 @@ def get_expenses_collection():
 
 def get_users_collection():
     return db_manager.get_collection("users")
+

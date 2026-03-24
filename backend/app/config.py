@@ -5,7 +5,12 @@ Centralized settings loaded from environment variables.
 Uses pydantic-settings for validation and type safety.
 """
 
+import os
 from pydantic_settings import BaseSettings
+
+# Compute the path to backend/.env regardless of where the process was started
+_BACKEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+_ENV_FILE = os.path.join(_BACKEND_DIR, ".env")
 
 
 class Settings(BaseSettings):
@@ -25,7 +30,7 @@ class Settings(BaseSettings):
     DEBUG: bool = True
 
     class Config:
-        env_file = ".env"
+        env_file = _ENV_FILE
 
 
 # Single settings instance used across the app

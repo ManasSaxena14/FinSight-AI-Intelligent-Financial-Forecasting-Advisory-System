@@ -1,16 +1,17 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from typing import List
 from app.models.schemas import AddExpenseRequest, ExpenseRecordResponse
 from app.db import get_expenses_collection
+from app.services.auth import get_current_user
 import uuid
 from datetime import datetime
 
 router = APIRouter(prefix="/api/expenses", tags=["Expenses"])
 
 @router.post("/add", response_model=ExpenseRecordResponse)
-async def add_expense(req: AddExpenseRequest):
+async def add_expense(req: AddExpenseRequest, current_user: dict = Depends(get_current_user)):
     """
-    Store new expense data in MongoDB.
+    Store new expense data in MongoDB. Protect with JWT.
     """
     total = sum(req.expenses.dict().values())
     savings = req.income - total
@@ -22,7 +23,7 @@ async def add_expense(req: AddExpenseRequest):
     # Construct DB document
     document = {
         "_id": record_id,
-        "user_id": req.user_id,
+        "user_id": current_user["id"],  # Extracted from secure JWT
         "month": req.month,
         "income": req.income,
         "expenses": req.expenses.dict(),
@@ -45,13 +46,13 @@ async def add_expense(req: AddExpenseRequest):
 
 
 @router.get("/get", response_model=List[ExpenseRecordResponse])
-async def get_expenses(user_id: str = "default_user"):
+async def get_expenses(current_user: dict = Depends(get_current_user)):
     """
-    Retrieve stored expenses for a specific user from MongoDB.
+    Retrieve stored expenses for the authenticated user from MongoDB.
     """
     try:
         collection = get_expenses_collection()
-        cursor = collection.find({"user_id": user_id}).sort("created_at", -1)
+        cursor = collection.find({"user_id": current_user["id"]}).sort("created_at", -1)
         
         user_records = []
         async for doc in cursor:

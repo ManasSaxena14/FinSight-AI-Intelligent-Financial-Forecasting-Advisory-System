@@ -1,5 +1,5 @@
-from fastapi import APIRouter, HTTPException
-from app.models.schemas import (
+from fastapi import APIRouter, HTTPException, Depends  # type: ignore
+from app.models.schemas import (  # type: ignore
     PredictionRequest,
     PredictionResponse,
     ForecastRequest,
@@ -7,24 +7,25 @@ from app.models.schemas import (
     HealthScoreResponse,
     RecommendationResponse
 )
-from app.ml.advanced_ml import (
+from app.ml.advanced_ml import (  # type: ignore
     multi_month_forecasting,
     category_wise_prediction,
     anomaly_detection,
     _load_main_model
 )
-from app.services.financial_logic import (
+from app.services.financial_logic import (  # type: ignore
     calculate_health_score,
     generate_alerts,
     generate_recommendations
 )
-import pandas as pd
+from app.services.auth import get_current_user  # type: ignore
+import pandas as pd  # type: ignore
 
 router = APIRouter(prefix="/api/ml", tags=["Machine Learning"])
 
 # ── 1. Predict Total Expense ────────────────────────────────────────────────
 @router.post("/predict", response_model=PredictionResponse)
-def predict_expense(req: PredictionRequest):
+def predict_expense(req: PredictionRequest, current_user: dict = Depends(get_current_user)):
     """
     Predict total expense for a given month using the trained Linear Regression model.
     """
@@ -40,15 +41,15 @@ def predict_expense(req: PredictionRequest):
         savings = req.income - predicted
         
         return PredictionResponse(
-            predicted_total_expense=round(predicted, 2),
-            projected_savings=round(savings, 2)
+            predicted_total_expense=float(f"{predicted:.2f}"),
+            projected_savings=float(f"{savings:.2f}")
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 # ── 2. Multi-Month Forecast ─────────────────────────────────────────────────
 @router.post("/forecast", response_model=ForecastResponse)
-def forecast_expenses(req: ForecastRequest):
+def forecast_expenses(req: ForecastRequest, current_user: dict = Depends(get_current_user)):
     """
     Forecast expenses for the next 3-12 months using realistic drift. 
     """
@@ -64,7 +65,7 @@ def forecast_expenses(req: ForecastRequest):
 
 # ── 3. Health Score ─────────────────────────────────────────────────────────
 @router.post("/health-score", response_model=HealthScoreResponse)
-def get_health_score(req: PredictionRequest):
+def get_health_score(req: PredictionRequest, current_user: dict = Depends(get_current_user)):
     """
     Calculate a simple Financial Health Score (0-100) based on savings rate.
     Uses centralized business logic.
@@ -80,7 +81,7 @@ def get_health_score(req: PredictionRequest):
 
 # ── 4. Recommendations & Alerts ─────────────────────────────────────────────
 @router.post("/recommendations", response_model=RecommendationResponse)
-def get_recommendations_and_alerts(req: PredictionRequest):
+def get_recommendations_and_alerts(req: PredictionRequest, current_user: dict = Depends(get_current_user)):
     """
     Provide smart financial recommendations and generate alerts based on 
     business rules (overspending, category spikes) and ML anomaly detection.

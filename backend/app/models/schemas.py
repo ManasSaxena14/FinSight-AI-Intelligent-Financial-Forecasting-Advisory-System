@@ -20,16 +20,39 @@ class ExpenseCategories(BaseModel):
     Entertainment: float = Field(0, ge=0)
 
 class AddExpenseRequest(BaseModel):
-    user_id: str = "default_user"
     month: str
     income: float = Field(..., gt=0)
     expenses: ExpenseCategories
 
 class ExpenseRecordResponse(AddExpenseRequest):
     id: str
+    user_id: str
     total_expense: float
     savings: float
     created_at: datetime
+
+
+# ── Auth Schemas ─────────────────────────────────────────────────────────────
+
+class UserCreate(BaseModel):
+    name: str = Field(..., min_length=2, max_length=50)
+    email: str = Field(..., min_length=5, max_length=255)
+    password: str = Field(..., min_length=6)
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class UserResponse(BaseModel):
+    id: str
+    name: str
+    email: str
+    created_at: datetime
+
 
 
 # ── ML Prediction & Forecasting Schemas ──────────────────────────────────────
@@ -52,9 +75,8 @@ class ForecastMonth(BaseModel):
     savings: float
 
 class ForecastResponse(BaseModel):
-    forecast: List[ForecastMonth]
-    average_predicted_expense: float
-    average_savings: float
+    predicted_next_month_expense: float
+    trend_direction: str
 
 
 # ── Health & Recommendations Schemas ─────────────────────────────────────────
@@ -63,8 +85,40 @@ class HealthScoreResponse(BaseModel):
     score: int = Field(..., ge=0, le=100)
     status: str
     savings_rate_pct: float
+    feedback: str
 
-class RecommendationResponse(BaseModel):
+class RecommendationsResponse(BaseModel):
     recommendations: List[str]
-    alerts: Optional[List[str]] = None
-    anomalies: Optional[List[dict]] = None
+    alerts: List[str]
+
+
+# ── Premium Feature Schemas ──────────────────────────────────────────────────
+
+class GoalCreate(BaseModel):
+    name: str = Field(..., max_length=100)
+    target_amount: float = Field(..., gt=0)
+    target_date: str # ISO format YYYY-MM-DD
+
+class GoalResponse(GoalCreate):
+    id: str
+    user_id: str
+    current_savings: float
+    progress_percentage: float
+    is_on_track: bool
+
+class ChatMessage(BaseModel):
+    message: str
+    context: dict | None = None # optional financial context passed from UI
+
+class ChatResponse(BaseModel):
+    reply: str
+
+class ScenarioRequest(BaseModel):
+    current_income: float
+    proposed_expenses: Dict[str, float]
+
+class ScenarioResponse(BaseModel):
+    projected_savings: float
+    savings_difference: float
+    projected_health_score: int
+    advice: str

@@ -1,1 +1,65 @@
 @import "tailwindcss";
+
+@theme {
+  --color-brand-50: #ecfdf5;
+  --color-brand-100: #d1fae5;
+  --color-brand-400: #34d399;
+  --color-brand-500: #10b981;
+  --color-brand-600: #059669;
+  --color-brand-900: #064e3b;
+  --color-brand-950: #022c22;
+
+  --color-bg-base: #09090b;   /* zinc-950 */
+  --color-bg-panel: #18181b;  /* zinc-900 */
+  --color-bg-elevated: #27272a; /* zinc-800 */
+  
+  --color-text-primary: #fafafa; /* zinc-50 */
+  --color-text-secondary: #a1a1aa; /* zinc-400 */
+  --color-text-tertiary: #52525b; /* zinc-600 */
+  
+  --color-border-subtle: #27272a; /* zinc-800 */
+  --color-border-glow: rgba(16, 185, 129, 0.4); /* brand-500 with opacity */
+}
+
+/* Base styles for a premium dark app feel */
+@layer base {
+  body {
+    @apply bg-bg-base text-text-primary antialiased selection:bg-brand-500 selection:text-white;
+    font-family: 'Inter', sans-serif;
+  }
+  
+  /* Custom scrollbar for webkit - Dark Variant */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-zinc-700 rounded-full hover:bg-zinc-600 transition-colors;
+  }
+}
+
+/* Premium Dark Glassmorphism utilities */
+@layer utilities {
+  .glass {
+    @apply bg-zinc-900/60 backdrop-blur-xl border border-zinc-800/60 shadow-lg shadow-black/20;
+  }
+  
+  .glass-card {
+    @apply bg-zinc-900/40 backdrop-blur-lg border border-zinc-800 shadow-xl shadow-black/40 transition-all duration-300;
+  }
+  
+  .glass-card:hover {
+    @apply border-zinc-700 shadow-brand-500/10 -translate-y-1;
+  }
+
+  .text-glow {
+    text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+  }
+  
+  .border-glow {
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+  }
+}

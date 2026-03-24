@@ -1,6 +1,41 @@
-# FinSight AI — Intelligent Financial Forecasting & Advisory System
+# Project Proposal: AI-Powered Personal Expense Prediction and Budget Recommendation System using Machine Learning
 
-A production-level web application that helps users track expenses, predict future spending, and receive intelligent financial recommendations using machine learning.
+## 1️⃣ Project Title
+AI-Powered Personal Expense Prediction and Budget Recommendation System using Machine Learning
+
+## 2️⃣ Problem Statement
+Many individuals struggle to manage their personal finances due to:
+- Lack of awareness of spending patterns
+- Poor budgeting habits
+- Inability to predict future expenses
+- Limited access to intelligent financial planning tools
+
+Traditional budgeting applications only track expenses but do not provide predictive insights or personalized recommendations.
+
+There is a need for an intelligent system that can:
+- Analyze spending behavior
+- Predict future expenses
+- Provide actionable financial recommendations
+
+## 3️⃣ Objective
+The main objective of this project is to develop a machine learning-based financial assistant that helps users:
+- Track and analyze expenses
+- Predict future spending patterns
+- Generate personalized budget recommendations
+- Improve savings habits
+- Visualize financial health through dashboards
+
+## 4️⃣ Proposed Solution
+The proposed system will:
+- Collect user financial data (income and expenses)
+- Process and analyze historical spending
+- Use machine learning models to predict future expenses
+- Generate personalized budget suggestions
+- Provide visual insights through an interactive dashboard
+
+The system is implemented as a full-stack web application with a React frontend and Python backend, featuring advanced premium tools including an AI Chatbot, What-If Scenario Analyzers, and smart Goal Tracking.
+
+---
 
 ## Tech Stack
 

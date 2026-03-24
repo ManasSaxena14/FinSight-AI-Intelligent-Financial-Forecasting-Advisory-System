@@ -10,7 +10,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from app.routes import ml, expenses
+from app.routes import ml, expenses, auth, premium
 from app.db import DatabaseManager
 
 # ---------------------------------------------------------------------------
@@ -48,8 +48,10 @@ app.add_middleware(
 # ---------------------------------------------------------------------------
 # Include API Routers
 # ---------------------------------------------------------------------------
+app.include_router(auth.router)
 app.include_router(ml.router)
 app.include_router(expenses.router)
+app.include_router(premium.router)
 
 # ---------------------------------------------------------------------------
 # Health Check
