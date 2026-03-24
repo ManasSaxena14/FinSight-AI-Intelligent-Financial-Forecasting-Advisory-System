@@ -8,8 +8,21 @@ all API routers (auth, expenses, predictions, etc.).
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 
 from app.routes import ml, expenses
+from app.db import DatabaseManager
+
+# ---------------------------------------------------------------------------
+# MongoDB connection lifespan
+# ---------------------------------------------------------------------------
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Connect to MongoDB
+    DatabaseManager.connect_to_database()
+    yield
+    # Shutdown: Close MongoDB connection
+    DatabaseManager.close_database_connection()
 
 # ---------------------------------------------------------------------------
 # App Initialization
@@ -18,6 +31,7 @@ app = FastAPI(
     title="FinSight AI",
     description="Intelligent Financial Forecasting & Advisory System",
     version="1.0.0",
+    lifespan=lifespan
 )
 
 # ---------------------------------------------------------------------------

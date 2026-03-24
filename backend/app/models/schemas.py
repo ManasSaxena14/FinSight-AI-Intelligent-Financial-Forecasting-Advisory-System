@@ -37,6 +37,7 @@ class ExpenseRecordResponse(AddExpenseRequest):
 class PredictionRequest(BaseModel):
     income: float = Field(..., gt=0)
     expenses: ExpenseCategories
+    previous_expenses: Optional[ExpenseCategories] = None
 
 class PredictionResponse(BaseModel):
     predicted_total_expense: float
@@ -65,4 +66,5 @@ class HealthScoreResponse(BaseModel):
 
 class RecommendationResponse(BaseModel):
     recommendations: List[str]
+    alerts: Optional[List[str]] = None
     anomalies: Optional[List[dict]] = None

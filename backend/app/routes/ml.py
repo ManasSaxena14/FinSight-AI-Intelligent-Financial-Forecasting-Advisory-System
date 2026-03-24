@@ -13,6 +13,11 @@ from app.ml.advanced_ml import (
     anomaly_detection,
     _load_main_model
 )
+from app.services.financial_logic import (
+    calculate_health_score,
+    generate_alerts,
+    generate_recommendations
+)
 import pandas as pd
 
 router = APIRouter(prefix="/api/ml", tags=["Machine Learning"])
@@ -62,69 +67,39 @@ def forecast_expenses(req: ForecastRequest):
 def get_health_score(req: PredictionRequest):
     """
     Calculate a simple Financial Health Score (0-100) based on savings rate.
+    Uses centralized business logic.
     """
     total_expense = sum(req.expenses.dict().values())
-    savings = req.income - total_expense
-    savings_rate = (savings / req.income) * 100 if req.income > 0 else 0
-
-    # Score calculation logic
-    if savings_rate >= 20:
-        score = min(100, int(50 + (savings_rate * 1.5)))
-        status = "Excellent"
-    elif savings_rate >= 10:
-        score = int(50 + savings_rate)
-        status = "Good"
-    elif savings_rate >= 0:
-        score = int(30 + (savings_rate * 2))
-        status = "Fair"
-    else:
-        score = max(0, int(30 + savings_rate)) # negative savings lowers score
-        status = "Needs Improvement"
-
+    result = calculate_health_score(req.income, total_expense)
+    
     return HealthScoreResponse(
-        score=score,
-        status=status,
-        savings_rate_pct=round(savings_rate, 1)
+        score=result["score"],
+        status=result["status"],
+        savings_rate_pct=result["savings_rate_pct"]
     )
 
-# ── 4. Recommendations ──────────────────────────────────────────────────────
+# ── 4. Recommendations & Alerts ─────────────────────────────────────────────
 @router.post("/recommendations", response_model=RecommendationResponse)
-def get_recommendations(req: PredictionRequest):
+def get_recommendations_and_alerts(req: PredictionRequest):
     """
-    Provide smart financial recommendations based on anomaly detection 
-    and category-wise analysis.
+    Provide smart financial recommendations and generate alerts based on 
+    business rules (overspending, category spikes) and ML anomaly detection.
     """
     expense_dict = req.expenses.dict()
+    prev_expense_dict = req.previous_expenses.dict() if req.previous_expenses else None
     
-    # Run anomaly detection
+    # 1. Generate Smart Alerts
+    alerts = generate_alerts(req.income, expense_dict, prev_expense_dict)
+    
+    # 2. Generate Rule-Based + ML Recommendations
+    recs = generate_recommendations(req.income, expense_dict)
+    
+    # Extract anomalies payload separately just for the frontend to render explicitly if needed
     anomaly_data = anomaly_detection(expense_dict, threshold=1.5)
-    anomalies = anomaly_data["anomalies"]
-    
-    # Run category comparison
-    cat_pred = category_wise_prediction(req.income, expense_dict)
-    bracket = cat_pred["income_bracket"]
-    
-    recs = []
-    
-    # General recs based on bracket
-    if bracket == "low":
-        recs.append("Focus on reducing non-essential bills and shopping to build an emergency fund.")
-    elif bracket == "middle":
-        recs.append("You are in the middle income tier. Consider allocating 20% to savings.")
-    else:
-        recs.append("Your income allows for aggressive saving. Look into high-yield investments.")
-        
-    # Anomaly-based recs
-    if not anomalies:
-        recs.append("Great job! All your expenses are within normal ranges for your profile.")
-    else:
-        for a in anomalies:
-            if a["type"] == "high":
-                recs.append(f"Warning: Your {a['category']} spending is unusually high ({a['z_score']} std devs above mean). Try to cut back.")
-            else:
-                recs.append(f"Notice: Your {a['category']} spending is very low. Make sure you aren't under-reporting.")
+    anomalies = anomaly_data.get("anomalies", [])
 
     return RecommendationResponse(
         recommendations=recs,
+        alerts=alerts if alerts else None,
         anomalies=anomalies if anomalies else None
     )
