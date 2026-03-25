@@ -12,31 +12,43 @@ export default function Layout() {
     // Elegant fade-up entry animation for the initial app load
     gsap.fromTo(
       mainRef.current,
-      { opacity: 0, y: 20 },
-      { opacity: 1, y: 0, duration: 0.8, ease: "power3.out" }
+      { opacity: 0, y: 10 },
+      { opacity: 1, y: 0, duration: 1.2, ease: "power4.out" }
     );
   }, []);
 
   return (
     <div className="flex h-screen bg-bg-base text-text-primary font-sans relative overflow-hidden">
+      <div className="absolute inset-0 bg-noise opacity-[0.03] pointer-events-none" />
+      
       {/* Soft abstract background glows */}
-      <div className="absolute top-[-20%] right-[-10%] w-[50%] h-[50%] bg-brand-500/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-20%] left-[-10%] w-[50%] h-[50%] bg-purple-900/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-[-25%] right-[-15%] w-[60%] h-[60%] bg-brand-500/5 rounded-full blur-[150px] pointer-events-none" />
+      <div className="absolute bottom-[-25%] left-[-15%] w-[60%] h-[60%] bg-white/5 rounded-full blur-[150px] pointer-events-none" />
 
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden z-10">
-        {/* Top Navbar Placeholder / Global Header */}
-        <header className="h-20 bg-zinc-900/40 backdrop-blur-xl border-b border-zinc-800/80 flex items-center px-10 shadow-lg">
-          <h2 className="text-xl font-bold tracking-tight text-white flex gap-2">
-            Overview <span className="text-zinc-600 font-normal">/ Active Portfolio</span>
-          </h2>
-          <div className="ml-auto flex items-center space-x-6">
-            <button className="relative text-zinc-400 hover:text-white transition-colors">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-0 right-0 w-2 h-2 bg-brand-500 rounded-full border border-zinc-900"></span>
+        {/* Top Navbar / Global Header */}
+        <header className="h-20 bg-bg-panel/40 backdrop-blur-2xl border-b border-white/5 flex items-center px-10 shadow-2xl relative z-20">
+          <div className="flex flex-col">
+            <h2 className="text-xl font-black tracking-tight text-text-primary flex items-baseline gap-2">
+              Overview <span className="text-text-tertiary font-bold text-xs uppercase tracking-[0.2em] ml-2">/ Intelligence Suite</span>
+            </h2>
+          </div>
+          
+          <div className="ml-auto flex items-center space-x-8">
+            <button className="relative text-text-tertiary hover:text-brand-400 transition-all duration-300 group">
+              <Bell className="w-5 h-5 group-hover:scale-110 transition-transform" />
+              <span className="absolute top-0 right-0 w-2 h-2 bg-brand-500 rounded-full border-2 border-bg-panel shadow-[0_0_8px_rgba(212,175,55,0.6)]"></span>
             </button>
-            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-zinc-700 to-zinc-600 border border-zinc-500 flex items-center justify-center text-white shadow-md cursor-pointer hover:border-brand-400 transition-colors">
-              U
+            
+            <div className="flex items-center gap-4 group cursor-pointer border-l border-white/5 pl-8 py-2">
+              <div className="text-right hidden sm:block">
+                <p className="text-sm font-black text-text-primary tracking-tight">Vip User</p>
+                <p className="text-[10px] text-brand-500 font-bold uppercase tracking-widest">Enterprise</p>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-bg-elevated to-bg-panel border border-brand-500/20 flex items-center justify-center text-brand-400 font-black shadow-lg group-hover:border-brand-500/50 transition-all duration-500 group-hover:scale-105">
+                {user?.email?.charAt(0).toUpperCase() || 'U'}
+              </div>
             </div>
           </div>
         </header>

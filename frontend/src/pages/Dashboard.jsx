@@ -73,34 +73,43 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-8" ref={containerRef}>
-      <div>
-        <h1 className="text-3xl font-bold text-zinc-50 tracking-tight">Welcome back{user?.name ? `, ${user.name}` : ''}!</h1>
-        <p className="text-sm text-zinc-400 mt-1">Here's your financial overview for the latest recorded month.</p>
+    <div className="space-y-10 relative" ref={containerRef}>
+      <div className="absolute inset-0 bg-noise opacity-[0.02] pointer-events-none" />
+      
+      <div className="relative z-10">
+        <h1 className="text-4xl font-black text-text-primary tracking-tighter italic">
+          Welcome back{user?.name ? `, ${user.name}` : ''}.
+        </h1>
+        <p className="text-sm text-text-tertiary mt-2 font-medium tracking-wide">
+          Your intelligent financial snapshot for the current fiscal cycle.
+        </p>
       </div>
 
       {expenses.length === 0 ? (
-        <Card className="dash-card">
-          <CardContent className="py-16 text-center">
-            <h3 className="text-xl font-medium text-zinc-200">No data available</h3>
-            <p className="mt-2 text-sm text-zinc-500">Start by adding your first expense report to unlock AI insights.</p>
+        <Card className="dash-card glass-card">
+          <CardContent className="py-24 text-center">
+            <h3 className="text-2xl font-bold text-text-secondary tracking-tight">System Initialization Pending</h3>
+            <p className="mt-3 text-sm text-text-tertiary max-w-md mx-auto">Upload your first dataset to activate the AI forecasting engine and unlock health forensics.</p>
           </CardContent>
         </Card>
       ) : (
         <>
           {/* AI Narrative Summary Card */}
           {aiSummary && (
-            <Card className="dash-card border-none bg-gradient-to-r from-zinc-900/80 via-zinc-950 to-zinc-900/80 shadow-2xl relative overflow-hidden group border border-white/5">
-              <div className="absolute inset-0 bg-brand-500/[0.02] opacity-0 group-hover:opacity-100 transition-opacity" />
-              <CardContent className="p-6 sm:p-8">
-                <div className="flex flex-col md:flex-row items-center gap-6">
-                  <div className="shrink-0 p-3 bg-brand-500/10 rounded-2xl border border-brand-500/20 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
-                    <Sparkles className="h-7 w-7 text-brand-400 drop-shadow-[0_0_5px_rgba(16,185,129,0.5)]" />
+            <Card className="dash-card border-none bg-gradient-to-br from-bg-panel/80 via-black/40 to-bg-panel/80 shadow-2xl relative overflow-hidden group border border-white/5 rounded-[2.5rem]">
+               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-500/20 to-transparent" />
+              <CardContent className="p-8 sm:p-10">
+                <div className="flex flex-col md:flex-row items-start gap-8">
+                  <div className="shrink-0 p-4 bg-brand-500/10 rounded-[2rem] border border-brand-500/20 shadow-2xl shadow-brand-500/5">
+                    <Sparkles className="h-8 w-8 text-brand-400 drop-shadow-[0_0_10px_rgba(212,175,55,0.4)]" />
                   </div>
-                  <div className="space-y-1">
-                    <p className="text-[10px] text-zinc-500 font-black uppercase tracking-[0.2em]">AI Intelligence Report</p>
-                    <p className="text-zinc-200 text-lg md:text-xl font-medium leading-relaxed italic">
-                      "{aiSummary}"
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                       <p className="text-[10px] text-brand-500 font-black uppercase tracking-[0.3em]">AI Synthesis Report</p>
+                       <div className="h-px w-12 bg-brand-500/20" />
+                    </div>
+                    <p className="text-text-primary text-xl md:text-2xl font-medium leading-relaxed tracking-tight">
+                      {aiSummary}
                     </p>
                   </div>
                 </div>
@@ -109,103 +118,84 @@ export default function Dashboard() {
           )}
 
           {/* Top Key Metrics */}
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            <Card className="dash-card">
-              <CardContent>
-                <div className="flex items-center">
-                  <div className="flex-shrink-0 bg-blue-500/10 border border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.1)] p-3 rounded-xl">
-                    <Activity className="h-6 w-6 text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 relative z-10">
+            {[
+              { label: 'Gross Revenue', value: stats.totalIncome, icon: Activity, color: 'brand' },
+              { label: 'Total Outgoings', value: stats.totalExpense, icon: CreditCard, color: 'zinc' },
+              { label: 'Net Surplus', value: stats.totalIncome - stats.totalExpense, icon: PiggyBank, color: 'brand' },
+            ].map((metric, i) => (
+              <Card key={i} className="dash-card glass-card border-none group">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className={`p-3 rounded-2xl ${metric.color === 'brand' ? 'bg-brand-500/10 border border-brand-500/20' : 'bg-white/5 border border-white/10'} transition-all duration-500 group-hover:scale-110`}>
+                      <metric.icon className={`h-5 w-5 ${metric.color === 'brand' ? 'text-brand-400' : 'text-text-secondary'}`} />
+                    </div>
+                    <TrendingUp className="h-4 w-4 text-brand-500/30" />
                   </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="truncate text-sm font-medium text-zinc-400">Monthly Income</dt>
-                      <dd className="text-2xl font-bold text-zinc-100 tracking-tight">${stats.totalIncome.toLocaleString()}</dd>
-                    </dl>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                  <dl>
+                    <dt className="text-[10px] font-black text-text-tertiary uppercase tracking-widest pl-1">{metric.label}</dt>
+                    <dd className="text-3xl font-black text-text-primary tracking-tighter mt-1">${metric.value.toLocaleString()}</dd>
+                  </dl>
+                </CardContent>
+              </Card>
+            ))}
 
-            <Card className="dash-card">
-              <CardContent>
-                <div className="flex items-center">
-                  <div className="flex-shrink-0 bg-rose-500/10 border border-rose-500/20 shadow-[0_0_15px_rgba(244,63,94,0.1)] p-3 rounded-xl">
-                    <CreditCard className="h-6 w-6 text-rose-400 drop-shadow-[0_0_8px_rgba(244,63,94,0.8)]" />
+            <Card className="dash-card glass-card border-none group bg-gradient-to-br from-brand-500/5 to-transparent">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-3 rounded-2xl bg-brand-500/10 border border-brand-500/20 transition-all duration-500 group-hover:scale-110 shadow-lg shadow-brand-500/10">
+                    <Target className="h-5 w-5 text-brand-400" />
                   </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="truncate text-sm font-medium text-zinc-400">Total Expenses</dt>
-                      <dd className="text-2xl font-bold text-zinc-100 tracking-tight">${stats.totalExpense.toLocaleString()}</dd>
-                    </dl>
-                  </div>
+                   <div className="text-[10px] font-black text-brand-500 bg-brand-500/10 px-2 py-1 rounded-md border border-brand-500/20">AI LIVE</div>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card className="dash-card">
-              <CardContent>
-                <div className="flex items-center">
-                  <div className="flex-shrink-0 bg-emerald-500/10 border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)] p-3 rounded-xl">
-                    <PiggyBank className="h-6 w-6 text-emerald-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="truncate text-sm font-medium text-zinc-400">Monthly Savings</dt>
-                      <dd className="text-2xl font-bold text-zinc-100 tracking-tight">${(stats.totalIncome - stats.totalExpense).toLocaleString()}</dd>
-                    </dl>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="dash-card">
-              <CardContent>
-                <div className="flex items-center">
-                  <div className="flex-shrink-0 bg-brand-500/10 border border-brand-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)] p-3 rounded-xl">
-                    <Target className="h-6 w-6 text-brand-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="truncate text-sm font-medium text-zinc-400">Health Score (ML)</dt>
-                      <dd className="text-2xl font-bold text-zinc-100 tracking-tight flex items-baseline">
-                        {healthScore ? healthScore.score : '--'}
-                        <span className="text-xs font-medium text-zinc-500 ml-1">/ 100</span>
-                      </dd>
-                    </dl>
-                  </div>
-                </div>
+                <dl>
+                  <dt className="text-[10px] font-black text-text-tertiary uppercase tracking-widest pl-1">Health Forensics</dt>
+                  <dd className="text-3xl font-black text-text-primary tracking-tighter mt-1 flex items-baseline">
+                    {healthScore ? healthScore.score : '--'}
+                    <span className="text-xs font-bold text-text-tertiary ml-1">/ 100</span>
+                  </dd>
+                </dl>
               </CardContent>
             </Card>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3 relative z-10">
             {/* Financial Status Summary */}
-            <div className="lg:col-span-1 space-y-6">
-              <Card className="dash-card">
-                <CardHeader>
-                  <CardTitle>Health Status</CardTitle>
+            <div className="lg:col-span-1 space-y-8">
+              <Card className="dash-card glass-card border-none">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg font-black tracking-tight text-text-primary flex justify-between items-center">
+                    Health Audit
+                    <div className="h-2 w-2 rounded-full bg-brand-500 animate-pulse shadow-[0_0_8px_rgba(212,175,55,1)]" />
+                  </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-8 pt-4">
                   {healthScore ? (
-                    <div className="space-y-5">
-                      <p className="text-zinc-300 text-sm leading-relaxed">
-                        Your financial health is considered <strong className="text-zinc-50">{healthScore.status}</strong> based on our ML analysis.
-                      </p>
-                      <div>
-                        <div className="flex justify-between text-sm mb-2">
-                          <span className="font-medium text-zinc-400">Savings Rate</span>
-                          <span className="text-zinc-200 font-bold">{healthScore.savings_rate_pct}%</span>
+                    <div className="space-y-6">
+                      <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/5">
+                        <p className="text-text-secondary text-sm leading-relaxed font-medium capitalize">
+                          Diagnostic: <strong className="text-text-primary font-black ml-1">{healthScore.status}</strong>
+                        </p>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex justify-between text-[10px] uppercase font-black tracking-widest px-1">
+                          <span className="text-text-tertiary">Accumulation Rate</span>
+                          <span className="text-brand-400">{healthScore.savings_rate_pct}%</span>
                         </div>
-                        <div className="w-full bg-zinc-800/80 rounded-full h-2 overflow-hidden shadow-inner border border-zinc-700/50">
-                          <div 
-                            className={`h-2 rounded-full shadow-[0_0_10px_currentColor] ${healthScore.score >= 80 ? 'bg-emerald-500 text-emerald-500' : healthScore.score >= 60 ? 'bg-blue-500 text-blue-500' : healthScore.score >= 40 ? 'bg-amber-500 text-amber-500' : 'bg-rose-500 text-rose-500'}`} 
+                        <div className="w-full bg-black/40 rounded-full h-3 overflow-hidden border border-white/5 relative">
+                           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent" />
+                           <div 
+                            className="h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(212,175,55,0.3)] bg-gradient-to-r from-brand-600 to-brand-400" 
                             style={{ width: `${Math.max(0, Math.min(100, healthScore.savings_rate_pct * 2))}%` }}
                           ></div>
                         </div>
                       </div>
                     </div>
                   ) : (
-                    <p className="text-zinc-500 text-sm animate-pulse">Analyzing health score...</p>
+                    <div className="space-y-4">
+                       <div className="h-4 w-full bg-white/5 rounded-full animate-pulse" />
+                       <div className="h-10 w-full bg-white/5 rounded-2xl animate-pulse" />
+                    </div>
                   )}
                 </CardContent>
               </Card>
@@ -215,26 +205,41 @@ export default function Dashboard() {
             </div>
 
             {/* Recent Expenses List */}
-            <Card className="dash-card lg:col-span-2">
-              <CardHeader>
-                <CardTitle>Recent History</CardTitle>
+            <Card className="dash-card glass-card border-none lg:col-span-2">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg font-black tracking-tight text-text-primary">Fiscal Archive</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
-                <ul className="divide-y divide-zinc-800/60">
-                  {expenses.slice(0, 4).map((record) => (
-                    <li key={record.id} className="p-5 hover:bg-zinc-800/30 transition-colors duration-300">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-bold text-zinc-100">{record.month} Report</p>
-                          <p className="text-xs text-zinc-400 mt-1">Savings: <span className="text-emerald-400">${record.savings.toLocaleString()}</span></p>
+                <div className="overflow-hidden rounded-b-[2.5rem]">
+                  <ul className="divide-y divide-white/5">
+                    {expenses.slice(0, 5).map((record) => (
+                      <li key={record.id} className="p-6 hover:bg-white/[0.02] transition-all duration-500 group">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="h-12 w-12 rounded-2xl bg-bg-panel border border-white/5 flex items-center justify-center text-text-tertiary group-hover:text-brand-400 group-hover:border-brand-500/20 transition-all duration-500">
+                               <Activity className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-black text-text-primary tracking-tight">{record.month} Snapshot</p>
+                              <p className="text-[10px] text-text-tertiary font-bold uppercase tracking-widest mt-1">
+                                Net Surplus: <span className="text-brand-500 font-black">${record.savings.toLocaleString()}</span>
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-6">
+                            <div className="text-right hidden sm:block">
+                               <p className="text-xs font-black text-text-primary tracking-tighter">${record.total_expense.toLocaleString()}</p>
+                               <p className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">Utilized</p>
+                            </div>
+                            <div className="h-8 w-8 rounded-full border border-white/10 flex items-center justify-center group-hover:border-brand-500/40 transition-all cursor-pointer">
+                               <ChevronRight className="w-4 h-4 text-text-tertiary group-hover:text-brand-400" />
+                            </div>
+                          </div>
                         </div>
-                        <div className="text-sm font-bold text-zinc-200 border border-zinc-700/80 px-4 py-1.5 rounded-lg bg-zinc-800/50 shadow-sm backdrop-blur-sm">
-                          ${record.total_expense.toLocaleString()} Spent
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </CardContent>
             </Card>
           </div>

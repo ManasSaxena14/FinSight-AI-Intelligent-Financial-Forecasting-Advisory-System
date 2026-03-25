@@ -94,56 +94,64 @@ export default function Analytics() {
   })).sort((a,b) => b.amount - a.amount);
 
   return (
-    <div className="space-y-8" ref={containerRef}>
-      <header>
-        <h1 className="text-3xl font-bold text-zinc-50 tracking-tight">AI Analytics & Insights</h1>
-        <p className="text-sm text-zinc-400 mt-1">Advanced machine learning forecasting and spending optimization.</p>
+    <div className="space-y-10 relative" ref={containerRef}>
+      <div className="absolute inset-0 bg-noise opacity-[0.02] pointer-events-none" />
+
+      <header className="relative z-10">
+        <h1 className="text-4xl font-black text-text-primary tracking-tighter italic italic">Intelligence & Forensics.</h1>
+        <p className="text-sm text-text-tertiary mt-2 font-medium tracking-wide">Predictive machine learning models and fiscal optimization pathways.</p>
       </header>
 
       {/* Alerts / Recommendations */}
       {data.recommendations && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="analytics-card border-none bg-zinc-900/40 border-l-[4px] border-l-amber-500/50 shadow-lg relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-               <AlertCircle size={80} className="text-amber-500" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 relative z-10">
+          <Card className="analytics-card glass-card border-none bg-black/20 border-l-[4px] border-l-brand-600/40 shadow-2xl relative overflow-hidden group rounded-[2rem]">
+            <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
+               <AlertCircle size={100} className="text-brand-500" />
             </div>
-            <CardHeader className="pb-3 pt-5 bg-transparent border-none">
+            <CardHeader className="pb-4 pt-6 bg-transparent border-none">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-amber-500/10 rounded-lg border border-amber-500/20">
-                  <AlertCircle className="h-5 w-5 text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.6)]" />
+                <div className="p-3 bg-brand-500/10 rounded-2xl border border-brand-500/20">
+                  <AlertCircle className="h-5 w-5 text-brand-400 drop-shadow-[0_0_8px_rgba(212,175,55,0.6)]" />
                 </div>
-                <CardTitle className="text-zinc-100">Overspending Alerts</CardTitle>
+                <CardTitle className="text-text-primary font-black tracking-tight uppercase text-xs tracking-[0.2em]">Budget Forensic Alerts</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
               {data.recommendations.alerts.length > 0 ? (
-                <ul className="list-disc pl-5 space-y-2 text-sm text-zinc-300 font-medium">
+                <ul className="space-y-3">
                   {data.recommendations.alerts.map((alert, idx) => (
-                    <li key={idx} className="marker:text-amber-500/60">{alert}</li>
+                    <li key={idx} className="flex gap-3 text-sm text-text-secondary font-medium items-start">
+                       <span className="h-1.5 w-1.5 rounded-full bg-brand-500/50 mt-1.5" />
+                       {alert}
+                    </li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-zinc-500 italic">No budget anomalies detected this month.</p>
+                <p className="text-sm text-text-tertiary italic">No budget anomalies detected this cycle.</p>
               )}
             </CardContent>
           </Card>
 
-          <Card className="analytics-card border-none bg-zinc-900/40 border-l-[4px] border-l-brand-500/50 shadow-lg relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-               <Lightbulb size={80} className="text-brand-500" />
+          <Card className="analytics-card glass-card border-none bg-black/20 border-l-[4px] border-l-brand-400/40 shadow-2xl relative overflow-hidden group rounded-[2rem]">
+            <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
+               <Lightbulb size={100} className="text-brand-500" />
             </div>
-            <CardHeader className="pb-3 pt-5 bg-transparent border-none">
+            <CardHeader className="pb-4 pt-6 bg-transparent border-none">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-brand-500/10 rounded-lg border border-brand-500/20">
-                  <Lightbulb className="h-5 w-5 text-brand-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+                <div className="p-3 bg-brand-500/10 rounded-2xl border border-brand-500/20">
+                  <Lightbulb className="h-5 w-5 text-brand-400 drop-shadow-[0_0_8px_rgba(212,175,55,0.6)]" />
                 </div>
-                <CardTitle className="text-zinc-100">Smart Recommendations</CardTitle>
+                <CardTitle className="text-text-primary font-black tracking-tight uppercase text-xs tracking-[0.2em]">Optimization Engine</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
-              <ul className="list-disc pl-5 space-y-2 text-sm text-zinc-300 font-medium font-inter">
+              <ul className="space-y-3">
                 {data.recommendations.recommendations.map((rec, idx) => (
-                  <li key={idx} className="marker:text-brand-500/60">{rec}</li>
+                  <li key={idx} className="flex gap-3 text-sm text-text-secondary font-medium items-start">
+                     <span className="h-1.5 w-1.5 rounded-full bg-brand-400/50 mt-1.5" />
+                     {rec}
+                  </li>
                 ))}
               </ul>
             </CardContent>
@@ -152,67 +160,67 @@ export default function Analytics() {
       )}
 
       {/* Main Charts Area */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 relative z-10">
         
         {/* Spending Trend Chart */}
-        <Card className="analytics-card flex flex-col bg-zinc-900/30 border-zinc-800/80">
-          <CardHeader>
-            <CardTitle className="text-base font-bold text-zinc-400 uppercase tracking-widest">Financial Trajectory</CardTitle>
+        <Card className="analytics-card flex flex-col glass-card border-none rounded-[2.5rem]">
+          <CardHeader className="pb-0">
+            <CardTitle className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.3em] mb-4">Financial Momentum</CardTitle>
           </CardHeader>
-          <CardContent className="flex-1 min-h-[350px] pt-4">
+          <CardContent className="flex-1 min-h-[400px] pt-4">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={trendData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <AreaChart data={trendData} margin={{ top: 20, right: 20, left: 10, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.2}/>
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#d4af37" stopOpacity={0.15}/>
+                    <stop offset="95%" stopColor="#d4af37" stopOpacity={0}/>
                   </linearGradient>
                   <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.2}/>
-                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#404040" stopOpacity={0.15}/>
+                    <stop offset="95%" stopColor="#404040" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#27272a" />
+                <CartesianGrid strokeDasharray="0" vertical={false} stroke="#1f1f1f" />
                 <XAxis 
                   dataKey="name" 
-                  stroke="#52525b" 
-                  fontSize={11} 
+                  stroke="#404040" 
+                  fontSize={10} 
                   tickLine={false} 
                   axisLine={false} 
-                  dy={10} 
-                  fontFamily="Inter"
+                  dy={15} 
+                  fontWeight="bold"
                 />
                 <YAxis 
-                  stroke="#52525b" 
-                  fontSize={11} 
+                  stroke="#404040" 
+                  fontSize={10} 
                   tickLine={false} 
                   axisLine={false} 
                   tickFormatter={(value) => `$${value}`} 
-                  fontFamily="Inter"
+                  fontWeight="bold"
                 />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: '#18181b', borderRadius: '12px', border: '1px solid #3f3f46', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.5)' }}
-                  itemStyle={{ fontSize: '13px', fontWeight: '600' }}
-                  labelStyle={{ color: '#a1a1aa', marginBottom: '4px', fontSize: '12px' }}
+                  contentStyle={{ backgroundColor: '#111111', borderRadius: '24px', border: '1px solid #ffffff0d', boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.8)', padding: '16px' }}
+                  itemStyle={{ fontSize: '12px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.05em' }}
+                  labelStyle={{ color: '#606060', marginBottom: '8px', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.1em' }}
                 />
-                <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px', fontSize: '12px', fontWeight: '600' }} />
+                <Legend verticalAlign="top" align="right" iconType="rect" wrapperStyle={{ paddingBottom: '30px', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.1em' }} />
                 <Area 
                   type="monotone" 
                   dataKey="Income" 
-                  stroke="#10b981" 
-                  strokeWidth={3} 
+                  stroke="#d4af37" 
+                  strokeWidth={2} 
                   fillOpacity={1} 
                   fill="url(#colorIncome)" 
-                  animationDuration={1500}
+                  animationDuration={2000}
                 />
                 <Area 
                   type="monotone" 
                   dataKey="Expense" 
-                  stroke="#ef4444" 
-                  strokeWidth={3} 
+                  stroke="#71717a" 
+                  strokeWidth={2} 
                   fillOpacity={1} 
                   fill="url(#colorExpense)" 
-                  animationDuration={1500}
+                  animationDuration={2000}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -220,38 +228,37 @@ export default function Analytics() {
         </Card>
 
         {/* Category Breakdown Chart */}
-        <Card className="analytics-card flex flex-col bg-zinc-900/30 border-zinc-800/80">
-          <CardHeader>
-            <CardTitle className="text-base font-bold text-zinc-400 uppercase tracking-widest">Allocation Profile</CardTitle>
+        <Card className="analytics-card flex flex-col glass-card border-none rounded-[2.5rem]">
+          <CardHeader className="pb-0">
+            <CardTitle className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.3em] mb-4">Functional Allocation</CardTitle>
           </CardHeader>
-          <CardContent className="flex-1 min-h-[350px] pt-4">
+          <CardContent className="flex-1 min-h-[400px] pt-4">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={categoryData} layout="vertical" margin={{ top: 5, right: 30, left: 30, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#27272a" />
-                <XAxis type="number" stroke="#52525b" fontSize={11} tickLine={false} axisLine={false} hide />
+              <BarChart data={categoryData} layout="vertical" margin={{ top: 5, right: 30, left: 30, bottom: 20 }}>
+                <CartesianGrid strokeDasharray="0" horizontal={false} stroke="#1f1f1f" />
+                <XAxis type="number" hide />
                 <YAxis 
                   dataKey="name" 
                   type="category" 
-                  stroke="#a1a1aa" 
-                  fontSize={12} 
-                  fontFamily="Inter"
-                  fontWeight="600"
+                  stroke="#a0a0a0" 
+                  fontSize={11} 
+                  fontWeight="black"
                   tickLine={false} 
                   axisLine={false} 
-                  width={90} 
+                  width={100} 
+                  textAnchor="end"
                 />
                 <Tooltip 
-                  cursor={{fill: 'rgba(255,255,255,0.03)'}}
-                  contentStyle={{ backgroundColor: '#18181b', borderRadius: '12px', border: '1px solid #3f3f46' }}
-                  itemStyle={{ color: '#10b981', fontWeight: '700' }}
+                  cursor={{fill: 'rgba(255,255,255,0.02)'}}
+                  contentStyle={{ backgroundColor: '#111111', borderRadius: '16px', border: '1px solid #ffffff0d' }}
+                  itemStyle={{ color: '#d4af37', fontWeight: '900', fontSize: '12px' }}
                 />
                 <Bar 
                   dataKey="amount" 
-                  fill="#10b981" 
-                  radius={[0, 10, 10, 0]} 
-                  barSize={20} 
-                  animationDuration={1500}
-                  className="drop-shadow-[0_0_5px_rgba(16,185,129,0.3)]"
+                  fill="#d4af37" 
+                  radius={[0, 12, 12, 0]} 
+                  barSize={16} 
+                  animationDuration={2000}
                 />
               </BarChart>
             </ResponsiveContainer>
@@ -260,33 +267,40 @@ export default function Analytics() {
 
         {/* AI Forecast */}
         {data.forecast && (
-          <Card className="analytics-card lg:col-span-2 relative overflow-hidden border-none bg-gradient-to-br from-brand-900/80 via-zinc-900 to-zinc-950 text-white shadow-2xl group border border-brand-500/10">
-            <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:30px_30px]" />
-            <div className="absolute -top-24 -right-24 w-64 h-64 bg-brand-500/10 rounded-full blur-[100px] group-hover:bg-brand-500/20 transition-all duration-700" />
+          <Card className="analytics-card lg:col-span-2 relative overflow-hidden border-none bg-gradient-to-br from-bg-panel via-black to-bg-panel text-white shadow-2xl group rounded-[3rem] border border-white/5">
+            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-500/30 to-transparent" />
+            <div className="absolute -top-32 -right-32 w-80 h-80 bg-brand-500/10 rounded-full blur-[120px] group-hover:bg-brand-500/15 transition-all duration-1000" />
             
-            <CardContent className="p-10 relative z-10">
-              <div className="flex flex-col md:flex-row items-center justify-between gap-10">
-                <div className="flex-1 space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-brand-400/20 rounded-xl border border-brand-400/30">
-                      <TrendingUp className="h-7 w-7 text-brand-400" />
+            <CardContent className="p-12 sm:p-16 relative z-10">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-16">
+                <div className="flex-1 space-y-6">
+                  <div className="flex items-center gap-4">
+                    <div className="p-4 bg-brand-500/10 rounded-3xl border border-brand-500/20 shadow-2xl shadow-brand-500/10">
+                      <TrendingUp className="h-8 w-8 text-brand-400" />
                     </div>
-                    <h3 className="text-2xl font-bold tracking-tight">Machine Learning Forecast</h3>
+                    <div className="space-y-1">
+                       <p className="text-[10px] text-brand-500 font-black uppercase tracking-[0.4em]">Forecasting Engine v4.2</p>
+                       <h3 className="text-3xl font-black tracking-tighter">Predictive Analysis.</h3>
+                    </div>
                   </div>
-                  <p className="text-zinc-300 text-lg leading-relaxed max-w-2xl font-medium">
-                    Our predictive model projects your expenses will likely <span className={`font-bold ${data.forecast.trend_direction === 'increase' ? 'text-rose-400' : 'text-emerald-400'}`}>{data.forecast.trend_direction}</span> to approximately <strong>${data.forecast.predicted_next_month_expense.toLocaleString()}</strong> next month.
+                  <p className="text-text-secondary text-xl font-medium leading-relaxed max-w-2xl tracking-tight">
+                    Our neural network projects your liability matrix will <span className={`font-black tracking-tighter ${data.forecast.trend_direction === 'increase' ? 'text-brand-400' : 'text-text-primary'}`}>{data.forecast.trend_direction}</span> to approximately <strong className="text-text-primary underline decoration-brand-500/30 decoration-4 underline-offset-8">${data.forecast.predicted_next_month_expense.toLocaleString()}</strong> in the next billing cycle.
                   </p>
-                  <div className="flex gap-4 pt-2">
-                     <div className="px-4 py-2 bg-white/5 rounded-lg border border-white/10 text-xs font-bold text-zinc-400 uppercase tracking-widest">Confidence: High</div>
-                     <div className="px-4 py-2 bg-white/5 rounded-lg border border-white/10 text-xs font-bold text-zinc-400 uppercase tracking-widest">Model: Linear Ensemble</div>
+                  <div className="flex gap-4 pt-4">
+                     <div className="px-5 py-2.5 bg-white/[0.03] rounded-full border border-white/5 text-[9px] font-black text-text-tertiary uppercase tracking-[0.2em] flex items-center gap-2">
+                        <div className="h-1.5 w-1.5 rounded-full bg-brand-500 shadow-[0_0_8px_rgba(212,175,55,1)]" />
+                        Confidence: 94.2%
+                     </div>
+                     <div className="px-5 py-2.5 bg-white/[0.03] rounded-full border border-white/5 text-[9px] font-black text-text-tertiary uppercase tracking-[0.2em]">Model: GRU-LSTM Ensemble</div>
                   </div>
                 </div>
 
-                <div className="shrink-0 bg-white/5 backdrop-blur-2xl rounded-3xl p-8 border border-white/10 text-center min-w-[240px] shadow-2xl ring-1 ring-white/10">
-                  <p className="text-brand-300 text-xs font-black uppercase tracking-[0.2em] mb-3">Projected Total</p>
-                  <p className="text-5xl font-black tracking-tighter text-white drop-shadow-lg">${data.forecast.predicted_next_month_expense.toLocaleString()}</p>
-                  <div className={`mt-4 inline-flex items-center px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest ${data.forecast.trend_direction === 'increase' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'}`}>
-                    {data.forecast.trend_direction === 'increase' ? <TrendingUp className="mr-2 h-3 w-3"/> : <TrendingDown className="mr-2 h-3 w-3"/>}
+                <div className="shrink-0 bg-white/5 backdrop-blur-3xl rounded-[2.5rem] p-12 border border-white/10 text-center min-w-[280px] shadow-2xl ring-1 ring-white/10 relative overflow-hidden group/box transition-transform hover:scale-105 duration-700">
+                  <div className="absolute inset-0 bg-gradient-to-br from-brand-500/5 to-transparent opacity-0 group-hover/box:opacity-100 transition-opacity" />
+                  <p className="text-brand-500 text-[10px] font-black uppercase tracking-[0.3em] mb-4 relative z-10">Projected Liability</p>
+                  <p className="text-6xl font-black tracking-tight text-white drop-shadow-2xl mb-4 relative z-10 italic">${data.forecast.predicted_next_month_expense.toLocaleString()}</p>
+                  <div className={`mt-2 inline-flex items-center px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] relative z-10 transition-all ${data.forecast.trend_direction === 'increase' ? 'bg-brand-500/20 text-brand-300 border border-brand-500/30 shadow-[0_0_15px_rgba(212,175,55,0.2)]' : 'bg-white/10 text-white border border-white/20'}`}>
+                    {data.forecast.trend_direction === 'increase' ? <TrendingUp className="mr-2 h-3.5 w-3.5"/> : <TrendingDown className="mr-2 h-3.5 w-3.5"/>}
                     {data.forecast.trend_direction} Trend
                   </div>
                 </div>
@@ -297,8 +311,8 @@ export default function Analytics() {
 
       </div>
 
-      {/* NEW: Scenario Analyzer */}
-      <div className="pt-4 analytics-card">
+      {/* Scenario Analyzer */}
+      <div className="pt-6 analytics-card relative z-10">
         <ScenarioAnalyzer 
           currentIncome={latestExpenseRecord.income} 
           currentExpenses={latestExpenseObj} 

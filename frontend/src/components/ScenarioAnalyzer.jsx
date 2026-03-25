@@ -43,49 +43,52 @@ export default function ScenarioAnalyzer({ currentIncome, currentExpenses }) {
   const totalProposed = Object.values(proposedExpenses).reduce((acc, val) => acc + val, 0);
 
   return (
-    <Card className="analytics-card border-none bg-zinc-900/60 shadow-2xl overflow-hidden relative">
-      <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/5 blur-3xl rounded-full" />
+    <Card className="analytics-card border-none bg-black/20 shadow-2xl rounded-[3rem] overflow-hidden relative">
+      <div className="absolute top-0 right-0 w-48 h-48 bg-brand-500/5 blur-[100px] rounded-full pointer-events-none" />
       
-      <CardHeader className="border-zinc-800/80 bg-zinc-900/40 py-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-brand-500/10 rounded-xl border border-brand-500/20">
-            <Calculator className="w-6 h-6 text-brand-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+      <CardHeader className="border-white/5 bg-transparent py-8 px-10">
+        <div className="flex items-center gap-5">
+          <div className="p-3.5 bg-brand-500/10 rounded-2xl border border-brand-500/20 shadow-2xl shadow-brand-500/10">
+            <Calculator className="w-7 h-7 text-brand-400 drop-shadow-[0_0_10px_rgba(212,175,55,0.6)]" />
           </div>
           <div>
-            <CardTitle className="text-xl font-bold tracking-tight">Scenario Simulator</CardTitle>
-            <p className="text-xs text-zinc-500 mt-0.5 font-medium tracking-wide">AI-powered predictive budget stress testing.</p>
+            <CardTitle className="text-sm font-black tracking-[0.3em] text-text-primary uppercase italic">Stress Test Engine</CardTitle>
+            <p className="text-[10px] text-text-tertiary mt-1 font-black uppercase tracking-[0.2em]">Neural Predictive Budget Simulation v4.0</p>
           </div>
         </div>
       </CardHeader>
       
-      <CardContent className="pt-8 pb-10 px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+      <CardContent className="pt-10 pb-12 px-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
           
           {/* Inputs */}
-          <div className="space-y-8">
+          <div className="space-y-10">
             <div>
-              <label className="text-xs font-black text-zinc-500 uppercase tracking-widest block mb-3">Target Monthly Income</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 font-bold">$</span>
+              <label className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.4em] block mb-4 px-2">Liquidity Injection / Income</label>
+              <div className="relative group">
+                <span className="absolute left-6 top-1/2 -translate-y-1/2 text-brand-500 font-black italic">$</span>
                 <input 
                   type="number" 
                   value={income} 
                   onChange={e => setIncome(e.target.value)} 
-                  className="w-full pl-10 pr-4 py-3 bg-zinc-950 border border-zinc-800 rounded-xl focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-zinc-100 font-bold outline-none transition-all shadow-inner"
+                  className="w-full pl-12 pr-6 py-4 bg-black/20 border border-white/5 rounded-2xl focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500/40 text-text-primary font-black italic outline-none transition-all shadow-2xl group-hover:border-white/10"
                 />
               </div>
             </div>
 
-            <div className="space-y-6">
-              <h4 className="text-xs font-black text-zinc-500 uppercase tracking-widest border-b border-zinc-800 pb-3">Adjust Category Allocations</h4>
+            <div className="space-y-10">
+              <div className="flex items-center gap-4 mb-2">
+                 <h4 className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.3em]">Liability Parameters</h4>
+                 <div className="h-px flex-1 bg-white/5" />
+              </div>
               {CATEGORIES.map(cat => (
                 <div key={cat} className="group">
-                  <div className="flex justify-between text-xs font-bold text-zinc-400 mb-2 group-hover:text-zinc-200 transition-colors">
-                    <span className="flex items-center gap-2">
-                       <div className="w-1.5 h-1.5 rounded-full bg-zinc-700 group-hover:bg-brand-500 transition-colors" />
+                  <div className="flex justify-between text-[10px] font-black text-text-tertiary mb-3 group-hover:text-text-secondary transition-colors uppercase tracking-widest">
+                    <span className="flex items-center gap-3 italic">
+                       <span className="w-1.5 h-1.5 rounded-full bg-white/10 group-hover:bg-brand-500 group-hover:shadow-[0_0_8px_rgba(212,175,55,1)] transition-all" />
                        {cat}
                     </span>
-                    <span className="text-zinc-50 tracking-tighter">${proposedExpenses[cat]?.toLocaleString() || 0}</span>
+                    <span className="text-text-primary font-black italic tracking-tight text-xs">${proposedExpenses[cat]?.toLocaleString() || 0}</span>
                   </div>
                   <input 
                     type="range" 
@@ -94,64 +97,67 @@ export default function ScenarioAnalyzer({ currentIncome, currentExpenses }) {
                     step="50"
                     value={proposedExpenses[cat] || 0} 
                     onChange={e => handleExpenseChange(cat, e.target.value)}
-                    className="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-brand-500 hover:accent-brand-400 transition-all"
+                    className="w-full h-1 bg-white/5 rounded-full appearance-none cursor-pointer accent-brand-500 hover:accent-brand-400 transition-all"
                   />
                 </div>
               ))}
             </div>
             
-            <div className="pt-4">
-              <Button onClick={handleAnalyze} isLoading={isLoading} className="w-full h-12 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-black uppercase tracking-widest text-xs shadow-lg shadow-brand-500/20 transition-all active:scale-[0.98]">
-                Execute Simulation
+            <div className="pt-6">
+              <Button onClick={handleAnalyze} isLoading={isLoading} className="w-full h-14 rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 text-black font-black uppercase tracking-[0.3em] text-[10px] shadow-2xl shadow-brand-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                Run Stress Simulation
               </Button>
             </div>
           </div>
 
           {/* Results Display */}
-          <div className="bg-zinc-950/50 rounded-3xl border border-zinc-800/80 p-8 flex flex-col justify-center min-h-[400px] shadow-inner relative overflow-hidden group/result">
-            <div className="absolute inset-0 bg-brand-500/[0.01] opacity-0 group-hover/result:opacity-100 transition-opacity pointer-events-none" />
+          <div className="bg-black/20 rounded-[3rem] border border-white/5 p-10 flex flex-col justify-center min-h-[450px] shadow-2xl relative overflow-hidden group/result">
+            <div className="absolute inset-0 bg-brand-500/[0.02] opacity-0 group-hover/result:opacity-100 transition-opacity pointer-events-none" />
             
             {result ? (
-              <div className="space-y-8 relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+              <div className="space-y-10 relative z-10 animate-in fade-in slide-in-from-bottom-6 duration-1000">
                 <div className="text-center">
-                  <p className="text-[10px] text-zinc-500 uppercase tracking-[0.2em] font-black mb-2">Projected Monthly Surplus</p>
-                  <div className={`text-5xl font-black tracking-tighter drop-shadow-2xl ${result.projected_savings >= 0 ? 'text-emerald-400' : 'text-rose-500'}`}>
+                  <p className="text-[10px] text-text-tertiary uppercase tracking-[0.4em] font-black mb-4">Projected Surplus Matrix</p>
+                  <div className={`text-6xl font-black tracking-tighter drop-shadow-2xl italic ${result.projected_savings >= 0 ? 'text-text-primary underline decoration-brand-500/40 decoration-8 underline-offset-8' : 'text-rose-500'}`}>
                     ${result.projected_savings.toLocaleString()}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-zinc-900/60 p-4 rounded-2xl border border-zinc-800 text-center">
-                    <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1">Simulated Spending</p>
-                    <p className="text-xl font-black text-zinc-100">${totalProposed.toLocaleString()}</p>
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="bg-bg-panel/40 p-6 rounded-3xl border border-white/5 text-center shadow-2xl group hover:border-brand-500/20 transition-colors">
+                    <p className="text-[9px] text-text-tertiary font-black uppercase tracking-widest mb-2">Aggregate Burn</p>
+                    <p className="text-2xl font-black text-text-primary italic">${totalProposed.toLocaleString()}</p>
                   </div>
-                  <div className="bg-zinc-900/60 p-4 rounded-2xl border border-zinc-800 text-center">
-                    <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1">Simulated Health</p>
-                    <p className={`text-xl font-black ${result.projected_health_score >= 80 ? 'text-emerald-400' : result.projected_health_score >= 60 ? 'text-blue-400' : 'text-amber-500'}`}>
-                      {result.projected_health_score}<span className="text-xs text-zinc-600 ml-0.5">/100</span>
+                  <div className="bg-bg-panel/40 p-6 rounded-3xl border border-white/5 text-center shadow-2xl group hover:border-brand-500/20 transition-colors">
+                    <p className="text-[9px] text-text-tertiary font-black uppercase tracking-widest mb-2">Stability Rating</p>
+                    <p className={`text-2xl font-black italic ${result.projected_health_score >= 80 ? 'text-brand-400 shadow-brand-500/20' : result.projected_health_score >= 60 ? 'text-text-primary' : 'text-rose-500'}`}>
+                      {result.projected_health_score}<span className="text-xs text-text-tertiary ml-1 not-italic">/100</span>
                     </p>
                   </div>
                 </div>
 
-                <Card className="bg-brand-500/5 border-zinc-800/80 rounded-2xl overflow-hidden group/advice">
-                   <div className="p-5 flex gap-4 text-sm text-zinc-300">
+                <div className="bg-gradient-to-br from-brand-500/10 to-transparent border border-brand-500/20 rounded-3xl overflow-hidden group/advice shadow-2xl">
+                   <div className="p-8 flex gap-6 text-sm text-text-secondary">
                     <div className="shrink-0">
-                      <div className="p-2 bg-brand-500/10 rounded-lg">
-                        <TrendingUp className="w-5 h-5 text-brand-400" />
+                      <div className="p-3 bg-brand-500/10 rounded-2xl border border-brand-500/30">
+                        <TrendingUp className="w-6 h-6 text-brand-400" />
                       </div>
                     </div>
-                    <p className="leading-relaxed font-medium italic text-zinc-400 group-hover/advice:text-zinc-200 transition-colors">"{result.advice}"</p>
+                    <div>
+                        <p className="text-[9px] font-black text-brand-500 uppercase tracking-[0.3em] mb-2">Forensic Advice</p>
+                        <p className="leading-relaxed font-bold italic text-text-primary tracking-tight">"{result.advice}"</p>
+                    </div>
                   </div>
-                </Card>
+                </div>
               </div>
             ) : (
-              <div className="text-center py-10">
-                <div className="relative inline-block mb-6">
-                  <Calculator className="w-16 h-16 text-zinc-800 opacity-50" />
-                  <ArrowRight className="w-6 h-6 text-brand-500 absolute -bottom-2 -right-2 animate-bounce-x" />
+              <div className="text-center py-16 animate-pulse">
+                <div className="relative inline-block mb-10">
+                  <Calculator className="w-24 h-24 text-white/5 opacity-50" />
+                  <ArrowRight className="w-8 h-8 text-brand-500 absolute -bottom-2 -right-2 drop-shadow-[0_0_10px_rgba(212,175,55,1)]" />
                 </div>
-                <h4 className="text-zinc-200 font-bold mb-2">Awaiting Parameters</h4>
-                <p className="text-sm text-zinc-500 max-w-[200px] mx-auto font-medium">Configure your spending profile and execute the simulation.</p>
+                <h4 className="text-text-secondary font-black tracking-widest uppercase text-xs mb-3">Awaiting Parameters</h4>
+                <p className="text-[10px] text-text-tertiary max-w-[220px] mx-auto font-bold uppercase tracking-[0.2em] leading-relaxed">Initialize spending profile to execute neural stress simulation.</p>
               </div>
             )}
           </div>

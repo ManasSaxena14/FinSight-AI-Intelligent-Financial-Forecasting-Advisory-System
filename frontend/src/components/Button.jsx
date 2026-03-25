@@ -1,13 +1,13 @@
 import { cn } from "../utils/cn";
 
 export function Button({ className, variant = "primary", size = "md", isLoading, children, ...props }) {
-  const baseStyles = "inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none";
+  const baseStyles = "inline-flex items-center justify-center rounded-xl font-black transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:ring-offset-2 focus:ring-offset-bg-base disabled:opacity-40 disabled:pointer-events-none active:scale-[0.97] tracking-widest uppercase text-[10px]";
   
   const variants = {
-    primary: "bg-brand-600 text-white hover:bg-brand-700 shadow-sm",
-    secondary: "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50",
-    danger: "bg-red-600 text-white hover:bg-red-700 shadow-sm",
-    ghost: "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+    primary: "bg-gradient-to-br from-brand-400 to-brand-600 text-black hover:shadow-[0_0_20px_rgba(212,175,55,0.3)] border border-brand-300/20",
+    secondary: "bg-white/[0.03] text-text-secondary border border-white/5 hover:bg-white/[0.08] hover:text-text-primary backdrop-blur-md",
+    danger: "bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20",
+    ghost: "text-text-tertiary hover:text-brand-400 hover:bg-brand-500/5"
   };
 
   const sizes = {

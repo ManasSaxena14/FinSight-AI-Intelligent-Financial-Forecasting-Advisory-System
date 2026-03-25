@@ -82,20 +82,20 @@ export default function AddExpense() {
   if (success) {
     return (
       <div className="flex h-[80vh] items-center justify-center relative">
-        <div className="absolute inset-0 bg-brand-500/5 blur-[120px] rounded-full" />
-        <div ref={successRef} className="text-center space-y-8 relative z-10 glass-card p-12 rounded-[3rem] border border-brand-500/20 shadow-2xl shadow-brand-500/10">
-          <div className="mx-auto h-24 w-24 rounded-full bg-brand-500/10 border border-brand-500/30 flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.3)]">
-            <svg className="h-12 w-12 text-brand-400 drop-shadow-[0_0_10px_rgba(16,185,129,0.8)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="absolute inset-0 bg-brand-500/5 blur-[150px] rounded-full" />
+        <div ref={successRef} className="text-center space-y-10 relative z-10 glass-card p-16 rounded-[4rem] border border-white/5 shadow-2xl shadow-brand-500/10 max-w-xl w-full">
+          <div className="mx-auto h-28 w-28 rounded-[2.5rem] bg-brand-500/10 border border-brand-500/20 flex items-center justify-center shadow-2xl shadow-brand-500/20 group">
+            <svg className="h-14 w-14 text-brand-400 drop-shadow-[0_0_15px_rgba(212,175,55,0.8)] group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <div className="space-y-2">
-            <h2 className="text-4xl font-black text-white tracking-tight">Record Encrypted</h2>
-            <p className="text-zinc-400 font-medium">Your financial data has been synchronized and secured.</p>
+          <div className="space-y-3">
+            <h2 className="text-4xl font-black text-text-primary tracking-tighter italic">Ledger Synchronized.</h2>
+            <p className="text-text-tertiary font-bold uppercase tracking-widest text-[10px]">Biometric identity confirmed • AES-256 Protocol</p>
           </div>
-          <div className="pt-4 flex gap-4 justify-center">
-            <Button variant="secondary" onClick={() => setSuccess(false)} className="px-8 py-3 rounded-xl border-zinc-800 text-zinc-400 font-bold hover:bg-zinc-900 transition-all">Add Another</Button>
-            <Button variant="primary" onClick={() => navigate('/')} className="px-8 py-3 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-black shadow-lg shadow-brand-500/20 transition-all">Go to Dashboard</Button>
+          <div className="pt-6 flex flex-col sm:flex-row gap-4 justify-center px-4">
+            <Button variant="secondary" onClick={() => setSuccess(false)} className="flex-1 py-4 rounded-2xl border-white/5 text-text-secondary font-black hover:bg-white/5 transition-all text-xs uppercase tracking-widest">Add Another Entry</Button>
+            <Button variant="primary" onClick={() => navigate('/')} className="flex-1 py-4 rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 hover:scale-[1.02] text-black font-black shadow-2xl shadow-brand-500/20 transition-all text-xs uppercase tracking-widest">Dashboard Overview</Button>
           </div>
         </div>
       </div>
@@ -103,38 +103,41 @@ export default function AddExpense() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-8" ref={formRef}>
-      <header>
-        <h1 className="text-3xl font-bold text-zinc-50 tracking-tight">Expand Ledger</h1>
-        <p className="text-sm text-zinc-400 mt-1 font-medium">Capture your monthly financial snapshots for AI analysis.</p>
+    <div className="max-w-4xl mx-auto space-y-10 relative" ref={formRef}>
+      <div className="absolute inset-0 bg-noise opacity-[0.02] pointer-events-none" />
+      
+      <header className="relative z-10">
+        <h1 className="text-4xl font-black text-text-primary tracking-tighter italic italic">The Ledger.</h1>
+        <p className="text-sm text-text-tertiary mt-2 font-medium tracking-wide italic">Secure synchronization of fiscal outgoings for AI auditing.</p>
       </header>
 
-      <Card className="glass-card border-none bg-zinc-900/40 shadow-2xl rounded-[2.5rem] overflow-hidden">
-        <CardContent className="p-8 sm:p-10">
-          <form onSubmit={handleSubmit} className="space-y-10">
+      <Card className="glass-card border-none bg-black/20 shadow-2xl rounded-[3rem] overflow-hidden relative z-10">
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-500/20 to-transparent" />
+        <CardContent className="p-10 sm:p-14">
+          <form onSubmit={handleSubmit} className="space-y-12">
             {error && (
-              <div className="rounded-2xl bg-rose-500/10 border border-rose-500/20 p-4 text-xs font-bold text-rose-400 uppercase tracking-widest text-center">{error}</div>
+              <div className="rounded-2xl bg-rose-500/10 border border-rose-500/20 p-5 text-[10px] font-black text-rose-400 uppercase tracking-[0.2em] text-center shadow-2xl">{error}</div>
             )}
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-2">
-                <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest px-1">Fiscal Month</label>
-                <div className="relative">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+              <div className="space-y-3">
+                <label className="block text-[10px] font-black text-text-tertiary uppercase tracking-[0.3em] px-2">Fiscal Cycle</label>
+                <div className="relative group">
                    <select
-                    className="flex h-12 w-full rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-2 text-sm text-zinc-100 font-bold focus:outline-none focus:ring-4 focus:ring-brand-500/10 focus:border-brand-500/50 appearance-none transition-all shadow-inner"
+                    className="flex h-14 w-full rounded-2xl border border-white/5 bg-bg-panel/40 px-6 py-2 text-sm text-text-primary font-black focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500/40 appearance-none transition-all shadow-2xl group-hover:border-white/10"
                     value={month}
                     onChange={(e) => setMonth(e.target.value)}
                   >
-                    {MONTHS.map(m => <option key={m} value={m} className="bg-zinc-950 text-zinc-100">{m}</option>)}
+                    {MONTHS.map(m => <option key={m} value={m} className="bg-bg-base text-text-primary">{m}</option>)}
                   </select>
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-500">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                  <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-text-tertiary group-hover:text-brand-400 transition-colors">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" /></svg>
                   </div>
                 </div>
               </div>
 
               <Input
-                label="Total Gross Income / $"
+                label="Gross Liquidity / USD"
                 type="number"
                 min="1"
                 step="any"
@@ -142,41 +145,48 @@ export default function AddExpense() {
                 value={income}
                 onChange={(e) => setIncome(e.target.value)}
                 placeholder="0.00"
-                className="font-bold"
+                className="font-black h-14 rounded-2xl bg-bg-panel/40 border-white/5 focus:border-brand-500/40 focus:ring-brand-500/5"
               />
             </div>
 
             <div>
-              <h4 className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] border-b border-white/5 pb-4 mb-8">Category Allocation Profile</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
+              <div className="flex items-center gap-4 mb-10">
+                 <h4 className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.4em]">Functional Matrix</h4>
+                 <div className="h-px flex-1 bg-white/5" />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
                 {CATEGORIES.map(category => (
                   <Input
                     key={category}
-                    label={`${category} / outgoings`}
+                    label={`${category} Liability`}
                     type="number"
                     min="0"
                     step="any"
                     value={expenses[category]}
                     onChange={(e) => handleExpenseChange(category, e.target.value)}
                     placeholder="0.00"
-                    className="font-bold"
+                    className="font-black h-12 rounded-xl bg-bg-panel/20 border-white/5 focus:border-brand-500/30"
                   />
                 ))}
               </div>
             </div>
 
-            <div className="pt-6 border-t border-white/5 flex justify-end">
-              <Button type="submit" isLoading={isLoading} className="w-full md:w-auto h-12 px-10 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-black uppercase tracking-widest text-xs shadow-lg shadow-brand-500/20 transition-all active:scale-[0.98]">
-                Save Financial Record
+            <div className="pt-8 border-t border-white/5 flex justify-end">
+              <Button type="submit" isLoading={isLoading} className="w-full md:w-auto h-14 px-12 rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 hover:scale-[1.02] text-black font-black uppercase tracking-[0.2em] text-[10px] shadow-2xl shadow-brand-500/20 transition-all active:scale-[0.98]">
+                Commit Record to Neural Net
               </Button>
             </div>
           </form>
         </CardContent>
       </Card>
       
-      <p className="text-center text-[10px] text-zinc-600 font-black uppercase tracking-[0.3em]">
-        Verified Ledger Sync • AES-256 Security
-      </p>
+      <div className="flex items-center justify-center gap-6 opacity-30">
+         <div className="h-px w-12 bg-text-tertiary" />
+         <p className="text-[9px] text-text-tertiary font-black uppercase tracking-[0.5em]">
+            ISO-27001 Certified • Neural Protocol
+         </p>
+         <div className="h-px w-12 bg-text-tertiary" />
+      </div>
     </div>
   );
 }

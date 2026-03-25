@@ -1,65 +1,82 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-50: #ecfdf5;
-  --color-brand-100: #d1fae5;
-  --color-brand-400: #34d399;
-  --color-brand-500: #10b981;
-  --color-brand-600: #059669;
-  --color-brand-900: #064e3b;
-  --color-brand-950: #022c22;
+  --color-brand-50: #fdfaf0;
+  --color-brand-100: #f9f1d4;
+  --color-brand-400: #e5c35c;
+  --color-brand-500: #d4af37;
+  --color-brand-600: #b69119;
+  --color-brand-900: #4a3b0a;
+  --color-brand-950: #2c2306;
 
-  --color-bg-base: #09090b;   /* zinc-950 */
-  --color-bg-panel: #18181b;  /* zinc-900 */
-  --color-bg-elevated: #27272a; /* zinc-800 */
+  --color-bg-base: #0a0a0a;   /* charcoal base */
+  --color-bg-panel: #111111;  /* charcoal panel */
+  --color-bg-elevated: #1a1a1a; /* deep gray */
   
-  --color-text-primary: #fafafa; /* zinc-50 */
-  --color-text-secondary: #a1a1aa; /* zinc-400 */
-  --color-text-tertiary: #52525b; /* zinc-600 */
+  --color-text-primary: #f5f5f5; /* off-white */
+  --color-text-secondary: #a0a0a0; /* medium gray */
+  --color-text-tertiary: #404040; /* dark gray */
   
-  --color-border-subtle: #27272a; /* zinc-800 */
-  --color-border-glow: rgba(16, 185, 129, 0.4); /* brand-500 with opacity */
+  --color-border-subtle: #1f1f1f; /* charcoal border */
+  --color-border-glow: rgba(212, 175, 55, 0.4); /* gold-500 with opacity */
 }
 
-/* Base styles for a premium dark app feel */
+/* Base styles for a premium luxury fintech app */
 @layer base {
   body {
-    @apply bg-bg-base text-text-primary antialiased selection:bg-brand-500 selection:text-white;
-    font-family: 'Inter', sans-serif;
+    @apply bg-bg-base text-text-primary antialiased selection:bg-brand-500 selection:text-black;
+    font-family: 'Inter', system-ui, sans-serif;
+    letter-spacing: -0.01em;
   }
   
-  /* Custom scrollbar for webkit - Dark Variant */
+  /* Custom scrollbar - Luxury Dark Variant */
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
   }
   ::-webkit-scrollbar-track {
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    @apply bg-zinc-700 rounded-full hover:bg-zinc-600 transition-colors;
+    @apply bg-zinc-800 rounded-full hover:bg-brand-500/40 transition-colors;
   }
 }
 
-/* Premium Dark Glassmorphism utilities */
+/* Premium Luxury Glassmorphism utilities */
 @layer utilities {
   .glass {
-    @apply bg-zinc-900/60 backdrop-blur-xl border border-zinc-800/60 shadow-lg shadow-black/20;
+    @apply bg-bg-panel/70 backdrop-blur-2xl border border-white/5 shadow-2xl shadow-black/60;
   }
   
   .glass-card {
-    @apply bg-zinc-900/40 backdrop-blur-lg border border-zinc-800 shadow-xl shadow-black/40 transition-all duration-300;
+    @apply bg-bg-panel/40 backdrop-blur-xl border border-white/5 shadow-2xl transition-all duration-500 ease-out;
   }
   
   .glass-card:hover {
-    @apply border-zinc-700 shadow-brand-500/10 -translate-y-1;
+    @apply border-brand-500/20 shadow-brand-500/5 -translate-y-1;
   }
 
   .text-glow {
-    text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+    text-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
   }
   
   .border-glow {
-    box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.15);
+  }
+
+  .bg-noise {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    opacity: 0.02;
+    pointer-events: none;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  .animate-shimmer {
+    background-size: 200% 100%;
+    animation: shimmer 3s linear infinite;
   }
 }
