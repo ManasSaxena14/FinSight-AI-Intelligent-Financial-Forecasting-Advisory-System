@@ -4,7 +4,7 @@ import { expenseService } from '../api/expenseService';
 import { mlService } from '../api/mlService';
 import { premiumService } from '../api/premiumService';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/Card';
-import { Activity, CreditCard, PiggyBank, Target, Sparkles, TrendingUp } from 'lucide-react';
+import { Activity, CreditCard, PiggyBank, Target, Sparkles, TrendingUp, ChevronRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import GoalTracker from '../components/GoalTracker';
 
@@ -121,14 +121,14 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 relative z-10">
             {[
               { label: 'Gross Revenue', value: stats.totalIncome, icon: Activity, color: 'brand' },
-              { label: 'Total Outgoings', value: stats.totalExpense, icon: CreditCard, color: 'zinc' },
+              { label: 'Total Outgoings', value: stats.totalExpense, icon: CreditCard, color: 'neutral' },
               { label: 'Net Surplus', value: stats.totalIncome - stats.totalExpense, icon: PiggyBank, color: 'brand' },
             ].map((metric, i) => (
               <Card key={i} className="dash-card glass-card border-none group">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className={`p-3 rounded-2xl ${metric.color === 'brand' ? 'bg-brand-500/10 border border-brand-500/20' : 'bg-white/5 border border-white/10'} transition-all duration-500 group-hover:scale-110`}>
-                      <metric.icon className={`h-5 w-5 ${metric.color === 'brand' ? 'text-brand-400' : 'text-text-secondary'}`} />
+                    <div className={`p-3 rounded-2xl ${metric.color === 'brand' ? 'bg-brand-500/10 border border-brand-500/20' : 'bg-white/5 border border-white/10'} transition-all duration-500 group-hover:scale-110 shadow-lg shadow-black/20`}>
+                      <metric.icon className={`h-5 w-5 ${metric.color === 'brand' ? 'text-brand-400' : 'text-text-tertiary'}`} />
                     </div>
                     <TrendingUp className="h-4 w-4 text-brand-500/30" />
                   </div>

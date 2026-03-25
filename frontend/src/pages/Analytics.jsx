@@ -64,15 +64,15 @@ export default function Analytics() {
   }, [isLoading]);
 
   if (isLoading) {
-    return <div className="p-8 text-center text-zinc-500 animate-pulse tracking-wide font-medium">Processing complex ML analytics...</div>;
+    return <div className="p-12 text-center text-text-tertiary animate-pulse tracking-[0.3em] font-black uppercase italic">Processing neural analytics...</div>;
   }
 
   if (data.expenses.length === 0) {
     return (
-      <Card className="analytics-card mt-6 border-zinc-800">
-        <CardContent className="py-16 text-center">
-          <h3 className="text-xl font-bold text-zinc-200">Need More Data</h3>
-          <p className="mt-2 text-sm text-zinc-500">Please add at least one monthly expense record to unlock predictive analytics.</p>
+      <Card className="analytics-card mt-6 border-white/5 bg-black/20 rounded-[2.5rem] shadow-2xl">
+        <CardContent className="py-24 text-center">
+          <h3 className="text-xl font-black text-text-primary tracking-tighter italic uppercase">Initialization Required.</h3>
+          <p className="mt-4 text-[10px] text-text-tertiary uppercase tracking-[0.2em] max-w-xs mx-auto">Upload a fiscal dataset to activate predictive neural modeling.</p>
         </CardContent>
       </Card>
     );
@@ -216,7 +216,7 @@ export default function Analytics() {
                 <Area 
                   type="monotone" 
                   dataKey="Expense" 
-                  stroke="#71717a" 
+                  stroke="#404040" 
                   strokeWidth={2} 
                   fillOpacity={1} 
                   fill="url(#colorExpense)" 

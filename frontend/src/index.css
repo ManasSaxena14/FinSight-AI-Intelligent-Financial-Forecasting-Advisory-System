@@ -38,7 +38,7 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    @apply bg-zinc-800 rounded-full hover:bg-brand-500/40 transition-colors;
+    @apply bg-white/10 rounded-full hover:bg-brand-500/40 transition-colors;
   }
 }
 

@@ -3,10 +3,12 @@ import { useLayoutEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import Sidebar from './Sidebar';
 import Chatbot from './Chatbot';
-import { Bell } from 'lucide-react';
+import { Bell, LogOut } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export default function Layout() {
   const mainRef = useRef(null);
+  const { user, logout } = useAuth();
 
   useLayoutEffect(() => {
     // Elegant fade-up entry animation for the initial app load
@@ -41,14 +43,22 @@ export default function Layout() {
               <span className="absolute top-0 right-0 w-2 h-2 bg-brand-500 rounded-full border-2 border-bg-panel shadow-[0_0_8px_rgba(212,175,55,0.6)]"></span>
             </button>
             
-            <div className="flex items-center gap-4 group cursor-pointer border-l border-white/5 pl-8 py-2">
+            <div className="flex items-center gap-4 group cursor-pointer border-l border-white/5 pl-8 py-2 relative">
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-black text-text-primary tracking-tight">Vip User</p>
-                <p className="text-[10px] text-brand-500 font-bold uppercase tracking-widest">Enterprise</p>
+                <p className="text-sm font-black text-text-primary tracking-tight">{user?.email?.split('@')[0] || 'Member'}</p>
+                <p className="text-[10px] text-brand-500 font-bold uppercase tracking-widest">Enterprise Elite</p>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-bg-elevated to-bg-panel border border-brand-500/20 flex items-center justify-center text-brand-400 font-black shadow-lg group-hover:border-brand-500/50 transition-all duration-500 group-hover:scale-105">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-bg-elevated to-bg-panel border border-brand-500/20 flex items-center justify-center text-brand-400 font-black shadow-lg group-hover:border-brand-500/50 transition-all duration-500 group-hover:scale-105 overflow-hidden">
                 {user?.email?.charAt(0).toUpperCase() || 'U'}
               </div>
+              
+              {/* Optional: Simple Logout Tooltip/Dropdown integration check */}
+              <button 
+                onClick={logout}
+                className="absolute -bottom-10 right-0 bg-bg-panel border border-white/5 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-500/10 hover:text-rose-500 text-text-tertiary flex items-center gap-2 text-[10px] font-black uppercase tracking-widest shadow-2xl"
+              >
+                <LogOut className="w-3 h-3" /> Terminate Session
+              </button>
             </div>
           </div>
         </header>
