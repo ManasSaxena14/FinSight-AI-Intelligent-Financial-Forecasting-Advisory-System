@@ -105,6 +105,15 @@ class GoalResponse(GoalCreate):
     current_savings: float
     progress_percentage: float
     is_on_track: bool
+    days_remaining: Optional[int] = None
+    required_monthly_saving: Optional[float] = None
+
+class GoalContribution(BaseModel):
+    amount: float = Field(..., gt=0)
+
+class GoalDeleteResponse(BaseModel):
+    message: str
+    deleted_id: str
 
 class ChatMessage(BaseModel):
     message: str
@@ -122,3 +131,43 @@ class ScenarioResponse(BaseModel):
     savings_difference: float
     projected_health_score: int
     advice: str
+
+
+# ── Smart Savings & Live Budget Schemas ──────────────────────────────────────
+
+class SmartSavingsTip(BaseModel):
+    category: str
+    tip: str
+    potential_saving: float
+    priority: str  # "high", "medium", "low"
+
+class SmartSavingsResponse(BaseModel):
+    tips: List[SmartSavingsTip]
+    monthly_saving_potential: float
+    annual_saving_potential: float
+    summary: str
+
+class BudgetLiveResponse(BaseModel):
+    total_income: float
+    total_expense: float
+    total_savings: float
+    savings_rate: float
+    health_score: int
+    health_status: str
+    last_updated: str
+    trend: str  # "up", "down", "stable"
+
+
+# ── Notifications Schema ─────────────────────────────────────────────────────
+
+class NotificationItem(BaseModel):
+    id: str
+    type: str          # "alert", "insight", "achievement", "tip"
+    severity: str       # "critical", "warning", "info", "success"
+    title: str
+    message: str
+    timestamp: str
+
+class NotificationsResponse(BaseModel):
+    notifications: List[NotificationItem]
+    unread_count: int

@@ -1,11 +1,12 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, PlusCircle, PieChart, LogOut, Hexagon } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, PieChart, Bot, LogOut, Hexagon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Add Expense', href: '/add-expense', icon: PlusCircle },
   { name: 'Analytics', href: '/analytics', icon: PieChart },
+  { name: 'AI Advisor', href: '/advisor', icon: Bot },
 ];
 
 export default function Sidebar() {

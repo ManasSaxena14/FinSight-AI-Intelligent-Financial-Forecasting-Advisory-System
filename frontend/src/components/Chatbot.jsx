@@ -1,13 +1,22 @@
 import { useState, useRef, useEffect } from 'react';
 import gsap from 'gsap';
-import { MessageSquare, X, Send, Bot, User } from 'lucide-react';
+import { MessageSquare, X, Send, Bot, User, Zap } from 'lucide-react';
 import { premiumService } from '../api/premiumService';
 import { expenseService } from '../api/expenseService';
+
+const QUICK_PROMPTS = [
+  { label: 'Savings Tip', message: 'How can I save more this month?' },
+  { label: 'Budget Rule', message: 'Explain the 50/30/20 budget rule' },
+  { label: 'Invest Advice', message: 'How should I start investing?' },
+  { label: 'Reduce Debt', message: 'Best strategy to eliminate debt?' },
+  { label: 'Emergency Fund', message: 'How large should my emergency fund be?' },
+  { label: 'Credit Score', message: 'How do I improve my credit score?' },
+];
 
 export default function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { role: 'advisor', text: 'Hi! I am your FinSight AI Advisor. How can I help you optimize your finances today?' }
+    { role: 'advisor', text: 'Hi! I am your FinSight AI Advisor. How can I help you optimize your finances today? Try one of the quick prompts below or ask anything.' }
   ]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -21,7 +30,7 @@ export default function Chatbot() {
     if (isOpen && !context) {
       expenseService.getExpenses().then(data => {
         if (data && data.length > 0) {
-          const latest = data[0]; // grab most recent
+          const latest = data[0];
           setContext({
             income: latest.income,
             expenses: latest.expenses,
@@ -54,24 +63,31 @@ export default function Chatbot() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSend = async (e) => {
-    e?.preventDefault();
-    if (!inputText.trim()) return;
-
-    const userMessage = inputText;
+  const sendMessage = async (text) => {
+    if (!text.trim()) return;
     setInputText('');
-    setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
+    setMessages(prev => [...prev, { role: 'user', text }]);
     setIsLoading(true);
-
     try {
-      const response = await premiumService.sendChatMessage(userMessage, context);
+      const response = await premiumService.sendChatMessage(text, context);
       setMessages(prev => [...prev, { role: 'advisor', text: response.reply }]);
     } catch (err) {
-      setMessages(prev => [...prev, { role: 'advisor', text: 'I encountered a connection synchronized issue. Please verify your network and try again.' }]);
+      setMessages(prev => [...prev, { role: 'advisor', text: 'I encountered a connection issue. Please verify your network and try again.' }]);
     } finally {
       setIsLoading(false);
     }
   };
+
+  const handleSend = async (e) => {
+    e?.preventDefault();
+    await sendMessage(inputText);
+  };
+
+  const handleQuickPrompt = (message) => {
+    sendMessage(message);
+  };
+
+  const showQuickPrompts = messages.length <= 1;
 
   return (
     <>
@@ -79,6 +95,7 @@ export default function Chatbot() {
       
       {/* Toggle Button */}
       <button
+        id="chatbot-toggle-btn"
         onClick={() => setIsOpen(!isOpen)}
         className="fixed bottom-8 right-8 p-5 bg-gradient-to-br from-brand-400 to-brand-600 text-black rounded-[2rem] shadow-2xl shadow-brand-500/20 hover:scale-110 active:scale-95 transition-all z-50 flex items-center justify-center border border-white/20 group hover:shadow-[0_0_30px_rgba(212,175,55,0.4)]"
       >
@@ -94,6 +111,7 @@ export default function Chatbot() {
       {/* Chat Window */}
       <div 
         ref={chatRef}
+        id="chatbot-window"
         className="fixed bottom-28 right-8 w-[420px] h-[650px] glass-card border-none rounded-[3.5rem] shadow-2xl flex-col overflow-hidden z-50 flex shadow-black/80 ring-1 ring-white/5 bg-black/60 backdrop-blur-3xl"
         style={{ display: 'none' }}
       >
@@ -106,8 +124,8 @@ export default function Chatbot() {
             <div>
               <h3 className="font-black text-lg tracking-tighter italic">AI Oracle.</h3>
               <div className="flex items-center gap-2 mt-0.5">
-                <span className="w-1.5 h-1.5 bg-brand-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(212,175,55,1)]"></span>
-                <p className="text-[9px] text-text-tertiary font-black uppercase tracking-[0.3em]">Quantum Advisory Active</p>
+                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(16,185,129,1)]"></span>
+                <p className="text-[9px] text-text-tertiary font-black uppercase tracking-[0.3em]">Advisory Active</p>
               </div>
             </div>
           </div>
@@ -117,7 +135,7 @@ export default function Chatbot() {
         </div>
 
         {/* Message List */}
-        <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar bg-black/10">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-black/10">
           {messages.map((msg, idx) => (
             <div key={idx} className={`flex items-start gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
               <div className={`shrink-0 rounded-[1.2rem] p-3 border shadow-2xl transition-transform hover:scale-105 duration-300 ${msg.role === 'user' ? 'bg-bg-panel/60 border-white/5 text-text-tertiary' : 'bg-brand-500/10 border-brand-500/20 text-brand-400'}`}>
@@ -132,6 +150,8 @@ export default function Chatbot() {
               </div>
             </div>
           ))}
+
+          {/* Loading indicator */}
           {isLoading && (
             <div className="flex items-start gap-4">
               <div className="shrink-0 rounded-[1.2rem] p-3 bg-brand-500/10 border border-brand-500/20 text-brand-400 shadow-2xl"><Bot className="w-4 h-4" /></div>
@@ -145,17 +165,40 @@ export default function Chatbot() {
           <div ref={messagesEndRef} />
         </div>
 
+        {/* Quick Prompts — shown only when no conversation yet */}
+        {showQuickPrompts && !isLoading && (
+          <div className="px-6 py-3 border-t border-white/5 bg-bg-panel/20 backdrop-blur-xl">
+            <div className="flex items-center gap-2 mb-3">
+              <Zap className="w-3 h-3 text-brand-500" />
+              <p className="text-[9px] text-text-tertiary font-black uppercase tracking-[0.25em]">Quick Prompts</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {QUICK_PROMPTS.map((qp) => (
+                <button
+                  key={qp.label}
+                  onClick={() => handleQuickPrompt(qp.message)}
+                  className="text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-xl border border-brand-500/20 bg-brand-500/5 text-brand-400 hover:bg-brand-500/15 hover:border-brand-500/40 transition-all active:scale-95"
+                >
+                  {qp.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Input Area */}
-        <form onSubmit={handleSend} className="p-8 bg-bg-panel/40 backdrop-blur-3xl border-t border-white/5 flex gap-4">
+        <form onSubmit={handleSend} className="p-6 bg-bg-panel/40 backdrop-blur-3xl border-t border-white/5 flex gap-4">
           <input
+            id="chatbot-input"
             type="text"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            placeholder="Query the Oracle..."
+            placeholder="Ask the Oracle..."
             className="flex-1 bg-black/20 border border-white/5 rounded-[1.5rem] px-6 py-4 text-sm text-text-primary focus:outline-none focus:border-brand-500/40 focus:ring-4 focus:ring-brand-500/5 transition-all placeholder:text-text-tertiary font-bold shadow-inner"
           />
           <button 
             type="submit" 
+            id="chatbot-send-btn"
             disabled={!inputText.trim() || isLoading}
             className="p-4 bg-gradient-to-br from-brand-400 to-brand-600 text-black rounded-[1.5rem] hover:scale-105 disabled:opacity-20 transition-all active:scale-95 shadow-2xl shadow-brand-500/20 group"
           >

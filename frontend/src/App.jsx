@@ -8,6 +8,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import AddExpense from './pages/AddExpense';
 import Analytics from './pages/Analytics';
+import Advisor from './pages/Advisor';
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/add-expense" element={<AddExpense />} />
               <Route path="/analytics" element={<Analytics />} />
+              <Route path="/advisor" element={<Advisor />} />
             </Route>
           </Route>
 

@@ -3,12 +3,14 @@ import { premiumService } from '../api/premiumService';
 import { Card, CardContent, CardHeader, CardTitle } from './Card';
 import { Button } from './Button';
 import { Input } from './Input';
-import { Target, PlusCircle, CheckCircle2 } from 'lucide-react';
+import { Target, PlusCircle, CheckCircle2, Trash2, DollarSign } from 'lucide-react';
 
 export default function GoalTracker() {
   const [goals, setGoals] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
+  const [activeContribute, setActiveContribute] = useState(null);
+  const [contributeAmount, setContributeAmount] = useState('');
 
   // Form State
   const [newGoal, setNewGoal] = useState({ name: '', target_amount: '', target_date: '' });
@@ -43,6 +45,29 @@ export default function GoalTracker() {
       fetchGoals(); // refresh the list
     } catch (err) {
       console.error("Failed to create goal", err);
+    }
+  };
+
+  const handleDeleteGoal = async (goalId) => {
+    if (!window.confirm("Are you sure you want to delete this objective?")) return;
+    try {
+      await premiumService.deleteGoal(goalId);
+      fetchGoals();
+    } catch (err) {
+      console.error("Failed to delete goal", err);
+    }
+  };
+
+  const handleContribute = async (e, goalId) => {
+    e.preventDefault();
+    if (!contributeAmount || isNaN(contributeAmount)) return;
+    try {
+      await premiumService.contributeToGoal(goalId, parseFloat(contributeAmount));
+      setActiveContribute(null);
+      setContributeAmount('');
+      fetchGoals();
+    } catch (err) {
+      console.error("Failed to contribute to goal", err);
     }
   };
 
@@ -110,21 +135,65 @@ export default function GoalTracker() {
         ) : (
           <div className="space-y-10">
             {goals.map(goal => (
-              <div key={goal.id} className="relative group">
-                <div className="flex justify-between items-end mb-4">
+              <div key={goal.id} className="relative group/goal">
+                <div className="flex justify-between items-start mb-4">
                   <div>
                     <h4 className="font-black text-text-primary text-sm tracking-tight flex items-center gap-2 italic">
                       {goal.name} 
                       {goal.progress_percentage >= 100 && <CheckCircle2 className="w-4 h-4 text-brand-400 drop-shadow-[0_0_10px_rgba(212,175,55,0.8)]" />}
                     </h4>
                     <p className="text-[10px] text-text-tertiary mt-1 font-bold uppercase tracking-widest">Target: {new Date(goal.target_date).toLocaleDateString()}</p>
+                    {goal.days_remaining !== null && (
+                      <p className={`text-[9px] font-bold uppercase tracking-widest mt-1 ${goal.is_on_track ? 'text-text-tertiary' : 'text-rose-500'}`}>
+                        {goal.days_remaining > 0 ? `${goal.days_remaining} Days Remaining` : 'Deadline Passed'} 
+                        {goal.required_monthly_saving > 0 && ` •  Req $${goal.required_monthly_saving}/mo`}
+                      </p>
+                    )}
                   </div>
-                  <div className="text-right">
-                    <span className="text-sm font-black text-text-primary tracking-tight italic">${goal.current_savings.toLocaleString()}</span>
-                    <span className="text-[10px] text-text-tertiary font-bold tracking-widest"> / ${goal.target_amount.toLocaleString()}</span>
+                  <div className="flex gap-4 items-start">
+                    <div className="text-right">
+                      <span className="text-sm font-black text-text-primary tracking-tight italic">${goal.current_savings.toLocaleString()}</span>
+                      <span className="text-[10px] text-text-tertiary font-bold tracking-widest"> / ${goal.target_amount.toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center gap-2 opacity-0 group-hover/goal:opacity-100 transition-opacity">
+                      <button 
+                        onClick={() => setActiveContribute(activeContribute === goal.id ? null : goal.id)}
+                        className="p-1.5 rounded-lg bg-black/20 hover:bg-brand-500/10 hover:text-brand-400 text-text-tertiary border border-white/5 transition-colors"
+                        title="Contribute"
+                      >
+                        <DollarSign className="w-3.5 h-3.5" />
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteGoal(goal.id)}
+                        className="p-1.5 rounded-lg bg-black/20 hover:bg-rose-500/10 hover:text-rose-500 text-text-tertiary border border-white/5 transition-colors"
+                        title="Delete Goal"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
                 
+                {activeContribute === goal.id && (
+                   <form onSubmit={(e) => handleContribute(e, goal.id)} className="mb-4 flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <div className="relative flex-1">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary font-bold">$</span>
+                        <input
+                          type="number"
+                          min="1"
+                          step="0.01"
+                          placeholder="Amount"
+                          value={contributeAmount}
+                          onChange={e => setContributeAmount(e.target.value)}
+                          className="w-full pl-7 pr-3 py-2 bg-black/40 border border-white/10 rounded-lg text-sm focus:outline-none focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/50"
+                          required
+                        />
+                      </div>
+                      <Button type="submit" className="py-2 px-4 h-auto text-[10px] bg-brand-500 hover:bg-brand-400 text-black rounded-lg uppercase tracking-widest font-bold">Add</Button>
+                      <button type="button" onClick={() => setActiveContribute(null)} className="text-[10px] text-text-tertiary uppercase tracking-widest font-bold hover:text-text-secondary px-2">Cancel</button>
+                   </form>
+                )}
+
                 <div className="w-full bg-black/30 rounded-full h-2.5 overflow-hidden shadow-inner border border-white/5 relative">
                   <div 
                     className="h-full rounded-full transition-all duration-1000 bg-gradient-to-r from-brand-600 via-brand-400 to-brand-600 relative overflow-hidden"
