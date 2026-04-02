@@ -10,7 +10,6 @@ import { premiumService } from '../api/premiumService';
 
 const TABS = [
   { id: 'overview',   label: 'Live Overview',    icon: Sparkles,    desc: 'Real-time budget status & AI narrative' },
-  { id: 'goals',      label: 'Goals',            icon: Target,      desc: 'Set and track financial objectives'       },
   { id: 'savings',    label: 'Smart Savings',    icon: Lightbulb,   desc: 'Personalized AI savings recommendations'  },
   { id: 'scenario',   label: 'Stress Test',      icon: Calculator,  desc: 'What-if scenario budget simulation'       },
 ];

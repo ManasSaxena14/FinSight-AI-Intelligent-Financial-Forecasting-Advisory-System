@@ -82,13 +82,13 @@ export default function GoalTracker() {
           <div className="p-3 bg-brand-500/10 rounded-2xl border border-brand-500/20">
             <Target className="w-5 h-5 text-brand-400 drop-shadow-[0_0_8px_rgba(212,175,55,0.6)]" />
           </div>
-          <CardTitle className="text-xs font-black tracking-[0.2em] text-text-primary uppercase italic">Objectives Matrix</CardTitle>
+          <CardTitle className="text-xs font-black tracking-[0.2em] text-text-primary uppercase italic">Financial Goals</CardTitle>
         </div>
         <button 
           onClick={() => setIsAdding(!isAdding)} 
           className="text-brand-400 hover:text-brand-300 transition-all text-[10px] font-black uppercase tracking-[0.1em] flex items-center gap-2 group"
         >
-          {isAdding ? "Abort" : <><PlusCircle className="w-4 h-4 group-hover:scale-110 transition-transform"/> New Objective</>}
+          {isAdding ? "Cancel" : <><PlusCircle className="w-4 h-4 group-hover:scale-110 transition-transform"/> New Goal</>}
         </button>
       </CardHeader>
       
@@ -97,8 +97,8 @@ export default function GoalTracker() {
           <form onSubmit={handleCreateGoal} className="mb-10 p-8 bg-black/40 rounded-3xl space-y-6 border border-white/5 shadow-2xl relative overflow-hidden group">
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-500/20 to-transparent" />
             <Input 
-              label="Objective Identification" 
-              placeholder="e.g. Asset Accumulation" 
+              label="Goal Name" 
+              placeholder="e.g. New Car, Dream House" 
               value={newGoal.name} 
               onChange={(e) => setNewGoal({ ...newGoal, name: e.target.value })} 
               required 
@@ -106,7 +106,7 @@ export default function GoalTracker() {
             />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <Input 
-                label="Target Liquidity (₹)" 
+                label="Target Amount (₹)" 
                 type="number" 
                 min="1" 
                 value={newGoal.target_amount} 
@@ -115,7 +115,7 @@ export default function GoalTracker() {
                 className="bg-black/20"
               />
               <Input 
-                label="Deadline" 
+                label="Target Date" 
                 type="date" 
                 value={newGoal.target_date} 
                 onChange={(e) => setNewGoal({ ...newGoal, target_date: e.target.value })} 
@@ -123,14 +123,14 @@ export default function GoalTracker() {
                 className="bg-black/20"
               />
             </div>
-            <Button type="submit" className="w-full bg-gradient-to-br from-brand-400 to-brand-600 text-black shadow-2xl shadow-brand-500/20 h-12 rounded-xl uppercase font-black tracking-widest text-[10px]">Secure Objective</Button>
+            <Button type="submit" className="w-full bg-gradient-to-br from-brand-400 to-brand-600 text-black shadow-2xl shadow-brand-500/20 h-12 rounded-xl uppercase font-black tracking-widest text-[10px]">Create Goal</Button>
           </form>
         )}
 
         {goals.length === 0 && !isAdding ? (
           <div className="text-center py-12 text-text-tertiary">
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-2">No active objectives detected.</p>
-            <p className="text-[9px] font-medium tracking-widest opacity-50 uppercase">Initialize a new financial target to begin auditing.</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-2">No active goals yet.</p>
+            <p className="text-[9px] font-medium tracking-widest opacity-50 uppercase">Set your first financial goal to start tracking progress.</p>
           </div>
         ) : (
           <div className="space-y-10">

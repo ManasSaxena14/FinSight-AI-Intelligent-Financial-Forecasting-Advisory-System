@@ -1,11 +1,12 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, PlusCircle, PieChart, Bot, LogOut, Hexagon, Crown } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, PieChart, Bot, LogOut, Hexagon, Crown, Target } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Add Expense', href: '/add-expense', icon: PlusCircle },
   { name: 'Analytics', href: '/analytics', icon: PieChart },
+  { name: 'Financial Goals', href: '/goals', icon: Target },
   { name: 'AI Advisor', href: '/advisor', icon: Bot },
   { name: 'Membership', href: '/plans', icon: Crown },
 ];

@@ -11,6 +11,7 @@ import Analytics from './pages/Analytics';
 import Advisor from './pages/Advisor';
 import Plans from './pages/Plans';
 import Profile from './pages/Profile';
+import Goals from './pages/Goals';
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
               <Route path="/advisor" element={<Advisor />} />
               <Route path="/plans" element={<Plans />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/goals" element={<Goals />} />
             </Route>
           </Route>
 
