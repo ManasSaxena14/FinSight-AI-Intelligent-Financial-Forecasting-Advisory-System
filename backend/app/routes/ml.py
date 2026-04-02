@@ -5,7 +5,7 @@ from app.models.schemas import (  # type: ignore
     ForecastRequest,
     ForecastResponse,
     HealthScoreResponse,
-    RecommendationResponse
+    RecommendationsResponse
 )
 from app.ml.advanced_ml import (  # type: ignore
     multi_month_forecasting,
@@ -80,7 +80,7 @@ def get_health_score(req: PredictionRequest, current_user: dict = Depends(get_cu
     )
 
 # ── 4. Recommendations & Alerts ─────────────────────────────────────────────
-@router.post("/recommendations", response_model=RecommendationResponse)
+@router.post("/recommendations", response_model=RecommendationsResponse)
 def get_recommendations_and_alerts(req: PredictionRequest, current_user: dict = Depends(get_current_user)):
     """
     Provide smart financial recommendations and generate alerts based on 

@@ -61,7 +61,7 @@ def generate_alerts(income: float, current_expenses: Dict[str, float], previous_
             prev_val = previous_expenses.get(cat, 0)
             if prev_val > 0:
                 increase_pct = ((curr_val - prev_val) / prev_val) * 100
-                if increase_pct >= 50.0 and curr_val > 500: # only flag meaningful nominal amounts > $500
+                if increase_pct >= 50.0 and curr_val > 500: # only flag meaningful nominal amounts > ₹500
                     alerts.append(f"ALERT: Sudden spike in {cat} spending! It increased by {increase_pct:.1f}% compared to last month.")
 
     return alerts

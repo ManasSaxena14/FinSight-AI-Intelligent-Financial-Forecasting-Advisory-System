@@ -134,7 +134,7 @@ export default function Dashboard() {
                   </div>
                   <dl>
                     <dt className="text-[10px] font-black text-text-tertiary uppercase tracking-widest pl-1">{metric.label}</dt>
-                    <dd className="text-3xl font-black text-text-primary tracking-tighter mt-1">${metric.value.toLocaleString()}</dd>
+                    <dd className="text-3xl font-black text-text-primary tracking-tighter mt-1">₹{metric.value.toLocaleString()}</dd>
                   </dl>
                 </CardContent>
               </Card>
@@ -222,13 +222,13 @@ export default function Dashboard() {
                             <div>
                               <p className="text-sm font-black text-text-primary tracking-tight">{record.month} Snapshot</p>
                               <p className="text-[10px] text-text-tertiary font-bold uppercase tracking-widest mt-1">
-                                Net Surplus: <span className="text-brand-500 font-black">${record.savings.toLocaleString()}</span>
+                                Net Surplus: <span className="text-brand-500 font-black">₹{record.savings.toLocaleString()}</span>
                               </p>
                             </div>
                           </div>
                           <div className="flex items-center gap-6">
                             <div className="text-right hidden sm:block">
-                               <p className="text-xs font-black text-text-primary tracking-tighter">${record.total_expense.toLocaleString()}</p>
+                               <p className="text-xs font-black text-text-primary tracking-tighter">₹{record.total_expense.toLocaleString()}</p>
                                <p className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">Utilized</p>
                             </div>
                             <div className="h-8 w-8 rounded-full border border-white/10 flex items-center justify-center group-hover:border-brand-500/40 transition-all cursor-pointer">

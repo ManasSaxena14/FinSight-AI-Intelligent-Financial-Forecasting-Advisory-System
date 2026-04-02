@@ -15,7 +15,7 @@
   
   --color-text-primary: #f5f5f5; /* off-white */
   --color-text-secondary: #a0a0a0; /* medium gray */
-  --color-text-tertiary: #404040; /* dark gray */
+  --color-text-tertiary: #A1A1AA; /* significantly lighter gray for contrast */
   
   --color-border-subtle: #1f1f1f; /* charcoal border */
   --color-border-glow: rgba(212, 175, 55, 0.4); /* gold-500 with opacity */
@@ -25,8 +25,13 @@
 @layer base {
   body {
     @apply bg-bg-base text-text-primary antialiased selection:bg-brand-500 selection:text-black;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Outfit', system-ui, sans-serif;
     letter-spacing: -0.01em;
+  }
+  
+  .italic {
+    font-family: 'Cinzel', serif;
+    letter-spacing: 0.05em;
   }
   
   /* Custom scrollbar - Luxury Dark Variant */

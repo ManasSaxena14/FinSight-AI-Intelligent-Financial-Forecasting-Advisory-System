@@ -66,7 +66,7 @@ export default function ScenarioAnalyzer({ currentIncome, currentExpenses }) {
             <div>
               <label className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.4em] block mb-4 px-2">Liquidity Injection / Income</label>
               <div className="relative group">
-                <span className="absolute left-6 top-1/2 -translate-y-1/2 text-brand-500 font-black italic">$</span>
+                <span className="absolute left-6 top-1/2 -translate-y-1/2 text-brand-500 font-black italic">₹</span>
                 <input 
                   type="number" 
                   value={income} 

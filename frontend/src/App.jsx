@@ -9,6 +9,7 @@ import Dashboard from './pages/Dashboard';
 import AddExpense from './pages/AddExpense';
 import Analytics from './pages/Analytics';
 import Advisor from './pages/Advisor';
+import Plans from './pages/Plans';
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
               <Route path="/add-expense" element={<AddExpense />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/advisor" element={<Advisor />} />
+              <Route path="/plans" element={<Plans />} />
             </Route>
           </Route>
 

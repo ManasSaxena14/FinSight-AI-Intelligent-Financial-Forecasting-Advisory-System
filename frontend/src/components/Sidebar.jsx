@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, PlusCircle, PieChart, Bot, LogOut, Hexagon } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, PieChart, Bot, LogOut, Hexagon, Crown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const navigation = [
@@ -7,6 +7,7 @@ const navigation = [
   { name: 'Add Expense', href: '/add-expense', icon: PlusCircle },
   { name: 'Analytics', href: '/analytics', icon: PieChart },
   { name: 'AI Advisor', href: '/advisor', icon: Bot },
+  { name: 'Membership', href: '/plans', icon: Crown },
 ];
 
 export default function Sidebar() {
@@ -23,13 +24,9 @@ export default function Sidebar() {
       <div className="absolute inset-0 bg-noise" />
       
       {/* Brand logo area */}
-      <div className="flex h-20 items-center px-6 border-b border-white/5 relative z-10">
-        <div className="flex items-center gap-3 font-bold text-xl tracking-tighter">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-black shadow-lg shadow-brand-500/10 border border-white/10 group overflow-hidden relative">
-             <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-            <Hexagon className="h-5 w-5 fill-black/20 relative z-10" />
-          </div>
-          <span className="bg-clip-text text-transparent bg-gradient-to-r from-text-primary via-brand-100 to-brand-500 tracking-tight">FinSight</span>
+      <div className="flex h-24 items-center px-6 border-b border-white/5 relative z-10 w-full mb-2">
+        <div className="flex items-center w-full justify-center">
+          <img src="/LOGO_WITH_TAGLINE.png" alt="FinSight AI Logo" className="h-24 w-auto object-contain drop-shadow-[0_0_15px_rgba(212,175,55,0.2)] ml-[-1rem] cursor-pointer hover:scale-[1.02] transition-transform duration-300" onClick={() => navigate('/')} />
         </div>
       </div>
 

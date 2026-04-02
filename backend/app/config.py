@@ -28,9 +28,11 @@ class Settings(BaseSettings):
     # ── General ──────────────────────────────────────────────────────────
     APP_NAME: str = "FinSight AI"
     DEBUG: bool = True
+    GROQ_API_KEY: str | None = None
 
     class Config:
         env_file = _ENV_FILE
+        extra = "ignore"
 
 
 # Single settings instance used across the app

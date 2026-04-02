@@ -55,8 +55,8 @@ export default function Register() {
 
       <div className="w-full max-w-md space-y-12 relative z-10" ref={formRef}>
         <div className="text-center">
-          <div className="mx-auto h-20 w-20 rounded-[2rem] bg-gradient-to-br from-brand-400 to-brand-700 flex items-center justify-center text-black mb-10 shadow-3xl shadow-brand-500/20 ring-1 ring-white/10 group hover:scale-105 transition-transform duration-500">
-            <span className="text-3xl font-black tracking-tighter italic">FS</span>
+          <div className="mx-auto flex justify-center mb-10">
+            <img src="/MAIN_LOGO.png" alt="FinSight AI Logo" className="h-40 w-auto object-contain drop-shadow-[0_0_20px_rgba(212,175,55,0.3)] hover:scale-105 transition-transform duration-500" />
           </div>
           <h2 className="text-5xl font-black tracking-tighter text-text-primary mb-3 italic">
             Genesis.

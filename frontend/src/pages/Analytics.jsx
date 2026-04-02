@@ -195,7 +195,7 @@ export default function Analytics() {
                   fontSize={10} 
                   tickLine={false} 
                   axisLine={false} 
-                  tickFormatter={(value) => `$${value}`} 
+                  tickFormatter={(value) => `₹${value}`} 
                   fontWeight="bold"
                 />
                 <Tooltip 

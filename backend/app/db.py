@@ -53,3 +53,8 @@ def get_expenses_collection():
 def get_users_collection():
     return db_manager.get_collection("users")
 
+def get_database():
+    if DatabaseManager.db is None:
+        DatabaseManager.connect_to_database()
+    return DatabaseManager.db
+

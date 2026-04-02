@@ -20,8 +20,10 @@ from app.services.financial_logic import calculate_health_score  # type: ignore
 
 router = APIRouter(prefix="/api/premium", tags=["Premium Features"])
 
+from app.config import settings
+
 # Initialize Groq API if key is present
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GROQ_API_KEY = settings.GROQ_API_KEY
 groq_client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 
 
@@ -130,7 +132,7 @@ async def contribute_to_goal(goal_id: str, contribution: GoalContribution, curre
     
     await db["goals"].update_one(
         {"_id": goal_id},
-        {"$set": {"current_savings": new_savings}}
+        {"₹set": {"current_savings": new_savings}}
     )
     
     target_amount = float(goal_doc["target_amount"])
@@ -165,23 +167,23 @@ async def delete_goal(goal_id: str, current_user: dict = Depends(get_current_use
 
 RULE_BASED_REPLIES = {
     "save": "To maximize savings, apply the 50/30/20 rule: allocate 50% for necessities, 30% for wants, and 20% for savings. Automate a fixed savings transfer each payday so it happens before you can spend it.",
-    "invest": "Before investing, build a 3-6 month emergency fund. Once secured, explore low-cost index funds via a brokerage account. Even $50/month compounded over 30 years grows significantly.",
+    "invest": "Before investing, build a 3-6 month emergency fund. Once secured, explore low-cost index funds via a brokerage account. Even ₹50/month compounded over 30 years grows significantly.",
     "budget": "A zero-based budget works well — assign every dollar a purpose. List income at the top, subtract fixed expenses (rent, bills), then variable ones (food, entertainment) until you reach zero leftover.",
     "debt": "Attack debt using the Avalanche method (highest interest first) to save the most money, or the Snowball method (smallest balance first) for quick psychological wins.",
     "emergency": "Your emergency fund should cover 3-6 months of essential expenses. Keep it in a high-yield savings account for both accessibility and modest growth.",
     "rent": "Housing should stay below 30% of gross monthly income. If rent exceeds this, consider roommates, negotiating at lease renewal, or exploring nearby lower-cost areas.",
-    "food": "Reduce food expenses by meal-prepping on weekends and buying in bulk. A $15/day food habit costs $450/month — meal prep can cut this by 50%.",
+    "food": "Reduce food expenses by meal-prepping on weekends and buying in bulk. A ₹15/day food habit costs ₹450/month — meal prep can cut this by 50%.",
     "goal": "Set SMART financial goals: Specific, Measurable, Achievable, Relevant, and Time-bound. Break big goals into monthly targets.",
     "tax": "Maximize pre-tax retirement contributions (401k/IRA) to reduce taxable income. Every dollar contributed pre-tax saves money at your marginal rate.",
     "credit": "Your credit score is affected by: payment history (35%), utilization (30%), length of history (15%), new credit (10%), and credit mix (10%). Keep utilization below 30%.",
     "expense": "Tracking expenses is the first step to financial clarity. Categorize every spend and identify your top 3 highest categories — those are your highest-impact optimization targets.",
-    "spend": "To reduce spending, list every recurring expense and cancel anything unused. Then apply a 48-hour rule on all non-essential purchases above $50.",
+    "spend": "To reduce spending, list every recurring expense and cancel anything unused. Then apply a 48-hour rule on all non-essential purchases above ₹50.",
     "income": "To boost income, consider skill-based freelancing, monetizing a hobby, or negotiating your salary annually. A 10% income increase has a bigger long-term impact than cutting expenses.",
     "insurance": "Ensure you have health, auto, and renter's/homeowner's insurance. The right coverage prevents a single event from wiping out your entire savings.",
     "retire": "Start retirement planning early. The power of compound interest means starting at 25 vs 35 can nearly double your retirement fund, even with the same monthly contribution.",
     "inflation": "Inflation erodes purchasing power at ~3% annually. Ensure your savings earn above the inflation rate through investments, TIPS, or I-bonds to maintain real value.",
-    "subscription": "Audit subscriptions monthly — the average person wastes $30-50/month on forgotten services. Cancel what you haven't used in the last 30 days.",
-    "side hustle": "A side income stream of just $500/month ($6,000/year) invested at 8% average return becomes over $87,000 in 10 years through compounding.",
+    "subscription": "Audit subscriptions monthly — the average person wastes ₹30-50/month on forgotten services. Cancel what you haven't used in the last 30 days.",
+    "side hustle": "A side income stream of just ₹500/month (₹6,000/year) invested at 8% average return becomes over ₹87,000 in 10 years through compounding.",
 }
 
 @router.post("/chat", response_model=ChatResponse)
@@ -197,7 +199,7 @@ async def chat_with_advisor(req: ChatMessage, current_user: dict = Depends(get_c
             savings = req.context.get("savings", 0)
             savings_rate = (savings / income * 100) if income > 0 else 0
             if savings_rate < 0:
-                context_prefix = f"Based on your current data (overspending by ${abs(savings):,.0f}): "
+                context_prefix = f"Based on your current data (overspending by ₹{abs(savings):,.0f}): "
             elif savings_rate < 10:
                 context_prefix = f"With your {savings_rate:.1f}% savings rate: "
             elif savings_rate >= 20:
@@ -216,7 +218,7 @@ async def chat_with_advisor(req: ChatMessage, current_user: dict = Depends(get_c
         
         context_str = "No specific financial context provided."
         if req.context:
-            context_str = f"User's latest income: ${req.context.get('income', 0)}. Expenses breakdown: {req.context.get('expenses', {})}. Total Savings: ${req.context.get('savings', 0)}."
+            context_str = f"User's latest income: ₹{req.context.get('income', 0)}. Expenses breakdown: {req.context.get('expenses', {})}. Total Savings: ₹{req.context.get('savings', 0)}."
             
         system_prompt = f"You are a highly professional, concise, and helpful AI Financial Advisor for the application 'FinSight AI'. You give factual, practical financial advice. Do NOT give boilerplate disclaimers constantly, just act like a smart embedded tool. Here is the user's current context: {context_str}"
         
@@ -231,7 +233,7 @@ async def chat_with_advisor(req: ChatMessage, current_user: dict = Depends(get_c
                     "content": req.message
                 }
             ],
-            model="llama3-8b-8192",
+            model="llama-3.1-8b-instant",
             temperature=0.5,
             max_tokens=1024
         )
@@ -283,9 +285,9 @@ async def analyze_scenario(req: ScenarioRequest, current_user: dict = Depends(ge
         advice_parts.append("📊 Your proposed savings rate is below 10%. Try reducing your top spending category by 15-20% to increase your financial buffer.")
     
     if savings_difference > 0:
-        advice_parts.append(f"📈 This scenario saves ${savings_difference:,.0f} more than your current budget — a positive trajectory.")
+        advice_parts.append(f"📈 This scenario saves ₹{savings_difference:,.0f} more than your current budget — a positive trajectory.")
     elif savings_difference < 0:
-        advice_parts.append(f"📉 This scenario saves ${abs(savings_difference):,.0f} less than your current budget. Re-evaluate the tradeoffs.")
+        advice_parts.append(f"📉 This scenario saves ₹{abs(savings_difference):,.0f} less than your current budget. Re-evaluate the tradeoffs.")
     
     # Category-level insights
     high_cats = sorted(req.proposed_expenses.items(), key=lambda x: x[1], reverse=True)[:2]
@@ -329,24 +331,24 @@ def _generate_rule_based_summary(context: dict) -> str:
     elif savings_rate >= 0:
         parts.append(f"Your {savings_rate:.1f}% savings rate this month indicates tight margins. While you stayed in the positive, building a larger financial buffer should be a priority.")
     else:
-        parts.append(f"Critical: You overspent by ${abs(savings):,.0f} this month, resulting in a negative {savings_rate:.1f}% savings rate. Immediate cost reduction is recommended.")
+        parts.append(f"Critical: You overspent by ₹{abs(savings):,.0f} this month, resulting in a negative {savings_rate:.1f}% savings rate. Immediate cost reduction is recommended.")
     
     # Category insight
     if top_cat[0] != "N/A":
-        parts.append(f"Your dominant expense category was {top_cat[0]} at ${top_cat[1]:,.0f} ({top_cat_pct:.0f}% of total spend).")
+        parts.append(f"Your dominant expense category was {top_cat[0]} at ₹{top_cat[1]:,.0f} ({top_cat_pct:.0f}% of total spend).")
         
         # Second category comparison
         if len(sorted_cats) >= 2:
             runner = sorted_cats[1]
             gap = top_cat[1] - runner[1]
             if gap > 500:
-                parts.append(f"This is ${gap:,.0f} above {runner[0]}, your second-largest category — a significant concentration worth reviewing.")
+                parts.append(f"This is ₹{gap:,.0f} above {runner[0]}, your second-largest category — a significant concentration worth reviewing.")
     
     # Actionable advice
     if savings_rate < 10:
         parts.append("Gold Insight: Automating a fixed 15% income transfer to savings on payday, before discretionary spending begins, could transform your financial trajectory within 3 months.")
     elif savings_rate < 20:
-        parts.append("Gold Insight: Consider redirecting just 5% more of income into an investment vehicle — at historical market returns, this could yield an additional $12,000+ over 5 years.")
+        parts.append("Gold Insight: Consider redirecting just 5% more of income into an investment vehicle — at historical market returns, this could yield an additional ₹12,000+ over 5 years.")
     else:
         parts.append("Gold Insight: With your strong savings foundation, explore diversifying into index funds or increasing retirement contributions to maximize compound growth.")
     
@@ -370,9 +372,9 @@ async def generate_monthly_summary(req: ChatMessage, current_user: dict = Depend
         context_str = "No data available."
         if req.context:
             context_str = (
-                f"Income: ${req.context.get('income', 0)}. "
+                f"Income: ₹{req.context.get('income', 0)}. "
                 f"Expenses: {req.context.get('expenses', {})}. "
-                f"Total Savings this month: ${req.context.get('savings', 0)}."
+                f"Total Savings this month: ₹{req.context.get('savings', 0)}."
             )
             
         prompt = (
@@ -384,7 +386,7 @@ async def generate_monthly_summary(req: ChatMessage, current_user: dict = Depend
         
         chat_completion = client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
-            model="llama3-8b-8192",
+            model="llama-3.1-8b-instant",
             temperature=0.7,
             max_tokens=256
         )
@@ -474,7 +476,7 @@ async def get_smart_savings(current_user: dict = Depends(get_current_user)):
         deficit = (income * 0.20) - savings
         tips.append(SmartSavingsTip(
             category="Savings Rate",
-            tip=f"You are saving {savings_rate:.1f}% of income. The ideal target is 20%. Automate a transfer of ${deficit:,.0f}/month to a dedicated savings account on payday before you can spend it.",
+            tip=f"You are saving {savings_rate:.1f}% of income. The ideal target is 20%. Automate a transfer of ₹{deficit:,.0f}/month to a dedicated savings account on payday before you can spend it.",
             potential_saving=round(max(0, deficit), 2),
             priority="high" if savings_rate < 10 else "medium"
         ))
@@ -494,7 +496,7 @@ async def get_smart_savings(current_user: dict = Depends(get_current_user)):
     if savings_rate >= 20:
         summary = f"Excellent discipline! You are saving {savings_rate:.1f}% of income. Focus on growing these savings through investments."
     elif savings_rate >= 10:
-        summary = f"You are saving {savings_rate:.1f}% of income. These {len(tips)} optimizations could unlock an additional ${total_potential:,.0f}/month."
+        summary = f"You are saving {savings_rate:.1f}% of income. These {len(tips)} optimizations could unlock an additional ₹{total_potential:,.0f}/month."
     else:
         summary = f"Your savings rate is {savings_rate:.1f}%. Implementing these {len(tips)} strategies could significantly improve your financial position."
     
@@ -598,7 +600,7 @@ async def get_notifications(current_user: dict = Depends(get_current_user)):
     if savings < 0:
         notifications.append(_make(
             "alert", "critical", "Overspending Detected",
-            f"You spent ${abs(savings):,.0f} more than your income this month. Immediate action recommended."
+            f"You spent ₹{abs(savings):,.0f} more than your income this month. Immediate action recommended."
         ))
     
     # 2. Low savings rate warning
@@ -619,7 +621,7 @@ async def get_notifications(current_user: dict = Depends(get_current_user)):
                 if pct_change >= 40 and float(curr_val) > 300:
                     notifications.append(_make(
                         "alert", "warning", f"{cat} Spending Spike",
-                        f"Your {cat} spending jumped {pct_change:.0f}% vs last month (${prev_val:,.0f} → ${float(curr_val):,.0f})."
+                        f"Your {cat} spending jumped {pct_change:.0f}% vs last month (₹{prev_val:,.0f} → ₹{float(curr_val):,.0f})."
                     ))
                 elif pct_change <= -30 and prev_val > 300:
                     notifications.append(_make(
@@ -670,7 +672,7 @@ async def get_notifications(current_user: dict = Depends(get_current_user)):
     if len(notifications) == 0:
         notifications.append(_make(
             "tip", "info", "Financial Health Tip",
-            "Consider setting up an automatic monthly investment — even $100/month into an index fund grows significantly over time."
+            "Consider setting up an automatic monthly investment — even ₹100/month into an index fund grows significantly over time."
         ))
     
     return NotificationsResponse(

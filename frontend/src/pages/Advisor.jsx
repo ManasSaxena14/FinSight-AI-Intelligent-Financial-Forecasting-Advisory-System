@@ -145,9 +145,9 @@ export default function Advisor() {
               <div className="advisor-card grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {[
                   { label: 'Latest Month',   value: latestRecord.month,                                   unit: '' },
-                  { label: 'Gross Income',   value: `$${latestRecord.income.toLocaleString()}`,           unit: '' },
-                  { label: 'Total Spent',    value: `$${latestRecord.total_expense.toLocaleString()}`,    unit: '' },
-                  { label: 'Net Surplus',    value: `$${latestRecord.savings.toLocaleString()}`,          unit: '' },
+                  { label: 'Gross Income',   value: `₹${latestRecord.income.toLocaleString()}`,           unit: '' },
+                  { label: 'Total Spent',    value: `₹${latestRecord.total_expense.toLocaleString()}`,    unit: '' },
+                  { label: 'Net Surplus',    value: `₹${latestRecord.savings.toLocaleString()}`,          unit: '' },
                 ].map(stat => (
                   <div key={stat.label} className="bg-black/20 border border-white/5 rounded-2xl p-5 hover:border-brand-500/20 transition-colors">
                     <p className="text-[9px] text-text-tertiary font-black uppercase tracking-widest mb-2">{stat.label}</p>

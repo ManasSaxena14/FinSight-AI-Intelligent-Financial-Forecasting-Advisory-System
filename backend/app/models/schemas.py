@@ -89,7 +89,8 @@ class HealthScoreResponse(BaseModel):
 
 class RecommendationsResponse(BaseModel):
     recommendations: List[str]
-    alerts: List[str]
+    alerts: Optional[List[str]] = None
+    anomalies: Optional[List[dict]] = None
 
 
 # ── Premium Feature Schemas ──────────────────────────────────────────────────

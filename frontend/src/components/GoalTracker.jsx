@@ -106,7 +106,7 @@ export default function GoalTracker() {
             />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <Input 
-                label="Target Liquidity ($)" 
+                label="Target Liquidity (₹)" 
                 type="number" 
                 min="1" 
                 value={newGoal.target_amount} 
@@ -146,7 +146,7 @@ export default function GoalTracker() {
                     {goal.days_remaining !== null && (
                       <p className={`text-[9px] font-bold uppercase tracking-widest mt-1 ${goal.is_on_track ? 'text-text-tertiary' : 'text-rose-500'}`}>
                         {goal.days_remaining > 0 ? `${goal.days_remaining} Days Remaining` : 'Deadline Passed'} 
-                        {goal.required_monthly_saving > 0 && ` •  Req $${goal.required_monthly_saving}/mo`}
+                        {goal.required_monthly_saving > 0 && ` •  Req ₹${goal.required_monthly_saving}/mo`}
                       </p>
                     )}
                   </div>
@@ -177,7 +177,7 @@ export default function GoalTracker() {
                 {activeContribute === goal.id && (
                    <form onSubmit={(e) => handleContribute(e, goal.id)} className="mb-4 flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
                       <div className="relative flex-1">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary font-bold">$</span>
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary font-bold">₹</span>
                         <input
                           type="number"
                           min="1"

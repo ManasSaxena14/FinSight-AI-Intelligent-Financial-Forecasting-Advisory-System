@@ -137,7 +137,7 @@ export default function AddExpense() {
               </div>
 
               <Input
-                label="Gross Liquidity / USD"
+                label="Gross Liquidity / INR"
                 type="number"
                 min="1"
                 step="any"
