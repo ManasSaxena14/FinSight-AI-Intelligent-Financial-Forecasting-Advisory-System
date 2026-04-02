@@ -8,35 +8,65 @@ health, providing actionable recommendations, and generating alerts.
 from typing import Dict, List, Optional
 from app.ml.advanced_ml import category_wise_prediction, anomaly_detection
 
-def calculate_health_score(income: float, total_expense: float) -> dict:
+def calculate_health_score(income: float, total_expense: float, expenses: Dict[str, float] = None) -> dict:
     """
-    Calculate Financial Health Score (0-100) based on the savings ratio.
+    Calculate Financial Health Score (0-100) using a non-linear, nuanced model.
 
     Strategy:
-    - >= 20% savings = Excellent (80-100 score)
-    - >= 10% savings = Good (60-79 score)
-    - >= 0% savings  = Fair (40-59 score)
-    - < 0% savings   = Needs Improvement (0-39 score)
+    - Base score built progressively from savings rate.
+    - Category-level penalties applied if high dependency exists (e.g., housing burden).
     """
     savings = income - total_expense
     savings_rate = (savings / income) * 100 if income > 0 else 0
 
-    if savings_rate >= 20:
-        score = min(100, int(80 + (savings_rate - 20)))
-        status = "Excellent"
-    elif savings_rate >= 10:
-        score = int(60 + (savings_rate - 10) * 2)
-        status = "Good"
-    elif savings_rate >= 0:
-        score = int(40 + (savings_rate * 2))
-        status = "Fair"
+    # Base Score from Savings Rate (Non-linear)
+    if savings_rate < 0:
+        base_score = max(0, 30 + savings_rate)
+    elif savings_rate < 10:
+        base_score = 40 + savings_rate * 2  # 40 to 60
+    elif savings_rate < 20:
+        base_score = 60 + (savings_rate - 10) * 1.5  # 60 to 75
+    elif savings_rate < 30:
+        base_score = 75 + (savings_rate - 20) * 1  # 75 to 85
+    elif savings_rate < 50:
+        base_score = 85 + (savings_rate - 30) * 0.5  # 85 to 95
     else:
-        # Negative savings
-        score = max(0, int(39 + savings_rate))
-        status = "Needs Improvement"
+        base_score = min(100, 95 + (savings_rate - 50) * 0.2)
+
+    # Category Penalty Factor
+    penalty = 0
+    if expenses and total_expense > 0:
+        highest_expense = max(expenses.values())
+        highest_ratio = (highest_expense / income) * 100 if income > 0 else 0
+        
+        # Penalize if single category exceeds 40% of income
+        if highest_ratio > 40:
+            penalty += 10
+        elif highest_ratio > 30:
+            penalty += 5
+            
+        # Diversity check: if single category dominates expenses
+        if highest_expense / total_expense > 0.7:
+            penalty += 5
+
+    final_score = int(round(max(0, min(100, base_score - penalty))))
+
+    # Dynamic status
+    if final_score < 40:
+        status = "Requires Attention"
+    elif final_score < 60:
+        status = "Fair"
+    elif final_score < 75:
+        status = "Good"
+    elif final_score < 85:
+        status = "Very Good"
+    elif final_score < 95:
+        status = "Excellent"
+    else:
+        status = "Elite"
 
     return {
-        "score": score,
+        "score": final_score,
         "status": status,
         "savings_rate_pct": round(savings_rate, 1)
     }

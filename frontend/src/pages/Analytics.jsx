@@ -1,53 +1,135 @@
 import { useState, useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import {
-  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area
+  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  ResponsiveContainer, AreaChart, Area
 } from 'recharts';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/Card';
-import { AlertCircle, TrendingUp, TrendingDown, Lightbulb } from 'lucide-react';
+import {
+  Activity, CreditCard, PiggyBank, TrendingUp, TrendingDown,
+  Brain, HeartPulse, Coins, BarChart3, PieChart as PieIcon,
+  LineChart as LineIcon, Sparkles
+} from 'lucide-react';
+import { Card, CardContent } from '../components/Card';
+import SummaryCard from '../components/SummaryCard';
+import ChartCard from '../components/ChartCard';
+import InsightsPanel from '../components/InsightsPanel';
+import ScenarioAnalyzer from '../components/ScenarioAnalyzer';
 import { expenseService } from '../api/expenseService';
 import { mlService } from '../api/mlService';
-import ScenarioAnalyzer from '../components/ScenarioAnalyzer';
+
+import { getScoreColors } from './Dashboard';
+
+// ── Chart color palette ──────────────────────────────────────────────────────
+const GOLD_PALETTE = [
+  '#d4af37', '#b69119', '#e5c35c', '#8a7324',
+  '#f0d977', '#c9a52c', '#a68b2e', '#dbc462',
+];
+
+const TOOLTIP_STYLE = {
+  backgroundColor: '#111111',
+  borderRadius: '20px',
+  border: '1px solid rgba(255,255,255,0.05)',
+  boxShadow: '0 25px 50px -12px rgba(0,0,0,0.8)',
+  padding: '14px 18px',
+};
+const TOOLTIP_ITEM_STYLE = {
+  fontSize: '11px',
+  fontWeight: '800',
+  textTransform: 'uppercase',
+  letterSpacing: '0.05em',
+};
+const TOOLTIP_LABEL_STYLE = {
+  color: '#606060',
+  marginBottom: '8px',
+  fontSize: '9px',
+  fontWeight: '900',
+  textTransform: 'uppercase',
+  letterSpacing: '0.12em',
+};
+
+// ── Custom Pie label for category percentages ────────────────────────────────
+const renderPieLabel = ({ name, percent, x, y, midAngle }) => {
+  if (percent < 0.05) return null;
+  return (
+    <text
+      x={x}
+      y={y}
+      fill="#a0a0a0"
+      textAnchor={midAngle > 180 ? 'end' : 'start'}
+      dominantBaseline="central"
+      fontSize={10}
+      fontWeight={800}
+    >
+      {`${name} ${(percent * 100).toFixed(0)}%`}
+    </text>
+  );
+};
+
+// ── Custom Tooltip Component ─────────────────────────────────────────────────
+const CustomTooltip = ({ active, payload, label, prefix = '₹' }) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div style={TOOLTIP_STYLE}>
+      <p style={TOOLTIP_LABEL_STYLE}>{label}</p>
+      {payload.map((entry, i) => (
+        <p key={i} style={{ ...TOOLTIP_ITEM_STYLE, color: entry.color || '#d4af37' }}>
+          {entry.name}: {prefix}{Number(entry.value).toLocaleString()}
+        </p>
+      ))}
+    </div>
+  );
+};
+
 
 export default function Analytics() {
   const [data, setData] = useState({
     expenses: [],
     forecast: null,
     recommendations: null,
-    healthScore: null
+    healthScore: null,
+    prediction: null,
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const containerRef = useRef(null);
 
+  // ── Data fetching ────────────────────────────────────────────────────────
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
-        // Fetch historical expenses
         const rawExpenses = await expenseService.getExpenses();
-        const history = rawExpenses.reverse(); // chronological order for charts
-        
+        const history = [...rawExpenses].reverse(); // chronological
+
         if (history.length > 0) {
           const latest = history[history.length - 1];
-          const payload = { income: latest.income, expenses: latest.expenses };
+          const previous = history.length > 1 ? history[history.length - 2] : null;
+          const payload = {
+            income: latest.income,
+            expenses: latest.expenses,
+            ...(previous ? { previous_expenses: previous.expenses } : {}),
+          };
 
-          // Fetch ML forecast, recommendations, and health score concurrently
-          const [forecastData, recData, healthData] = await Promise.all([
+          // Parallel ML calls
+          const results = await Promise.allSettled([
             mlService.getForecast(payload),
             mlService.getRecommendations(payload),
-            mlService.getHealthScore(payload)
+            mlService.getHealthScore(payload),
           ]);
 
           setData({
             expenses: history,
-            forecast: forecastData,
-            recommendations: recData,
-            healthScore: healthData
+            forecast: results[0].status === 'fulfilled' ? results[0].value : null,
+            recommendations: results[1].status === 'fulfilled' ? results[1].value : null,
+            healthScore: results[2].status === 'fulfilled' ? results[2].value : null,
+            prediction: results[0].status === 'fulfilled' ? results[0].value : null,
           });
         } else {
-          setData(prev => ({ ...prev, expenses: [] }));
+          setData((prev) => ({ ...prev, expenses: [] }));
         }
       } catch (err) {
-        console.error("Failed to load analytics", err);
+        console.error('Failed to load analytics', err);
+        setError('Unable to fetch analytics data. Please try again later.');
       } finally {
         setIsLoading(false);
       }
@@ -56,66 +138,122 @@ export default function Analytics() {
     fetchAnalytics();
   }, []);
 
+  // ── GSAP entrance for summary cards ──────────────────────────────────────
   useEffect(() => {
     if (!isLoading && containerRef.current) {
       gsap.fromTo(
-        gsap.utils.toArray('.analytics-card'),
+        containerRef.current.querySelectorAll('.summary-card'),
         { y: 30, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.6, stagger: 0.1, ease: 'power2.out' }
+        { y: 0, opacity: 1, duration: 0.6, stagger: 0.08, ease: 'power2.out', delay: 0.1 }
       );
     }
   }, [isLoading]);
 
-  if (isLoading) {
-    return <div className="p-12 text-center text-text-tertiary animate-pulse tracking-[0.3em] font-black uppercase italic">Processing neural analytics...</div>;
-  }
 
-  if (data.expenses.length === 0) {
+  // ── Error state ──────────────────────────────────────────────────────────
+  if (error) {
     return (
-      <Card className="analytics-card mt-6 border-white/5 bg-black/20 rounded-[2.5rem] shadow-2xl">
+      <Card className="mt-6 border-white/5 bg-black/20 rounded-[2.5rem] shadow-2xl">
         <CardContent className="py-24 text-center">
-          <h3 className="text-xl font-black text-text-primary tracking-tighter italic uppercase">Initialization Required.</h3>
-          <p className="mt-4 text-[10px] text-text-tertiary uppercase tracking-[0.2em] max-w-xs mx-auto">Upload a fiscal dataset to activate predictive neural modeling.</p>
+          <div className="p-5 bg-rose-500/10 rounded-3xl border border-rose-500/20 w-fit mx-auto mb-6">
+            <Activity className="h-8 w-8 text-rose-400" />
+          </div>
+          <h3 className="text-xl font-black text-text-primary tracking-tighter">
+            System Error
+          </h3>
+          <p className="mt-3 text-sm text-text-tertiary max-w-md mx-auto">{error}</p>
         </CardContent>
       </Card>
     );
   }
 
-  // Format data for Recharts
-  const trendData = data.expenses.map(e => ({
+  // ── Empty state ──────────────────────────────────────────────────────────
+  if (!isLoading && data.expenses.length === 0) {
+    return (
+      <Card className="mt-6 border-white/5 bg-black/20 rounded-[2.5rem] shadow-2xl">
+        <CardContent className="py-24 text-center">
+          <div className="p-5 bg-brand-500/10 rounded-3xl border border-brand-500/20 w-fit mx-auto mb-6">
+            <Sparkles className="h-8 w-8 text-brand-400 drop-shadow-[0_0_10px_rgba(212,175,55,0.4)]" />
+          </div>
+          <h3 className="text-xl font-black text-text-primary tracking-tighter italic uppercase">
+            Initialization Required.
+          </h3>
+          <p className="mt-4 text-[10px] text-text-tertiary uppercase tracking-[0.2em] max-w-xs mx-auto">
+            Upload a fiscal dataset to activate predictive neural modeling and unlock intelligence analytics.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // ── Data processing ──────────────────────────────────────────────────────
+  const latestRecord = data.expenses[data.expenses.length - 1];
+  const latestExpenses = latestRecord?.expenses || {};
+  const totalIncome = latestRecord?.income || 0;
+  const totalExpense = latestRecord?.total_expense || 0;
+  const remainingBalance = totalIncome - totalExpense;
+
+  // Monthly trend data
+  const trendData = data.expenses.map((e) => ({
     name: e.month,
+    Income: e.income,
     Expense: e.total_expense,
     Savings: e.savings,
-    Income: e.income
   }));
 
-  const latestExpenseRecord = data.expenses[data.expenses.length - 1];
-  const latestExpenseObj = latestExpenseRecord.expenses;
-  const categoryData = Object.keys(latestExpenseObj).map(key => ({
-    name: key,
-    amount: latestExpenseObj[key]
-  })).sort((a,b) => b.amount - a.amount);
+  // Category-wise data (for pie + bar)
+  const categoryData = Object.entries(latestExpenses)
+    .map(([name, amount]) => ({ name, amount }))
+    .sort((a, b) => b.amount - a.amount);
+
+  // Forecast chart data (combine history + prediction)
+  const forecastChartData = data.expenses.map((e) => ({
+    name: e.month,
+    Actual: e.total_expense,
+  }));
+
+  if (data.forecast) {
+    forecastChartData.push({
+      name: 'Next Month',
+      Actual: null,
+      Predicted: data.forecast.predicted_next_month_expense,
+    });
+  }
 
   return (
     <div className="space-y-10 relative" ref={containerRef}>
       <div className="absolute inset-0 bg-noise opacity-[0.02] pointer-events-none" />
 
+      {/* ── Page Header ─────────────────────────────────────────────────── */}
       <header className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h1 className="text-4xl font-black text-text-primary tracking-tighter italic">Intelligence & Forensics.</h1>
-          <p className="text-sm text-text-tertiary mt-2 font-medium tracking-wide">Predictive machine learning models and fiscal optimization pathways.</p>
+          <h1 className="text-4xl font-black text-text-primary tracking-tighter italic">
+            Intelligence Dashboard.
+          </h1>
+          <p className="text-sm text-text-tertiary mt-2 font-medium tracking-wide">
+            Predictive machine learning models and financial growth opportunities.
+          </p>
         </div>
-        
+
         {data.healthScore && (
           <div className="flex gap-4">
             <div className="bg-black/20 border border-white/5 rounded-2xl px-6 py-3 flex flex-col items-center justify-center min-w-[140px]">
-              <p className="text-[9px] font-black text-text-tertiary uppercase tracking-widest mb-1">Stability Rating</p>
-              <p className={`text-2xl font-black italic ${data.healthScore.score >= 70 ? 'text-brand-400' : 'text-text-primary'}`}>
-                {data.healthScore.score}<span className="text-xs not-italic ml-1 opacity-40">/100</span>
+              <p className="text-[9px] font-black text-text-tertiary uppercase tracking-widest mb-1">
+                Stability Status
+              </p>
+              <p
+                className={`text-2xl font-black italic ${
+                  data.healthScore.score >= 70 ? 'text-brand-400' : 'text-text-primary'
+                }`}
+              >
+                {data.healthScore.score}
+                <span className="text-xs not-italic ml-1 opacity-40">/100</span>
               </p>
             </div>
             <div className="bg-black/20 border border-white/5 rounded-2xl px-6 py-3 flex flex-col items-center justify-center min-w-[140px]">
-              <p className="text-[9px] font-black text-text-tertiary uppercase tracking-widest mb-1">Accumulation Rate</p>
+              <p className="text-[9px] font-black text-text-tertiary uppercase tracking-widest mb-1">
+                Savings Rate
+              </p>
               <p className="text-2xl font-black text-brand-400 italic">
                 {data.healthScore.savings_rate_pct}%
               </p>
@@ -124,175 +262,338 @@ export default function Analytics() {
         )}
       </header>
 
-      {/* Alerts / Recommendations */}
-      {data.recommendations && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 relative z-10">
-          <Card className="analytics-card glass-card border-none bg-black/20 border-l-[4px] border-l-brand-600/40 shadow-2xl relative overflow-hidden group rounded-[2rem]">
-            <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-               <AlertCircle size={100} className="text-brand-500" />
-            </div>
-            <CardHeader className="pb-4 pt-6 bg-transparent border-none">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-brand-500/10 rounded-2xl border border-brand-500/20">
-                  <AlertCircle className="h-5 w-5 text-brand-400 drop-shadow-[0_0_8px_rgba(212,175,55,0.6)]" />
-                </div>
-                <CardTitle className="text-text-primary font-black tracking-tight uppercase text-xs tracking-[0.2em]">Budget Forensic Alerts</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {data.recommendations.alerts.length > 0 ? (
-                <ul className="space-y-3">
-                  {data.recommendations.alerts.map((alert, idx) => (
-                    <li key={idx} className="flex gap-3 text-sm text-text-secondary font-medium items-start">
-                       <span className="h-1.5 w-1.5 rounded-full bg-brand-500/50 mt-1.5" />
-                       {alert}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-text-tertiary italic">No budget anomalies detected this cycle.</p>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="analytics-card glass-card border-none bg-black/20 border-l-[4px] border-l-brand-400/40 shadow-2xl relative overflow-hidden group rounded-[2rem]">
-            <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity">
-               <Lightbulb size={100} className="text-brand-500" />
-            </div>
-            <CardHeader className="pb-4 pt-6 bg-transparent border-none">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-brand-500/10 rounded-2xl border border-brand-500/20">
-                  <Lightbulb className="h-5 w-5 text-brand-400 drop-shadow-[0_0_8px_rgba(212,175,55,0.6)]" />
-                </div>
-                <CardTitle className="text-text-primary font-black tracking-tight uppercase text-xs tracking-[0.2em]">Optimization Engine</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-3">
-                {data.recommendations.recommendations.map((rec, idx) => (
-                  <li key={idx} className="flex gap-3 text-sm text-text-secondary font-medium items-start">
-                     <span className="h-1.5 w-1.5 rounded-full bg-brand-400/50 mt-1.5" />
-                     {rec}
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
+      {/* ── Summary Cards Row ───────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 relative z-10">
+        <div className="summary-card">
+          <SummaryCard
+            label="Total Income"
+            value={`₹${totalIncome.toLocaleString()}`}
+            subValue="Current Cycle"
+            icon={Coins}
+            accent="gold"
+            isLoading={isLoading}
+          />
         </div>
-      )}
+        <div className="summary-card">
+          <SummaryCard
+            label="Total Expense"
+            value={`₹${totalExpense.toLocaleString()}`}
+            subValue={`${categoryData.length} Categories`}
+            icon={CreditCard}
+            accent="neutral"
+            isLoading={isLoading}
+          />
+        </div>
+        <div className="summary-card">
+          <SummaryCard
+            label="Savings Balance"
+            value={`₹${remainingBalance.toLocaleString()}`}
+            subValue={remainingBalance >= 0 ? 'Surplus' : 'Deficit'}
+            icon={PiggyBank}
+            accent={remainingBalance >= 0 ? 'positive' : 'danger'}
+            isLoading={isLoading}
+          />
+        </div>
+        <div className="summary-card">
+          <SummaryCard
+            label="Predicted Next"
+            value={
+              data.forecast
+                ? `₹${data.forecast.predicted_next_month_expense.toLocaleString()}`
+                : '—'
+            }
+            subValue={data.forecast ? `Trend: ${data.forecast.trend_direction}` : 'Awaiting Data'}
+            icon={Brain}
+            customColors={getScoreColors(data.healthScore?.score)}
+            badge="AI LIVE"
+            isLoading={isLoading}
+          />
+        </div>
+        <div className="summary-card">
+          <SummaryCard
+            label="Health Score"
+            value={data.healthScore ? `${data.healthScore.score}/100` : '—'}
+            subValue={data.healthScore ? data.healthScore.status : 'Awaiting Data'}
+            icon={HeartPulse}
+            customColors={getScoreColors(data.healthScore?.score)}
+            badge="AI LIVE"
+            isLoading={isLoading}
+          />
+        </div>
+      </div>
 
-      {/* Main Charts Area */}
+      {/* ── Insights Panel (Alerts + Recommendations) ───────────────────── */}
+      <div className="relative z-10">
+        <InsightsPanel
+          recommendations={data.recommendations}
+          isLoading={isLoading}
+        />
+      </div>
+
+      {/* ── Charts Grid ─────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 relative z-10">
-        
-        {/* Spending Trend Chart */}
-        <Card className="analytics-card flex flex-col glass-card border-none rounded-[2.5rem]">
-          <CardHeader className="pb-0">
-            <CardTitle className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.3em] mb-4">Financial Momentum</CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1 min-h-[400px] pt-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={trendData} margin={{ top: 20, right: 20, left: 10, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#d4af37" stopOpacity={0.15}/>
-                    <stop offset="95%" stopColor="#d4af37" stopOpacity={0}/>
-                  </linearGradient>
-                  <linearGradient id="colorExpense" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#404040" stopOpacity={0.15}/>
-                    <stop offset="95%" stopColor="#404040" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="0" vertical={false} stroke="#1f1f1f" />
-                <XAxis 
-                  dataKey="name" 
-                  stroke="#404040" 
-                  fontSize={10} 
-                  tickLine={false} 
-                  axisLine={false} 
-                  dy={15} 
-                  fontWeight="bold"
-                />
-                <YAxis 
-                  stroke="#404040" 
-                  fontSize={10} 
-                  tickLine={false} 
-                  axisLine={false} 
-                  tickFormatter={(value) => `₹${value}`} 
-                  fontWeight="bold"
-                />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#111111', borderRadius: '24px', border: '1px solid #ffffff0d', boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.8)', padding: '16px' }}
-                  itemStyle={{ fontSize: '12px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.05em' }}
-                  labelStyle={{ color: '#606060', marginBottom: '8px', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.1em' }}
-                />
-                <Legend verticalAlign="top" align="right" iconType="rect" wrapperStyle={{ paddingBottom: '30px', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.1em' }} />
-                <Area 
-                  type="monotone" 
-                  dataKey="Income" 
-                  stroke="#d4af37" 
-                  strokeWidth={2} 
-                  fillOpacity={1} 
-                  fill="url(#colorIncome)" 
-                  animationDuration={2000}
-                />
-                <Area 
-                  type="monotone" 
-                  dataKey="Expense" 
-                  stroke="#404040" 
-                  strokeWidth={2} 
-                  fillOpacity={1} 
-                  fill="url(#colorExpense)" 
-                  animationDuration={2000}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
 
-        {/* Category Breakdown Chart */}
-        <Card className="analytics-card flex flex-col glass-card border-none rounded-[2.5rem]">
-          <CardHeader className="pb-0">
-            <CardTitle className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.3em] mb-4">Functional Allocation</CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1 min-h-[400px] pt-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={categoryData} layout="vertical" margin={{ top: 5, right: 30, left: 30, bottom: 20 }}>
-                <CartesianGrid strokeDasharray="0" horizontal={false} stroke="#1f1f1f" />
-                <XAxis type="number" hide />
-                <YAxis 
-                  dataKey="name" 
-                  type="category" 
-                  stroke="#a0a0a0" 
-                  fontSize={11} 
-                  fontWeight="black"
-                  tickLine={false} 
-                  axisLine={false} 
-                  width={100} 
-                  textAnchor="end"
-                />
-                <Tooltip 
-                  cursor={{fill: 'rgba(255,255,255,0.02)'}}
-                  contentStyle={{ backgroundColor: '#111111', borderRadius: '16px', border: '1px solid #ffffff0d' }}
-                  itemStyle={{ color: '#d4af37', fontWeight: '900', fontSize: '12px' }}
-                />
-                <Bar 
-                  dataKey="amount" 
-                  fill="#d4af37" 
-                  radius={[0, 12, 12, 0]} 
-                  barSize={16} 
-                  animationDuration={2000}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        {/* Pie Chart — Category-wise spending */}
+        <ChartCard
+          title="Spending Distribution"
+          subtitle="Category-wise allocation breakdown"
+          icon={PieIcon}
+          isLoading={isLoading}
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={categoryData}
+                cx="50%"
+                cy="50%"
+                innerRadius={75}
+                outerRadius={130}
+                paddingAngle={3}
+                dataKey="amount"
+                nameKey="name"
+                label={renderPieLabel}
+                labelLine={false}
+                animationBegin={200}
+                animationDuration={1500}
+                stroke="rgba(0,0,0,0.4)"
+                strokeWidth={2}
+              >
+                {categoryData.map((_, idx) => (
+                  <Cell
+                    key={`cell-${idx}`}
+                    fill={GOLD_PALETTE[idx % GOLD_PALETTE.length]}
+                    className="transition-opacity duration-300 hover:opacity-80"
+                  />
+                ))}
+              </Pie>
+              <Tooltip content={<CustomTooltip />} />
+              <Legend
+                verticalAlign="bottom"
+                iconType="circle"
+                iconSize={8}
+                wrapperStyle={{
+                  paddingTop: '20px',
+                  fontSize: '10px',
+                  fontWeight: '800',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </ChartCard>
 
-        {/* AI Forecast */}
-        {data.forecast && (
-          <Card className="analytics-card lg:col-span-2 relative overflow-hidden border-none bg-gradient-to-br from-bg-panel via-black to-bg-panel text-white shadow-2xl group rounded-[3rem] border border-white/5">
+        {/* Line Chart — Monthly expense trend */}
+        <ChartCard
+          title="Financial Momentum"
+          subtitle="Income vs. expense trajectory over time"
+          icon={LineIcon}
+          isLoading={isLoading}
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={trendData} margin={{ top: 20, right: 20, left: 10, bottom: 0 }}>
+              <defs>
+                <linearGradient id="gradIncome" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#d4af37" stopOpacity={0.15} />
+                  <stop offset="95%" stopColor="#d4af37" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="gradExpense" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#404040" stopOpacity={0.15} />
+                  <stop offset="95%" stopColor="#404040" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="gradSavings" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#34d399" stopOpacity={0.1} />
+                  <stop offset="95%" stopColor="#34d399" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="0" vertical={false} stroke="#1f1f1f" />
+              <XAxis
+                dataKey="name"
+                stroke="#404040"
+                fontSize={10}
+                tickLine={false}
+                axisLine={false}
+                dy={15}
+                fontWeight="bold"
+              />
+              <YAxis
+                stroke="#404040"
+                fontSize={10}
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(v) => `₹${v}`}
+                fontWeight="bold"
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend
+                verticalAlign="top"
+                align="right"
+                iconType="rect"
+                wrapperStyle={{
+                  paddingBottom: '30px',
+                  fontSize: '10px',
+                  fontWeight: '900',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em',
+                }}
+              />
+              <Area
+                type="monotone"
+                dataKey="Income"
+                stroke="#d4af37"
+                strokeWidth={2}
+                fillOpacity={1}
+                fill="url(#gradIncome)"
+                animationDuration={2000}
+                dot={false}
+                activeDot={{ r: 5, fill: '#d4af37', stroke: '#0a0a0a', strokeWidth: 2 }}
+              />
+              <Area
+                type="monotone"
+                dataKey="Expense"
+                stroke="#606060"
+                strokeWidth={2}
+                fillOpacity={1}
+                fill="url(#gradExpense)"
+                animationDuration={2000}
+                dot={false}
+                activeDot={{ r: 5, fill: '#606060', stroke: '#0a0a0a', strokeWidth: 2 }}
+              />
+              <Area
+                type="monotone"
+                dataKey="Savings"
+                stroke="#34d399"
+                strokeWidth={1.5}
+                fillOpacity={1}
+                fill="url(#gradSavings)"
+                animationDuration={2000}
+                dot={false}
+                activeDot={{ r: 4, fill: '#34d399', stroke: '#0a0a0a', strokeWidth: 2 }}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        {/* Bar Chart — Category comparison */}
+        <ChartCard
+          title="Functional Allocation"
+          subtitle="Ranked spending by category"
+          icon={BarChart3}
+          isLoading={isLoading}
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={categoryData}
+              layout="vertical"
+              margin={{ top: 5, right: 30, left: 30, bottom: 20 }}
+            >
+              <CartesianGrid strokeDasharray="0" horizontal={false} stroke="#1f1f1f" />
+              <XAxis type="number" hide />
+              <YAxis
+                dataKey="name"
+                type="category"
+                stroke="#a0a0a0"
+                fontSize={11}
+                fontWeight="900"
+                tickLine={false}
+                axisLine={false}
+                width={100}
+                textAnchor="end"
+              />
+              <Tooltip
+                content={<CustomTooltip />}
+                cursor={{ fill: 'rgba(255,255,255,0.02)' }}
+              />
+              <Bar
+                dataKey="amount"
+                fill="#d4af37"
+                radius={[0, 12, 12, 0]}
+                barSize={18}
+                animationDuration={2000}
+              >
+                {categoryData.map((_, idx) => (
+                  <Cell
+                    key={`bar-${idx}`}
+                    fill={GOLD_PALETTE[idx % GOLD_PALETTE.length]}
+                  />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        {/* Forecast Chart — Historical + Prediction */}
+        <ChartCard
+          title="Forecast Trajectory"
+          subtitle="Actual expense history vs. predicted next month"
+          icon={TrendingUp}
+          isLoading={isLoading}
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={forecastChartData} margin={{ top: 20, right: 20, left: 10, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="0" vertical={false} stroke="#1f1f1f" />
+              <XAxis
+                dataKey="name"
+                stroke="#404040"
+                fontSize={10}
+                tickLine={false}
+                axisLine={false}
+                dy={15}
+                fontWeight="bold"
+              />
+              <YAxis
+                stroke="#404040"
+                fontSize={10}
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(v) => `₹${v}`}
+                fontWeight="bold"
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend
+                verticalAlign="top"
+                align="right"
+                iconType="rect"
+                wrapperStyle={{
+                  paddingBottom: '30px',
+                  fontSize: '10px',
+                  fontWeight: '900',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em',
+                }}
+              />
+              <Line
+                type="monotone"
+                dataKey="Actual"
+                stroke="#d4af37"
+                strokeWidth={2}
+                dot={{ r: 4, fill: '#d4af37', stroke: '#0a0a0a', strokeWidth: 2 }}
+                activeDot={{ r: 6, fill: '#d4af37', stroke: '#0a0a0a', strokeWidth: 3 }}
+                animationDuration={2000}
+                connectNulls={false}
+              />
+              <Line
+                type="monotone"
+                dataKey="Predicted"
+                stroke="#e5c35c"
+                strokeWidth={2}
+                strokeDasharray="8 4"
+                dot={{ r: 6, fill: '#e5c35c', stroke: '#0a0a0a', strokeWidth: 3 }}
+                animationDuration={2000}
+                connectNulls={false}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      </div>
+
+      {/* ── AI Forecast Hero Section ────────────────────────────────────── */}
+      {data.forecast && (
+        <div className="relative z-10">
+          <Card className="lg:col-span-2 relative overflow-hidden border-none bg-gradient-to-br from-bg-panel via-black to-bg-panel text-white shadow-2xl group rounded-[3rem] border border-white/5">
             <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-500/30 to-transparent" />
-            <div className="absolute -top-32 -right-32 w-80 h-80 bg-brand-500/10 rounded-full blur-[120px] group-hover:bg-brand-500/15 transition-all duration-1000" />
-            
+            <div className="absolute -top-32 -right-32 w-80 h-80 bg-brand-500/10 rounded-full blur-[120px] group-hover:bg-brand-500/15 transition-all duration-1000 pointer-events-none" />
+
             <CardContent className="p-12 sm:p-16 relative z-10">
               <div className="flex flex-col md:flex-row items-center justify-between gap-16">
                 <div className="flex-1 space-y-6">
@@ -301,46 +602,87 @@ export default function Analytics() {
                       <TrendingUp className="h-8 w-8 text-brand-400" />
                     </div>
                     <div className="space-y-1">
-                       <p className="text-[10px] text-brand-500 font-black uppercase tracking-[0.4em]">Forecasting Engine v4.2</p>
-                       <h3 className="text-3xl font-black tracking-tighter">Predictive Analysis.</h3>
+                      <p className="text-[10px] text-brand-500 font-black uppercase tracking-[0.4em]">
+                        Forecasting Engine v4.2
+                      </p>
+                      <h3 className="text-3xl font-black tracking-tighter">
+                        Predictive Analysis.
+                      </h3>
                     </div>
                   </div>
                   <p className="text-text-secondary text-xl font-medium leading-relaxed max-w-2xl tracking-tight">
-                    Our neural network projects your liability matrix will <span className={`font-black tracking-tighter ${data.forecast.trend_direction === 'increase' ? 'text-brand-400' : 'text-text-primary'}`}>{data.forecast.trend_direction}</span> to approximately <strong className="text-text-primary underline decoration-brand-500/30 decoration-4 underline-offset-8">₹{data.forecast.predicted_next_month_expense.toLocaleString()}</strong> in the next billing cycle.
+                    Our neural network projects your liability matrix will{' '}
+                    <span
+                      className={`font-black tracking-tighter ${
+                        data.forecast.trend_direction === 'increase'
+                          ? 'text-brand-400'
+                          : 'text-text-primary'
+                      }`}
+                    >
+                      {data.forecast.trend_direction}
+                    </span>{' '}
+                    to approximately{' '}
+                    <strong className="text-text-primary underline decoration-brand-500/30 decoration-4 underline-offset-8">
+                      ₹{data.forecast.predicted_next_month_expense.toLocaleString()}
+                    </strong>{' '}
+                    in the next billing cycle.
                   </p>
-                  <div className="flex gap-4 pt-4">
-                     <div className="px-5 py-2.5 bg-white/[0.03] rounded-full border border-white/5 text-[9px] font-black text-text-tertiary uppercase tracking-[0.2em] flex items-center gap-2">
-                        <div className="h-1.5 w-1.5 rounded-full bg-brand-500 shadow-[0_0_8px_rgba(212,175,55,1)]" />
-                        Confidence: 94.2%
-                     </div>
-                     <div className="px-5 py-2.5 bg-white/[0.03] rounded-full border border-white/5 text-[9px] font-black text-text-tertiary uppercase tracking-[0.2em]">Model: GRU-LSTM Ensemble</div>
+                  <div className="flex gap-4 pt-4 flex-wrap">
+                    <div className="px-5 py-2.5 bg-white/[0.03] rounded-full border border-white/5 text-[9px] font-black text-text-tertiary uppercase tracking-[0.2em] flex items-center gap-2">
+                      <div className="h-1.5 w-1.5 rounded-full bg-brand-500 shadow-[0_0_8px_rgba(212,175,55,1)]" />
+                      Confidence: 94.2%
+                    </div>
+                    <div className="px-5 py-2.5 bg-white/[0.03] rounded-full border border-white/5 text-[9px] font-black text-text-tertiary uppercase tracking-[0.2em]">
+                      Model: GRU-LSTM Ensemble
+                    </div>
                   </div>
                 </div>
 
-                <div className="shrink-0 bg-white/5 backdrop-blur-3xl rounded-[2.5rem] p-12 border border-white/10 text-center min-w-[280px] shadow-2xl ring-1 ring-white/10 relative overflow-hidden group/box transition-transform hover:scale-105 duration-700">
+                <div className="shrink-0 bg-white/5 backdrop-blur-3xl rounded-[2.5rem] p-12 border border-white/10 text-center min-w-[260px] shadow-2xl ring-1 ring-white/10 relative overflow-hidden group/box transition-transform hover:scale-105 duration-700">
                   <div className="absolute inset-0 bg-gradient-to-br from-brand-500/5 to-transparent opacity-0 group-hover/box:opacity-100 transition-opacity" />
-                  <p className="text-brand-500 text-[10px] font-black uppercase tracking-[0.3em] mb-4 relative z-10">Projected Liability</p>
-                  <p className="text-6xl font-black tracking-tight text-white drop-shadow-2xl mb-4 relative z-10 italic">₹{data.forecast.predicted_next_month_expense.toLocaleString()}</p>
-                  <div className={`mt-2 inline-flex items-center px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] relative z-10 transition-all ${data.forecast.trend_direction === 'increase' ? 'bg-brand-500/20 text-brand-300 border border-brand-500/30 shadow-[0_0_15px_rgba(212,175,55,0.2)]' : 'bg-white/10 text-white border border-white/20'}`}>
-                    {data.forecast.trend_direction === 'increase' ? <TrendingUp className="mr-2 h-3.5 w-3.5"/> : <TrendingDown className="mr-2 h-3.5 w-3.5"/>}
+                  <p className="text-brand-500 text-[10px] font-black uppercase tracking-[0.3em] mb-4 relative z-10">
+                    Projected Liability
+                  </p>
+                  <p className="text-5xl sm:text-6xl font-black tracking-tight text-white drop-shadow-2xl mb-4 relative z-10 italic">
+                    ₹{data.forecast.predicted_next_month_expense.toLocaleString()}
+                  </p>
+                  <div
+                    className={`mt-2 inline-flex items-center px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] relative z-10 transition-all ${
+                      data.forecast.trend_direction === 'increase'
+                        ? 'bg-brand-500/20 text-brand-300 border border-brand-500/30 shadow-[0_0_15px_rgba(212,175,55,0.2)]'
+                        : 'bg-white/10 text-white border border-white/20'
+                    }`}
+                  >
+                    {data.forecast.trend_direction === 'increase' ? (
+                      <TrendingUp className="mr-2 h-3.5 w-3.5" />
+                    ) : (
+                      <TrendingDown className="mr-2 h-3.5 w-3.5" />
+                    )}
                     {data.forecast.trend_direction} Trend
                   </div>
                 </div>
               </div>
             </CardContent>
           </Card>
-        )}
+        </div>
+      )}
 
-      </div>
+      {/* ── Scenario Analyzer ───────────────────────────────────────────── */}
+      {latestRecord && (
+        <div className="relative z-10">
+          <ScenarioAnalyzer
+            currentIncome={latestRecord.income}
+            currentExpenses={latestExpenses}
+          />
+        </div>
+      )}
 
-      {/* Scenario Analyzer */}
-      <div className="pt-6 analytics-card relative z-10">
-        <ScenarioAnalyzer 
-          currentIncome={latestExpenseRecord.income} 
-          currentExpenses={latestExpenseObj} 
-        />
-      </div>
-
+      {/* ── Loading overlay ─────────────────────────────────────────────── */}
+      {isLoading && (
+        <div className="p-16 text-center text-text-tertiary animate-pulse tracking-[0.3em] font-black uppercase italic text-xs">
+          Processing neural analytics...
+        </div>
+      )}
     </div>
   );
 }

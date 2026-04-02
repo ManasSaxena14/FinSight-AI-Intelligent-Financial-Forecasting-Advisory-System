@@ -59,7 +59,14 @@ def forecast_expenses(req: ForecastRequest, current_user: dict = Depends(get_cur
             current_expenses=req.expenses.dict(),
             months=req.months
         )
-        return ForecastResponse(**result)
+        next_pred = result["forecast"][0]["predicted_expense"]
+        current_total = sum(req.expenses.dict().values())
+        trend = "increase" if next_pred > current_total else "decrease"
+
+        return ForecastResponse(
+            predicted_next_month_expense=next_pred,
+            trend_direction=trend
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -71,7 +78,7 @@ def get_health_score(req: PredictionRequest, current_user: dict = Depends(get_cu
     Uses centralized business logic.
     """
     total_expense = sum(req.expenses.dict().values())
-    result = calculate_health_score(req.income, total_expense)
+    result = calculate_health_score(req.income, total_expense, req.expenses.dict())
     
     return HealthScoreResponse(
         score=result["score"],
@@ -100,7 +107,7 @@ def get_recommendations_and_alerts(req: PredictionRequest, current_user: dict = 
     anomaly_data = anomaly_detection(expense_dict, threshold=1.5)
     anomalies = anomaly_data.get("anomalies", [])
 
-    return RecommendationResponse(
+    return RecommendationsResponse(
         recommendations=recs,
         alerts=alerts if alerts else None,
         anomalies=anomalies if anomalies else None

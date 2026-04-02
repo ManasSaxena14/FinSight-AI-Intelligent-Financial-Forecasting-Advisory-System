@@ -254,15 +254,8 @@ async def analyze_scenario(req: ScenarioRequest, current_user: dict = Depends(ge
     
     savings_rate = (projected_savings / req.current_income) * 100 if req.current_income > 0 else 0
     
-    score = 50
-    if savings_rate >= 20:
-        score = 90
-    elif savings_rate >= 10:
-        score = 75
-    elif savings_rate > 0:
-        score = 60
-    else:
-        score = 30
+    health = calculate_health_score(req.current_income, total_proposed_expenses, req.proposed_expenses)
+    score = health["score"]
     
     # Calculate actual savings difference from user's real latest record
     savings_difference = 0.0
@@ -276,18 +269,18 @@ async def analyze_scenario(req: ScenarioRequest, current_user: dict = Depends(ge
         
     advice_parts = []
     if savings_rate < 0:
-        advice_parts.append("⚠️ Warning: This scenario results in spending more than you earn. Consider reducing variable expenses.")
+        advice_parts.append("[CRITICAL] Warning: This scenario results in deficit spending. Consider reducing variable expenses immediately.")
     elif savings_rate >= 20:
-        advice_parts.append("✅ Excellent! You are allocating 20%+ to savings, which builds strong wealth over time.")
+        advice_parts.append("[SUCCESS] Excellent! You are allocating 20%+ to savings, which builds strong wealth over time.")
     elif savings_rate >= 10:
-        advice_parts.append("👍 Good balance. You are saving above 10%. Push towards the 20% golden benchmark for accelerated wealth growth.")
+        advice_parts.append("[OPTIMAL] Good balance. You are saving above 10%. Push towards the 20% golden benchmark for accelerated wealth growth.")
     else:
-        advice_parts.append("📊 Your proposed savings rate is below 10%. Try reducing your top spending category by 15-20% to increase your financial buffer.")
+        advice_parts.append("[ADVICE] Your proposed savings rate is below 10%. Try reducing your top spending category by 15-20% to increase your financial buffer.")
     
     if savings_difference > 0:
-        advice_parts.append(f"📈 This scenario saves ₹{savings_difference:,.0f} more than your current budget — a positive trajectory.")
+        advice_parts.append(f"[TREND] This scenario saves ₹{savings_difference:,.0f} more than your current budget — a positive trajectory.")
     elif savings_difference < 0:
-        advice_parts.append(f"📉 This scenario saves ₹{abs(savings_difference):,.0f} less than your current budget. Re-evaluate the tradeoffs.")
+        advice_parts.append(f"[ALERT] This scenario saves ₹{abs(savings_difference):,.0f} less than your current budget. Re-evaluate the tradeoffs.")
     
     # Category-level insights
     high_cats = sorted(req.proposed_expenses.items(), key=lambda x: x[1], reverse=True)[:2]
@@ -295,7 +288,7 @@ async def analyze_scenario(req: ScenarioRequest, current_user: dict = Depends(ge
         top_cat = high_cats[0]
         top_pct = (top_cat[1] / total_proposed_expenses * 100) if total_proposed_expenses > 0 else 0
         if top_pct > 35:
-            advice_parts.append(f"💡 {top_cat[0]} consumes {top_pct:.0f}% of total expenses. Diversifying spend allocation reduces single-category risk.")
+            advice_parts.append(f"[INSIGHT] {top_cat[0]} consumes {top_pct:.0f}% of total expenses. Diversifying spend allocation reduces single-category risk.")
 
     return ScenarioResponse(
         projected_savings=round(projected_savings, 2),
@@ -534,7 +527,7 @@ async def get_live_budget(current_user: dict = Depends(get_current_user)):
     savings = float(latest.get("savings", income - total_expense))
     savings_rate = (savings / income * 100) if income > 0 else 0
     
-    health = calculate_health_score(income, total_expense)
+    health = calculate_health_score(income, total_expense, expenses)
     
     trend = "stable"
     if len(records) >= 2:

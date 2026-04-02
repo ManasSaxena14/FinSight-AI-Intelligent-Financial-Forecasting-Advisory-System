@@ -21,7 +21,7 @@ class ExpenseCategories(BaseModel):
 
 class AddExpenseRequest(BaseModel):
     month: str
-    income: float = Field(..., gt=0)
+    income: float = Field(0, ge=0)
     expenses: ExpenseCategories
 
 class ExpenseRecordResponse(AddExpenseRequest):
@@ -30,6 +30,7 @@ class ExpenseRecordResponse(AddExpenseRequest):
     total_expense: float
     savings: float
     created_at: datetime
+    entries: List[Dict] = []
 
 
 # ── Auth Schemas ─────────────────────────────────────────────────────────────
@@ -58,7 +59,7 @@ class UserResponse(BaseModel):
 # ── ML Prediction & Forecasting Schemas ──────────────────────────────────────
 
 class PredictionRequest(BaseModel):
-    income: float = Field(..., gt=0)
+    income: float = Field(0, ge=0)
     expenses: ExpenseCategories
     previous_expenses: Optional[ExpenseCategories] = None
 
