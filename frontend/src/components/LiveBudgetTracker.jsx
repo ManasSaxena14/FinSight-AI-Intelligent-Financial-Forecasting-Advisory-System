@@ -128,7 +128,7 @@ export default function LiveBudgetTracker() {
         {/* Income */}
         <div className="bg-white/[0.02] rounded-2xl p-5 border border-white/5 flex flex-col justify-between">
           <p className="text-[9px] text-text-tertiary font-black uppercase tracking-widest mb-2">Income</p>
-          <p className="text-xl font-black text-text-primary italic tracking-tight">${data.total_income.toLocaleString()}</p>
+          <p className="text-xl font-black text-text-primary italic tracking-tight">₹{data.total_income.toLocaleString()}</p>
           <div className="flex items-center gap-1.5 mt-2">
             <Activity className="w-3 h-3 text-brand-500" />
             <p className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">This Cycle</p>
@@ -138,7 +138,7 @@ export default function LiveBudgetTracker() {
         {/* Expenses */}
         <div className="bg-white/[0.02] rounded-2xl p-5 border border-white/5 flex flex-col justify-between">
           <p className="text-[9px] text-text-tertiary font-black uppercase tracking-widest mb-2">Expenses</p>
-          <p className="text-xl font-black text-text-primary italic tracking-tight">${data.total_expense.toLocaleString()}</p>
+          <p className="text-xl font-black text-text-primary italic tracking-tight">₹{data.total_expense.toLocaleString()}</p>
           <div className="w-full bg-black/30 rounded-full h-1 mt-3 overflow-hidden">
             <div
               className="h-full rounded-full bg-gradient-to-r from-brand-600 to-brand-400 transition-all duration-1000"
@@ -157,7 +157,7 @@ export default function LiveBudgetTracker() {
             </div>
           </div>
           <p className={`text-xl font-black italic tracking-tight ${data.total_savings >= 0 ? 'text-text-primary' : 'text-red-400'}`}>
-            ${data.total_savings.toLocaleString()}
+            ₹{data.total_savings.toLocaleString()}
           </p>
           <p className={`text-[10px] font-black italic mt-2 ${trend.color}`}>
             {data.savings_rate}% savings rate

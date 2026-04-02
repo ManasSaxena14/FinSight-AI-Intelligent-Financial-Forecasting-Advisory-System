@@ -48,17 +48,13 @@ export default function Register() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-bg-base py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       <div className="absolute inset-0 bg-noise opacity-[0.02] pointer-events-none" />
-      
-      {/* Background blobs for depth */}
-      <div className="absolute top-1/3 -right-20 w-[600px] h-[600px] bg-brand-500/5 rounded-full blur-[150px]" />
-      <div className="absolute bottom-1/3 -left-20 w-[600px] h-[600px] bg-brand-600/5 rounded-full blur-[150px]" />
 
       <div className="w-full max-w-md space-y-12 relative z-10" ref={formRef}>
         <div className="text-center">
           <div className="mx-auto flex justify-center mb-10">
             <img src="/MAIN_LOGO.png" alt="FinSight AI Logo" className="h-40 w-auto object-contain drop-shadow-[0_0_20px_rgba(212,175,55,0.3)] hover:scale-105 transition-transform duration-500" />
           </div>
-          <h2 className="text-5xl font-black tracking-tighter text-text-primary mb-3 italic">
+          <h2 className="text-4xl font-black tracking-tight text-text-primary mb-3">
             Genesis.
           </h2>
           <p className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.4em]">
@@ -66,8 +62,8 @@ export default function Register() {
           </p>
         </div>
 
-        <div className="glass-card border-none p-10 sm:p-12 rounded-[3.5rem] shadow-2xl relative overflow-hidden bg-bg-panel/40">
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-500/20 to-transparent" />
+        <div className="glass-card border border-white/5 p-10 sm:p-12 rounded-[2.5rem] shadow-2xl relative overflow-hidden bg-black/40 backdrop-blur-xl">
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-500/10 to-transparent" />
           
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
@@ -78,20 +74,20 @@ export default function Register() {
             
             <div className="space-y-6">
               <Input
-                label="Full Nomenclature / Name"
+                label="Username"
                 id="name"
                 name="name"
                 type="text"
                 autoComplete="name"
                 required
                 value={name}
-                placeholder="Alex Johnson"
+                placeholder="Username"
                 onChange={(e) => setName(e.target.value)}
-                className="h-14 rounded-2xl bg-black/20 focus:border-brand-500/40"
+                className="h-14 rounded-xl bg-white/[0.03] border-white/10 focus:border-brand-500/40"
               />
 
               <Input
-                label="Digital Identity / Email"
+                label="Email Address"
                 id="email"
                 name="email"
                 type="email"
@@ -100,11 +96,11 @@ export default function Register() {
                 value={email}
                 placeholder="authority@finsight.ai"
                 onChange={(e) => setEmail(e.target.value)}
-                className="h-14 rounded-2xl bg-black/20 focus:border-brand-500/40"
+                className="h-14 rounded-xl bg-white/[0.03] border-white/10 focus:border-brand-500/40"
               />
 
               <Input
-                label="Security Access / Password"
+                label="Password"
                 id="password"
                 name="password"
                 type="password"
@@ -113,11 +109,11 @@ export default function Register() {
                 value={password}
                 placeholder="••••••••"
                 onChange={(e) => setPassword(e.target.value)}
-                className="h-14 rounded-2xl bg-black/20 focus:border-brand-500/40"
+                className="h-14 rounded-xl bg-white/[0.03] border-white/10 focus:border-brand-500/40"
               />
             </div>
 
-            <Button type="submit" variant="primary" className="w-full h-14 rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 text-black font-black uppercase tracking-[0.2em] text-[10px] shadow-2xl shadow-brand-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]" isLoading={isLoading}>
+            <Button type="submit" variant="primary" className="w-full h-14 rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 text-black font-black uppercase tracking-[0.2em] text-[10px] shadow-2xl shadow-brand-500/10 transition-all hover:scale-[1.02] active:scale-[0.98]" isLoading={isLoading}>
               Initialize Neural Vault
             </Button>
           </form>

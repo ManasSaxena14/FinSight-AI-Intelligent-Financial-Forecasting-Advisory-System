@@ -76,7 +76,8 @@ def get_health_score(req: PredictionRequest, current_user: dict = Depends(get_cu
     return HealthScoreResponse(
         score=result["score"],
         status=result["status"],
-        savings_rate_pct=result["savings_rate_pct"]
+        savings_rate_pct=result["savings_rate_pct"],
+        feedback="Diagnostics completed successfully."
     )
 
 # ── 4. Recommendations & Alerts ─────────────────────────────────────────────

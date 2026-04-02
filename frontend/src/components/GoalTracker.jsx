@@ -3,7 +3,7 @@ import { premiumService } from '../api/premiumService';
 import { Card, CardContent, CardHeader, CardTitle } from './Card';
 import { Button } from './Button';
 import { Input } from './Input';
-import { Target, PlusCircle, CheckCircle2, Trash2, DollarSign } from 'lucide-react';
+import { Target, PlusCircle, CheckCircle2, Trash2, IndianRupee } from 'lucide-react';
 
 export default function GoalTracker() {
   const [goals, setGoals] = useState([]);
@@ -152,8 +152,8 @@ export default function GoalTracker() {
                   </div>
                   <div className="flex gap-4 items-start">
                     <div className="text-right">
-                      <span className="text-sm font-black text-text-primary tracking-tight italic">${goal.current_savings.toLocaleString()}</span>
-                      <span className="text-[10px] text-text-tertiary font-bold tracking-widest"> / ${goal.target_amount.toLocaleString()}</span>
+                      <span className="text-sm font-black text-text-primary tracking-tight italic">₹{goal.current_savings.toLocaleString()}</span>
+                      <span className="text-[10px] text-text-tertiary font-bold tracking-widest"> / ₹{goal.target_amount.toLocaleString()}</span>
                     </div>
                     <div className="flex items-center gap-2 opacity-0 group-hover/goal:opacity-100 transition-opacity">
                       <button 
@@ -161,7 +161,7 @@ export default function GoalTracker() {
                         className="p-1.5 rounded-lg bg-black/20 hover:bg-brand-500/10 hover:text-brand-400 text-text-tertiary border border-white/5 transition-colors"
                         title="Contribute"
                       >
-                        <DollarSign className="w-3.5 h-3.5" />
+                        <IndianRupee className="w-3.5 h-3.5" />
                       </button>
                       <button 
                         onClick={() => handleDeleteGoal(goal.id)}

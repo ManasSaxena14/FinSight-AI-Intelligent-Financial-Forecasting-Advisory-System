@@ -185,8 +185,7 @@ export default function Dashboard() {
                         <div className="w-full bg-black/40 rounded-full h-3 overflow-hidden border border-white/5 relative">
                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent" />
                            <div 
-                            className="h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(212,175,55,0.3)] bg-gradient-to-r from-brand-600 to-brand-400" 
-                            style={{ width: `${Math.max(0, Math.min(100, healthScore.savings_rate_pct * 2))}%` }}
+                            style={{ width: `${Math.max(0, Math.min(100, healthScore.savings_rate_pct))}%` }}
                           ></div>
                         </div>
                       </div>

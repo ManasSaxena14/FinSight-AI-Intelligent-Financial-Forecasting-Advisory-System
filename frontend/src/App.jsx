@@ -10,6 +10,7 @@ import AddExpense from './pages/AddExpense';
 import Analytics from './pages/Analytics';
 import Advisor from './pages/Advisor';
 import Plans from './pages/Plans';
+import Profile from './pages/Profile';
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/advisor" element={<Advisor />} />
               <Route path="/plans" element={<Plans />} />
+              <Route path="/profile" element={<Profile />} />
             </Route>
           </Route>
 

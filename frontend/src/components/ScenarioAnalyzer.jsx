@@ -88,7 +88,7 @@ export default function ScenarioAnalyzer({ currentIncome, currentExpenses }) {
                        <span className="w-1.5 h-1.5 rounded-full bg-white/10 group-hover:bg-brand-500 group-hover:shadow-[0_0_8px_rgba(212,175,55,1)] transition-all" />
                        {cat}
                     </span>
-                    <span className="text-text-primary font-black italic tracking-tight text-xs">${proposedExpenses[cat]?.toLocaleString() || 0}</span>
+                    <span className="text-text-primary font-black italic tracking-tight text-xs">₹{proposedExpenses[cat]?.toLocaleString() || 0}</span>
                   </div>
                   <input 
                     type="range" 
@@ -119,14 +119,14 @@ export default function ScenarioAnalyzer({ currentIncome, currentExpenses }) {
                 <div className="text-center">
                   <p className="text-[10px] text-text-tertiary uppercase tracking-[0.4em] font-black mb-4">Projected Surplus Matrix</p>
                   <div className={`text-6xl font-black tracking-tighter drop-shadow-2xl italic ${result.projected_savings >= 0 ? 'text-text-primary underline decoration-brand-500/40 decoration-8 underline-offset-8' : 'text-rose-500'}`}>
-                    ${result.projected_savings.toLocaleString()}
+                    ₹{result.projected_savings.toLocaleString()}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-6">
                   <div className="bg-bg-panel/40 p-6 rounded-3xl border border-white/5 text-center shadow-2xl group hover:border-brand-500/20 transition-colors">
                     <p className="text-[9px] text-text-tertiary font-black uppercase tracking-widest mb-2">Aggregate Burn</p>
-                    <p className="text-2xl font-black text-text-primary italic">${totalProposed.toLocaleString()}</p>
+                    <p className="text-2xl font-black text-text-primary italic">₹{totalProposed.toLocaleString()}</p>
                   </div>
                   <div className="bg-bg-panel/40 p-6 rounded-3xl border border-white/5 text-center shadow-2xl group hover:border-brand-500/20 transition-colors">
                     <p className="text-[9px] text-text-tertiary font-black uppercase tracking-widest mb-2">Stability Rating</p>

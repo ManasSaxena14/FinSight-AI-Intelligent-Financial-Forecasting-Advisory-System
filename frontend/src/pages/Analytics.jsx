@@ -13,7 +13,8 @@ export default function Analytics() {
   const [data, setData] = useState({
     expenses: [],
     forecast: null,
-    recommendations: null
+    recommendations: null,
+    healthScore: null
   });
   const [isLoading, setIsLoading] = useState(true);
   const containerRef = useRef(null);
@@ -29,16 +30,18 @@ export default function Analytics() {
           const latest = history[history.length - 1];
           const payload = { income: latest.income, expenses: latest.expenses };
 
-          // Fetch ML forecast and recommendations concurrently for speed
-          const [forecastData, recData] = await Promise.all([
+          // Fetch ML forecast, recommendations, and health score concurrently
+          const [forecastData, recData, healthData] = await Promise.all([
             mlService.getForecast(payload),
-            mlService.getRecommendations(payload)
+            mlService.getRecommendations(payload),
+            mlService.getHealthScore(payload)
           ]);
 
           setData({
             expenses: history,
             forecast: forecastData,
-            recommendations: recData
+            recommendations: recData,
+            healthScore: healthData
           });
         } else {
           setData(prev => ({ ...prev, expenses: [] }));
@@ -97,9 +100,28 @@ export default function Analytics() {
     <div className="space-y-10 relative" ref={containerRef}>
       <div className="absolute inset-0 bg-noise opacity-[0.02] pointer-events-none" />
 
-      <header className="relative z-10">
-        <h1 className="text-4xl font-black text-text-primary tracking-tighter italic italic">Intelligence & Forensics.</h1>
-        <p className="text-sm text-text-tertiary mt-2 font-medium tracking-wide">Predictive machine learning models and fiscal optimization pathways.</p>
+      <header className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div>
+          <h1 className="text-4xl font-black text-text-primary tracking-tighter italic">Intelligence & Forensics.</h1>
+          <p className="text-sm text-text-tertiary mt-2 font-medium tracking-wide">Predictive machine learning models and fiscal optimization pathways.</p>
+        </div>
+        
+        {data.healthScore && (
+          <div className="flex gap-4">
+            <div className="bg-black/20 border border-white/5 rounded-2xl px-6 py-3 flex flex-col items-center justify-center min-w-[140px]">
+              <p className="text-[9px] font-black text-text-tertiary uppercase tracking-widest mb-1">Stability Rating</p>
+              <p className={`text-2xl font-black italic ${data.healthScore.score >= 70 ? 'text-brand-400' : 'text-text-primary'}`}>
+                {data.healthScore.score}<span className="text-xs not-italic ml-1 opacity-40">/100</span>
+              </p>
+            </div>
+            <div className="bg-black/20 border border-white/5 rounded-2xl px-6 py-3 flex flex-col items-center justify-center min-w-[140px]">
+              <p className="text-[9px] font-black text-text-tertiary uppercase tracking-widest mb-1">Accumulation Rate</p>
+              <p className="text-2xl font-black text-brand-400 italic">
+                {data.healthScore.savings_rate_pct}%
+              </p>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Alerts / Recommendations */}
@@ -284,7 +306,7 @@ export default function Analytics() {
                     </div>
                   </div>
                   <p className="text-text-secondary text-xl font-medium leading-relaxed max-w-2xl tracking-tight">
-                    Our neural network projects your liability matrix will <span className={`font-black tracking-tighter ${data.forecast.trend_direction === 'increase' ? 'text-brand-400' : 'text-text-primary'}`}>{data.forecast.trend_direction}</span> to approximately <strong className="text-text-primary underline decoration-brand-500/30 decoration-4 underline-offset-8">${data.forecast.predicted_next_month_expense.toLocaleString()}</strong> in the next billing cycle.
+                    Our neural network projects your liability matrix will <span className={`font-black tracking-tighter ${data.forecast.trend_direction === 'increase' ? 'text-brand-400' : 'text-text-primary'}`}>{data.forecast.trend_direction}</span> to approximately <strong className="text-text-primary underline decoration-brand-500/30 decoration-4 underline-offset-8">₹{data.forecast.predicted_next_month_expense.toLocaleString()}</strong> in the next billing cycle.
                   </p>
                   <div className="flex gap-4 pt-4">
                      <div className="px-5 py-2.5 bg-white/[0.03] rounded-full border border-white/5 text-[9px] font-black text-text-tertiary uppercase tracking-[0.2em] flex items-center gap-2">
@@ -298,7 +320,7 @@ export default function Analytics() {
                 <div className="shrink-0 bg-white/5 backdrop-blur-3xl rounded-[2.5rem] p-12 border border-white/10 text-center min-w-[280px] shadow-2xl ring-1 ring-white/10 relative overflow-hidden group/box transition-transform hover:scale-105 duration-700">
                   <div className="absolute inset-0 bg-gradient-to-br from-brand-500/5 to-transparent opacity-0 group-hover/box:opacity-100 transition-opacity" />
                   <p className="text-brand-500 text-[10px] font-black uppercase tracking-[0.3em] mb-4 relative z-10">Projected Liability</p>
-                  <p className="text-6xl font-black tracking-tight text-white drop-shadow-2xl mb-4 relative z-10 italic">${data.forecast.predicted_next_month_expense.toLocaleString()}</p>
+                  <p className="text-6xl font-black tracking-tight text-white drop-shadow-2xl mb-4 relative z-10 italic">₹{data.forecast.predicted_next_month_expense.toLocaleString()}</p>
                   <div className={`mt-2 inline-flex items-center px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.2em] relative z-10 transition-all ${data.forecast.trend_direction === 'increase' ? 'bg-brand-500/20 text-brand-300 border border-brand-500/30 shadow-[0_0_15px_rgba(212,175,55,0.2)]' : 'bg-white/10 text-white border border-white/20'}`}>
                     {data.forecast.trend_direction === 'increase' ? <TrendingUp className="mr-2 h-3.5 w-3.5"/> : <TrendingDown className="mr-2 h-3.5 w-3.5"/>}
                     {data.forecast.trend_direction} Trend

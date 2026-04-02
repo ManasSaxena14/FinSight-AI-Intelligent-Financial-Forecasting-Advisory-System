@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { premiumService } from '../api/premiumService';
 import { Card, CardContent, CardHeader, CardTitle } from './Card';
-import { Lightbulb, TrendingUp, AlertTriangle, CheckCircle, DollarSign, Zap } from 'lucide-react';
+import { Lightbulb, TrendingUp, AlertTriangle, CheckCircle, IndianRupee, Zap } from 'lucide-react';
 
 const PRIORITY_CONFIG = {
   high:   { label: 'High Impact', color: 'text-red-400',    bg: 'bg-red-500/10',    border: 'border-red-500/30',    icon: AlertTriangle },
@@ -61,13 +61,13 @@ export default function SmartSavings() {
               <div className="text-right">
                 <p className="text-[9px] text-text-tertiary font-black uppercase tracking-widest">Monthly Potential</p>
                 <p className="text-2xl font-black text-brand-400 tracking-tight italic drop-shadow-[0_0_10px_rgba(212,175,55,0.4)]">
-                  +${data.monthly_saving_potential.toLocaleString()}
+                  +₹{data.monthly_saving_potential.toLocaleString()}
                 </p>
               </div>
               <div className="text-right">
                 <p className="text-[9px] text-text-tertiary font-black uppercase tracking-widest">Annual Potential</p>
                 <p className="text-2xl font-black text-text-primary tracking-tight italic">
-                  +${data.annual_saving_potential.toLocaleString()}
+                  +₹{data.annual_saving_potential.toLocaleString()}
                 </p>
               </div>
             </div>
@@ -118,7 +118,7 @@ export default function SmartSavings() {
                 {tip.potential_saving > 0 && (
                   <div className="shrink-0 text-right">
                     <div className="flex items-center gap-1.5 justify-end">
-                      <DollarSign className="w-3.5 h-3.5 text-brand-500" />
+                      <IndianRupee className="w-3.5 h-3.5 text-brand-500" />
                       <span className="text-lg font-black text-text-primary tracking-tight italic">
                         {tip.potential_saving.toLocaleString()}
                       </span>
