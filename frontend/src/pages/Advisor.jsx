@@ -47,17 +47,23 @@ export default function Advisor() {
 
   useEffect(() => {
     if (!isLoading && containerRef.current) {
-      gsap.fromTo(
-        gsap.utils.toArray('.advisor-card'),
-        { y: 24, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.55, stagger: 0.08, ease: 'power2.out' }
-      );
+      const targets = gsap.utils.toArray('.advisor-card');
+      if (targets.length > 0) {
+        gsap.fromTo(
+          targets,
+          { y: 24, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.55, stagger: 0.08, ease: 'power2.out' }
+        );
+      }
     }
-  }, [isLoading]);
+  }, [isLoading, latestRecord, aiSummary]);
 
   // Re-animate content when tab changes
   useEffect(() => {
-    gsap.fromTo('#tab-content', { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' });
+    const el = document.getElementById('tab-content');
+    if (el) {
+      gsap.fromTo(el, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' });
+    }
   }, [activeTab]);
 
   return (

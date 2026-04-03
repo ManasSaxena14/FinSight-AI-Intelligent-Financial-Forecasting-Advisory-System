@@ -19,5 +19,14 @@ export const authService = {
   login: async (credentials) => {
     const response = await apiClient.post('/auth/login', credentials);
     return response.data;
+  },
+
+  /**
+   * Get current user profile
+   * @returns {Promise<Object>} The user object
+   */
+  getMe: async () => {
+    const response = await apiClient.get('/auth/me');
+    return response.data;
   }
 };

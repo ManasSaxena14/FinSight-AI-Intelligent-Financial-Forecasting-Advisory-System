@@ -5,7 +5,7 @@ from datetime import datetime
 
 from app.models.schemas import UserCreate, UserResponse, Token, UserLogin
 from app.db import get_users_collection
-from app.services.auth import get_password_hash, verify_password, create_access_token
+from app.services.auth import get_password_hash, verify_password, create_access_token, get_current_user
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
@@ -76,4 +76,25 @@ async def login(user_credentials: UserLogin):
     # Convention is to store user ID in the 'sub' (subject) claim
     access_token = create_access_token(data={"sub": str(user["_id"])})
     
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer",
+        "user": UserResponse(
+            id=str(user["_id"]),
+            name=user["name"],
+            email=user["email"],
+            created_at=user["created_at"]
+        )
+    }
+
+@router.get("/me", response_model=UserResponse)
+async def get_me(current_user: dict = Depends(get_current_user)):
+    """
+    Get current logged-in user profile from token.
+    """
+    return UserResponse(
+        id=str(current_user["id"]),
+        name=current_user["name"],
+        email=current_user["email"],
+        created_at=current_user["created_at"]
+    )

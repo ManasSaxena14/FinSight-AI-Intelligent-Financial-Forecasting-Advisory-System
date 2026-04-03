@@ -120,8 +120,8 @@ export default function Layout() {
             
             <Link to="/profile" className="flex items-center gap-4 group cursor-pointer border-l border-white/5 pl-8 py-2 relative">
               <div className="text-right hidden sm:block">
-                <p className="text-sm font-black text-text-primary tracking-tight">{user?.name || 'Member'}</p>
-                <p className="text-[10px] text-brand-500 font-bold uppercase tracking-widest">Enterprise Elite</p>
+                <p className="text-sm font-black text-text-primary tracking-tight">{user?.name || 'Authorized Member'}</p>
+                <p className="text-[10px] text-brand-500 font-bold uppercase tracking-widest">Neural Strategist</p>
               </div>
               <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-bg-elevated to-bg-panel border border-brand-500/20 flex items-center justify-center text-brand-400 font-black shadow-lg group-hover:border-brand-500/50 transition-all duration-500 group-hover:scale-105 overflow-hidden">
                 {user?.name?.charAt(0).toUpperCase() || 'U'}

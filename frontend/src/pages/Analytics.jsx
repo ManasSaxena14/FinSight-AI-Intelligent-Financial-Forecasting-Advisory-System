@@ -89,6 +89,7 @@ export default function Analytics() {
     recommendations: null,
     healthScore: null,
     prediction: null,
+    classification: null,
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -115,6 +116,7 @@ export default function Analytics() {
             mlService.getForecast(payload),
             mlService.getRecommendations(payload),
             mlService.getHealthScore(payload),
+            mlService.getClassification(payload),
           ]);
 
           setData({
@@ -123,6 +125,7 @@ export default function Analytics() {
             recommendations: results[1].status === 'fulfilled' ? results[1].value : null,
             healthScore: results[2].status === 'fulfilled' ? results[2].value : null,
             prediction: results[0].status === 'fulfilled' ? results[0].value : null,
+            classification: results[3].status === 'fulfilled' ? results[3].value : null,
           });
         } else {
           setData((prev) => ({ ...prev, expenses: [] }));
@@ -262,38 +265,51 @@ export default function Analytics() {
         )}
       </header>
 
-      {/* ── Summary Cards Row ───────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 relative z-10">
-        <div className="summary-card">
-          <SummaryCard
-            label="Total Income"
-            value={`₹${totalIncome.toLocaleString()}`}
-            subValue="Current Cycle"
-            icon={Coins}
-            accent="gold"
-            isLoading={isLoading}
-          />
+      {/* ── Summary Cards ───────────────────────────────────────────── */}
+      <div className="space-y-8 relative z-10">
+        <div>
+          <h3 className="text-lg font-black text-text-secondary tracking-widest uppercase mb-4 pl-1">
+            Current Fiscal State
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            <div className="summary-card">
+              <SummaryCard
+                label="Total Income"
+                value={`₹${totalIncome.toLocaleString()}`}
+                subValue="Current Cycle"
+                icon={Coins}
+                accent="gold"
+                isLoading={isLoading}
+              />
+            </div>
+            <div className="summary-card">
+              <SummaryCard
+                label="Total Expense"
+                value={`₹${totalExpense.toLocaleString()}`}
+                subValue={`${categoryData.length} Categories`}
+                icon={CreditCard}
+                accent="neutral"
+                isLoading={isLoading}
+              />
+            </div>
+            <div className="summary-card">
+              <SummaryCard
+                label="Savings Balance"
+                value={`₹${remainingBalance.toLocaleString()}`}
+                subValue={remainingBalance >= 0 ? 'Surplus' : 'Deficit'}
+                icon={PiggyBank}
+                accent={remainingBalance >= 0 ? 'positive' : 'danger'}
+                isLoading={isLoading}
+              />
+            </div>
+          </div>
         </div>
-        <div className="summary-card">
-          <SummaryCard
-            label="Total Expense"
-            value={`₹${totalExpense.toLocaleString()}`}
-            subValue={`${categoryData.length} Categories`}
-            icon={CreditCard}
-            accent="neutral"
-            isLoading={isLoading}
-          />
-        </div>
-        <div className="summary-card">
-          <SummaryCard
-            label="Savings Balance"
-            value={`₹${remainingBalance.toLocaleString()}`}
-            subValue={remainingBalance >= 0 ? 'Surplus' : 'Deficit'}
-            icon={PiggyBank}
-            accent={remainingBalance >= 0 ? 'positive' : 'danger'}
-            isLoading={isLoading}
-          />
-        </div>
+
+        <div>
+          <h3 className="text-lg font-black text-brand-500 tracking-widest uppercase mb-4 pl-1">
+            Neural Intelligence
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         <div className="summary-card">
           <SummaryCard
             label="Predicted Next"
@@ -311,6 +327,17 @@ export default function Analytics() {
         </div>
         <div className="summary-card">
           <SummaryCard
+            label="Behavioral Class"
+            value={data.classification ? (data.classification.predicted_class === 2 ? 'Good' : data.classification.predicted_class === 1 ? 'Moderate' : 'Poor') : '—'}
+            subValue={data.classification ? `Conf: ${(data.classification.confidence_score * 100).toFixed(1)}%` : 'Awaiting Data'}
+            icon={Activity}
+            accent={data.classification ? (data.classification.predicted_class === 2 ? 'positive' : data.classification.predicted_class === 1 ? 'gold' : 'danger') : 'neutral'}
+            badge="ML CLASSIFIER"
+            isLoading={isLoading}
+          />
+        </div>
+        <div className="summary-card">
+          <SummaryCard
             label="Health Score"
             value={data.healthScore ? `${data.healthScore.score}/100` : '—'}
             subValue={data.healthScore ? data.healthScore.status : 'Awaiting Data'}
@@ -319,6 +346,8 @@ export default function Analytics() {
             badge="AI LIVE"
             isLoading={isLoading}
           />
+        </div>
+          </div>
         </div>
       </div>
 
@@ -341,13 +370,13 @@ export default function Analytics() {
           isLoading={isLoading}
         >
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
+            <PieChart margin={{ top: 30, right: 30, left: 30, bottom: 30 }}>
               <Pie
                 data={categoryData}
                 cx="50%"
                 cy="50%"
-                innerRadius={75}
-                outerRadius={130}
+                innerRadius="50%"
+                outerRadius="75%"
                 paddingAngle={3}
                 dataKey="amount"
                 nameKey="name"
@@ -391,7 +420,7 @@ export default function Analytics() {
           isLoading={isLoading}
         >
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={trendData} margin={{ top: 20, right: 20, left: 10, bottom: 0 }}>
+            <AreaChart data={trendData} margin={{ top: 20, right: 20, left: 20, bottom: 15 }}>
               <defs>
                 <linearGradient id="gradIncome" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#d4af37" stopOpacity={0.15} />
@@ -406,7 +435,7 @@ export default function Analytics() {
                   <stop offset="95%" stopColor="#34d399" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="0" vertical={false} stroke="#1f1f1f" />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1f1f1f" />
               <XAxis
                 dataKey="name"
                 stroke="#404040"
@@ -485,9 +514,9 @@ export default function Analytics() {
             <BarChart
               data={categoryData}
               layout="vertical"
-              margin={{ top: 5, right: 30, left: 30, bottom: 20 }}
+              margin={{ top: 5, right: 30, left: 40, bottom: 20 }}
             >
-              <CartesianGrid strokeDasharray="0" horizontal={false} stroke="#1f1f1f" />
+              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#1f1f1f" />
               <XAxis type="number" hide />
               <YAxis
                 dataKey="name"
@@ -497,7 +526,7 @@ export default function Analytics() {
                 fontWeight="900"
                 tickLine={false}
                 axisLine={false}
-                width={100}
+                width={120}
                 textAnchor="end"
               />
               <Tooltip
@@ -530,8 +559,8 @@ export default function Analytics() {
           isLoading={isLoading}
         >
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={forecastChartData} margin={{ top: 20, right: 20, left: 10, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="0" vertical={false} stroke="#1f1f1f" />
+            <LineChart data={forecastChartData} margin={{ top: 20, right: 20, left: 20, bottom: 15 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1f1f1f" />
               <XAxis
                 dataKey="name"
                 stroke="#404040"

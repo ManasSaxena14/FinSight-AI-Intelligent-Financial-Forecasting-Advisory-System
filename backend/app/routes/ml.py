@@ -5,7 +5,8 @@ from app.models.schemas import (  # type: ignore
     ForecastRequest,
     ForecastResponse,
     HealthScoreResponse,
-    RecommendationsResponse
+    RecommendationsResponse,
+    ClassificationResponse
 )
 from app.ml.advanced_ml import (  # type: ignore
     multi_month_forecasting,
@@ -45,6 +46,52 @@ def predict_expense(req: PredictionRequest, current_user: dict = Depends(get_cur
             projected_savings=float(f"{savings:.2f}")
         )
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ── 1.b Predict Classification (Logistic Regression) ────────────────────────
+import os
+import joblib
+
+CLASSIFIER_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "ml", "logistic_model.pkl")
+
+def _load_classifier_model():
+    if not os.path.exists(CLASSIFIER_PATH):
+        raise RuntimeError("Classification model not trained yet.")
+    data = joblib.load(CLASSIFIER_PATH)
+    return data["model"], data.get("features", [])
+
+@router.post("/predict-classification", response_model=ClassificationResponse)
+def predict_behavioral_classification(req: PredictionRequest, current_user: dict = Depends(get_current_user)):
+    """
+    Predict behavioral financial category using Logistic Regression.
+    """
+    try:
+        model, features = _load_classifier_model()
+        
+        # Build feature dict
+        expense_dict = req.expenses.dict()
+        row = {"Income": req.income, **expense_dict}
+        
+        X = pd.DataFrame([row])[features]
+        predicted_class = int(model.predict(X)[0])
+        probabilities = model.predict_proba(X)[0]
+        confidence = float(max(probabilities))
+        
+        # Map to insights based on training phase definitions
+        insight_map = {
+            0: "Overspending / Poor Financial Health",
+            1: "Financial Health: Moderate",
+            2: "Financial Health: Good"
+        }
+        
+        return ClassificationResponse(
+            predicted_class=predicted_class,
+            confidence_score=confidence,
+            behavioral_insight=insight_map.get(predicted_class, "Unknown State")
+        )
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 # ── 2. Multi-Month Forecast ─────────────────────────────────────────────────

@@ -19,9 +19,9 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score, accuracy_score, confusion_matrix, precision_score, recall_score
 
 # ── Paths ────────────────────────────────────────────────────────────────────
 SCRIPT_DIR   = os.path.dirname(os.path.abspath(__file__))
@@ -255,5 +255,92 @@ print(f"  Features   : {FEATURE_COLS}")
 print(f"  R2 Score   : {best_metrics['r2']:.6f}")
 
 print("\n" + "=" * 60)
-print("ML MODEL TRAINING COMPLETE")
+print("ML MODEL TRAINING COMPLETE (REGRESSION)")
+print("=" * 60)
+
+# ==========================================================================
+# STEP 10 -- Add Classification Capability (Behavior & Health)
+# ==========================================================================
+print("\n" + "=" * 60)
+print("STEP 10: Defining Classification Targets")
+print("=" * 60)
+
+def assign_health_category(row):
+    savings = row["Income"] - row["Total_Expense"]
+    savings_rate = (savings / row["Income"]) if row["Income"] > 0 else 0
+    if savings_rate < 0:
+        return 0  # Poor
+    elif savings_rate < 0.15:
+        return 1  # Moderate
+    else:
+        return 2  # Good
+
+df["Health_Category"] = df.apply(assign_health_category, axis=1)
+
+y_class = df["Health_Category"]
+
+print(f"  Classification Target: Health_Category (0=Poor, 1=Moderate, 2=Good)")
+print(df["Health_Category"].value_counts().sort_index())
+
+
+# ==========================================================================
+# STEP 11 -- Train/Test Split (Classification)
+# ==========================================================================
+print("\n" + "=" * 60)
+print("STEP 11: Splitting data into train/test sets for Classification")
+print("=" * 60)
+
+X_train_c, X_test_c, y_train_c, y_test_c = train_test_split(
+    X, y_class, test_size=0.2, random_state=42, stratify=y_class
+)
+
+print(f"  Training set (Class): {X_train_c.shape[0]} samples")
+print(f"  Testing set  (Class): {X_test_c.shape[0]} samples\n")
+
+
+# ==========================================================================
+# STEP 12 -- Train Logistic Regression Model
+# ==========================================================================
+print("=" * 60)
+print("STEP 12: Training Logistic Regression Model")
+print("=" * 60)
+
+log_clf = LogisticRegression(max_iter=1000, random_state=42)
+log_clf.fit(X_train_c, y_train_c)
+log_pred = log_clf.predict(X_test_c)
+
+acc = accuracy_score(y_test_c, log_pred)
+prec = precision_score(y_test_c, log_pred, average='weighted', zero_division=0)
+rec = recall_score(y_test_c, log_pred, average='weighted', zero_division=0)
+cm = confusion_matrix(y_test_c, log_pred)
+
+print(f"\n  Logistic Regression Evaluation:")
+print(f"    Accuracy  : {acc:.4f}")
+print(f"    Precision : {prec:.4f}")
+print(f"    Recall    : {rec:.4f}")
+print(f"\n    Confusion Matrix:\n{cm}")
+
+
+# ==========================================================================
+# STEP 13 -- Save Classification Model
+# ==========================================================================
+print("\n" + "=" * 60)
+print("STEP 13: Saving the Classification model")
+print("=" * 60)
+
+CLASSIFIER_PATH = os.path.join(SCRIPT_DIR, "logistic_model.pkl")
+
+clf_data = {
+    "model": log_clf,
+    "model_name": "Logistic Regression Classifier",
+    "features": FEATURE_COLS,
+    "target": "Health_Category",
+    "metrics": {"accuracy": acc, "precision": prec, "recall": rec},
+}
+
+joblib.dump(clf_data, CLASSIFIER_PATH)
+print(f"  Model saved: {CLASSIFIER_PATH}")
+
+print("\n" + "=" * 60)
+print("ALL ML MODEL TRAINING FULLY COMPLETE")
 print("=" * 60)

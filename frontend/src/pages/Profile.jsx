@@ -27,11 +27,13 @@ export default function Profile() {
   }, []);
 
   useEffect(() => {
-    gsap.fromTo(
-      containerRef.current,
-      { y: 20, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out' }
-    );
+    if (containerRef.current) {
+      gsap.fromTo(
+        containerRef.current,
+        { y: 20, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out' }
+      );
+    }
   }, []);
 
   if (!user) return null;
@@ -59,8 +61,8 @@ export default function Profile() {
               <User className="w-10 h-10 text-black group-hover:scale-110 transition-transform" />
             </div>
             <div>
-              <CardTitle className="text-2xl font-black text-text-primary italic tracking-tight">{user.name}</CardTitle>
-              <p className="text-[10px] text-text-tertiary font-black uppercase tracking-[0.3em] mt-1">Authorized User Profile</p>
+              <CardTitle className="text-2xl font-black text-text-primary italic tracking-tight">{user.name || 'Account Holder'}</CardTitle>
+              <p className="text-[10px] text-text-tertiary font-black uppercase tracking-[0.3em] mt-1">Neural Profile: {user.name || 'Anonymous'}</p>
             </div>
           </CardHeader>
           <CardContent className="p-10 pt-12 space-y-10">
@@ -75,36 +77,42 @@ export default function Profile() {
               <div className="space-y-2 group">
                 <label className="text-[9px] font-black text-text-tertiary uppercase tracking-widest block mb-2 px-1">Identity UID</label>
                 <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/5 transition-all group-hover:border-white/10 overflow-hidden">
-                  <div className="h-2 w-2 rounded-full bg-brand-500 shrink-0" />
-                  <span className="text-[10px] font-mono text-text-tertiary truncate">{user.id}</span>
+                  <div className="h-2 w-2 rounded-full bg-brand-500 shrink-0 shadow-[0_0_8px_rgba(212,175,55,0.6)]" />
+                  <span className="text-[10px] font-mono text-text-tertiary truncate lowercase">{user.id || 'SYNC_PHASE_ACTIVE'}</span>
                 </div>
               </div>
             </div>
 
-            <div className="p-8 rounded-[2rem] bg-gradient-to-br from-brand-500/5 to-transparent border border-brand-500/10 space-y-4">
-              <div className="flex items-center gap-3">
-                <Sparkles className="w-4 h-4 text-brand-400" />
-                <p className="text-[10px] font-black text-brand-500 uppercase tracking-widest italic">Security Insight</p>
+            <div className="p-8 rounded-[2rem] bg-gradient-to-br from-brand-500/5 to-transparent border border-brand-500/10 space-y-4 relative overflow-hidden group/insight">
+              <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover/insight:opacity-[0.1] transition-opacity">
+                <ShieldCheck size={40} className="text-brand-500" />
               </div>
-              <p className="text-sm text-text-secondary leading-relaxed font-medium">Your session is currently protected by AES-256 encryption. Last login detected from a verified secure terminal.</p>
+              <div className="flex items-center gap-3 relative z-10">
+                <Sparkles className="w-4 h-4 text-brand-400" />
+                <p className="text-[10px] font-black text-brand-500 uppercase tracking-widest italic">Financial Intelligence Status</p>
+              </div>
+              <p className="text-sm text-text-secondary leading-relaxed font-medium relative z-10">
+                Your neural profile is currently optimized for <span className="text-brand-400 font-bold italic">Elite-Tier Analysis</span>. 
+                All data transit is guarded by end-to-end quantum-resistant encryption, ensuring your fiscal sovereignty remains absolute.
+              </p>
             </div>
           </CardContent>
         </Card>
 
         {/* Right Column - Membership & Actions */}
         <div className="space-y-10">
-          <Card className="glass-card border-none bg-black/20 shadow-2xl rounded-[2.5rem] overflow-hidden">
+          <Card className="glass-card border-none bg-gradient-to-br from-brand-500/10 via-black/20 to-transparent shadow-2xl rounded-[2.5rem] overflow-hidden">
             <CardContent className="p-10 text-center space-y-8">
-              <div className="mx-auto h-20 w-20 rounded-[2rem] bg-white/[0.03] border border-white/5 flex items-center justify-center text-text-tertiary">
-                <CreditCard className="w-8 h-8" />
+              <div className="mx-auto h-20 w-20 rounded-[2rem] bg-brand-500/10 border border-brand-500/20 flex items-center justify-center text-brand-400 shadow-[0_0_20px_rgba(212,175,55,0.1)]">
+                <Sparkles className="w-8 h-8" />
               </div>
               <div>
-                <p className="text-[10px] font-black text-text-tertiary uppercase tracking-widest mb-2">Membership Status</p>
-                <h3 className="text-2xl font-black text-text-primary italic tracking-tight">Essential Tier</h3>
+                <p className="text-[10px] font-black text-text-tertiary uppercase tracking-widest mb-2">Member Authorization</p>
+                <h3 className="text-2xl font-black text-text-primary italic tracking-tight uppercase">Legacy Elite</h3>
                 <p className="text-[9px] font-bold text-brand-500 uppercase tracking-[0.2em] mt-2">Active Authorization</p>
               </div>
-              <Button onClick={() => window.location.href='/plans'} variant="secondary" className="w-full py-4 rounded-2xl border-white/5 text-text-secondary font-black hover:bg-white/5 transition-all text-[10px] uppercase tracking-widest">
-                Upgrade Access
+              <Button onClick={() => window.location.href='/plans'} variant="secondary" className="w-full py-4 rounded-2xl border-brand-500/20 text-brand-400 font-black hover:bg-brand-500/10 transition-all text-[10px] uppercase tracking-widest">
+                Optimize Access
               </Button>
             </CardContent>
           </Card>

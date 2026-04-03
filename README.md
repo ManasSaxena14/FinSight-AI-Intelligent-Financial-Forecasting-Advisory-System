@@ -1,9 +1,9 @@
 # Project Proposal: AI-Powered Personal Expense Prediction and Budget Recommendation System using Machine Learning
 
-## 1️⃣ Project Title
+## Project Title
 AI-Powered Personal Expense Prediction and Budget Recommendation System using Machine Learning
 
-## 2️⃣ Problem Statement
+## Problem Statement
 Many individuals struggle to manage their personal finances due to:
 - Lack of awareness of spending patterns
 - Poor budgeting habits
@@ -17,7 +17,7 @@ There is a need for an intelligent system that can:
 - Predict future expenses
 - Provide actionable financial recommendations
 
-## 3️⃣ Objective
+## Objective
 The main objective of this project is to develop a machine learning-based financial assistant that helps users:
 - Track and analyze expenses
 - Predict future spending patterns
@@ -25,7 +25,7 @@ The main objective of this project is to develop a machine learning-based financ
 - Improve savings habits
 - Visualize financial health through dashboards
 
-## 4️⃣ Proposed Solution
+## Proposed Solution
 The proposed system will:
 - Collect user financial data (income and expenses)
 - Process and analyze historical spending

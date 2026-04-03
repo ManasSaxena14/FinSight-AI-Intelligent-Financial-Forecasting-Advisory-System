@@ -70,13 +70,16 @@ export default function Dashboard() {
   useEffect(() => {
     if (!isLoading) {
       // GSAP Stagger animation for cards (kept alongside Framer Motion for specific element staggers)
-      gsap.fromTo(
-        gsap.utils.toArray('.dash-card'),
-        { y: 20, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.5, stagger: 0.1, ease: 'power2.out', delay: 0.1 }
-      );
+      const targets = gsap.utils.toArray('.dash-card');
+      if (targets.length > 0) {
+        gsap.fromTo(
+          targets,
+          { y: 20, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.5, stagger: 0.1, ease: 'power2.out', delay: 0.1 }
+        );
+      }
     }
-  }, [isLoading]);
+  }, [isLoading, expenses]);
 
   const scoreColor = getScoreColors(healthScore?.score);
 
@@ -84,13 +87,36 @@ export default function Dashboard() {
     <div className="space-y-10 relative" ref={containerRef}>
       <div className="absolute inset-0 bg-noise opacity-[0.02] pointer-events-none" />
       
-      <div className="relative z-10">
-        <h1 className="text-4xl font-black text-text-primary tracking-tighter italic">
-          Welcome back{user?.name ? `, ${user.name}` : ''}.
-        </h1>
-        <p className="text-sm text-text-tertiary mt-2 font-medium tracking-wide">
-          Your intelligent financial snapshot for the current fiscal cycle.
-        </p>
+      <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8 pb-4 border-b border-white/5">
+        <div className="flex items-center gap-6">
+          <div className="relative group">
+            <div className="absolute inset-0 bg-brand-500/20 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+            <img 
+              src="/MAIN_LOGO.png" 
+              alt="FinSight AI" 
+              className="h-20 w-auto object-contain relative z-10 drop-shadow-[0_0_15px_rgba(212,175,55,0.4)] transition-transform duration-500 group-hover:scale-105" 
+            />
+          </div>
+          <div className="h-12 w-px bg-white/10 hidden md:block" />
+          <div>
+            <h1 className="text-4xl font-black text-text-primary tracking-tighter italic">
+              Welcome back{user?.name ? `, ${user.name}` : ''}.
+            </h1>
+            <p className="text-sm text-text-tertiary mt-1 font-medium tracking-wide italic">
+              Your intelligent financial snapshot for the current fiscal cycle.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-col items-start md:items-end gap-2 px-6 py-4 rounded-[2rem] bg-brand-500/5 border border-brand-500/10 backdrop-blur-md shadow-2xl shadow-brand-500/5">
+          <p className="text-[10px] text-brand-500 font-black uppercase tracking-[0.4em] mb-1">Corporate Mission</p>
+          <p className="text-lg font-black text-text-primary tracking-tight italic leading-none">
+            Predict Smarter. <span className="text-brand-500">Spend Better.</span>
+          </p>
+          <p className="text-lg font-black text-text-primary tracking-tight italic leading-none">
+            Grow Faster.
+          </p>
+        </div>
       </div>
 
       <AnimatePresence mode="wait">

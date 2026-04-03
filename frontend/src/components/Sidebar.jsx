@@ -25,9 +25,15 @@ export default function Sidebar() {
       <div className="absolute inset-0 bg-noise" />
       
       {/* Brand logo area */}
-      <div className="flex h-24 items-center px-6 border-b border-white/5 relative z-10 w-full mb-2">
-        <div className="flex items-center w-full justify-center">
-          <img src="/LOGO_WITH_TAGLINE.png" alt="FinSight AI Logo" className="h-24 w-auto object-contain drop-shadow-[0_0_15px_rgba(212,175,55,0.2)] ml-[-1rem] cursor-pointer hover:scale-[1.02] transition-transform duration-300" onClick={() => navigate('/')} />
+      <div className="flex h-28 items-center px-4 border-b border-white/5 relative z-10 w-full mb-2">
+        <div className="flex items-center w-full justify-center relative relative group cursor-pointer" onClick={() => navigate('/')}>
+          {/* Subtle ambient glow behind the logo */}
+          <div className="absolute inset-0 bg-white/15 blur-2xl rounded-full opacity-70 group-hover:opacity-100 transition-opacity duration-300" />
+          <img 
+            src="/LOGO_WITH_TAGLINE.png" 
+            alt="FinSight AI Logo" 
+            className="h-24 w-auto object-contain ml-[-1rem] relative z-10 transition-transform duration-300 group-hover:scale-[1.02] drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" 
+          />
         </div>
       </div>
 
@@ -67,11 +73,11 @@ export default function Sidebar() {
       <div className="border-t border-white/5 p-5 bg-black/20 relative z-10">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-bg-elevated to-bg-panel border border-white/5 shadow-inner text-xs font-black text-brand-400">
-            {user?.email?.charAt(0).toUpperCase() || 'U'}
+            {(user?.name || user?.email || 'U').charAt(0).toUpperCase()}
           </div>
           <div className="flex-1 truncate">
-            <p className="truncate text-sm font-bold text-text-primary">{user?.email || 'User'}</p>
-            <p className="truncate text-[10px] text-brand-500/70 font-black uppercase tracking-widest">Premium Tier</p>
+            <p className="truncate text-sm font-bold text-text-primary">{user?.name || user?.email || 'Authorized User'}</p>
+            <p className="truncate text-[10px] text-brand-500/70 font-black uppercase tracking-widest">Neural Architect</p>
           </div>
           <button
             onClick={handleLogout}

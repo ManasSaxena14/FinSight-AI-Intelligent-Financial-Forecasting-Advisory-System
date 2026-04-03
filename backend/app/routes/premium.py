@@ -523,6 +523,7 @@ async def get_live_budget(current_user: dict = Depends(get_current_user)):
     
     latest = records[0]
     income = float(latest.get("income", 0))
+    expenses = latest.get("expenses", {})
     total_expense = float(latest.get("total_expense", 0))
     savings = float(latest.get("savings", income - total_expense))
     savings_rate = (savings / income * 100) if income > 0 else 0

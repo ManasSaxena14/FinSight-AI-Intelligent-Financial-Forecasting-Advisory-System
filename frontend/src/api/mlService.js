@@ -16,8 +16,13 @@ export const mlService = {
    * @param {Object} profile - { income, expenses }
    * @returns {Promise<Object>} forecast data including predicted_next_month_expense
    */
-  getForecast: async (profile) => {
-    const response = await apiClient.post('/ml/forecast', profile);
+  getForecast: async (payload) => {
+    const response = await apiClient.post('/ml/forecast', payload);
+    return response.data;
+  },
+  
+  getClassification: async (payload) => {
+    const response = await apiClient.post('/ml/predict-classification', payload);
     return response.data;
   },
 

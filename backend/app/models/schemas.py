@@ -47,6 +47,7 @@ class UserLogin(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+    user: UserResponse
 
 class UserResponse(BaseModel):
     id: str
@@ -66,6 +67,11 @@ class PredictionRequest(BaseModel):
 class PredictionResponse(BaseModel):
     predicted_total_expense: float
     projected_savings: float
+
+class ClassificationResponse(BaseModel):
+    predicted_class: int
+    confidence_score: float
+    behavioral_insight: str
 
 class ForecastRequest(PredictionRequest):
     months: int = Field(3, ge=1, le=12)

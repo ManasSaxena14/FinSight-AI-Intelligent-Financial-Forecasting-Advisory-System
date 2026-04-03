@@ -10,31 +10,45 @@ export const AuthProvider = ({ children }) => {
 
   // Load user and token from localStorage on fresh reload
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
-    
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (e) {
-        console.error("Failed to parse stored user", e);
-        logout();
+    const initAuth = async () => {
+      const storedToken = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
+      
+      if (storedToken) {
+        setToken(storedToken);
+        if (storedUser) {
+          try {
+            setUser(JSON.parse(storedUser));
+          } catch (e) {
+            console.error("Failed to parse stored user", e);
+          }
+        }
+        
+        // Silently refresh user data from backend to ensure we have latest name/id
+        try {
+          const freshUser = await authService.getMe();
+          setUser(freshUser);
+          localStorage.setItem('user', JSON.stringify(freshUser));
+        } catch (e) {
+          console.error("Session sync failed", e);
+          if (e.response?.status === 401) logout();
+        }
       }
-    }
-    setIsLoading(false);
+      setIsLoading(false);
+    };
+
+    initAuth();
   }, []);
 
   const login = async (email, password) => {
     try {
       const data = await authService.login({ email, password });
-      const { access_token } = data;
+      const { access_token, user: userData } = data;
       
       // Store token
       setToken(access_token);
       localStorage.setItem('token', access_token);
       
-      const userData = { email, timestamp: Date.now() }; 
       setUser(userData);
       localStorage.setItem('user', JSON.stringify(userData));
       
