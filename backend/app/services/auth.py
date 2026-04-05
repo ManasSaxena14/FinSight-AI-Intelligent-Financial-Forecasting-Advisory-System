@@ -5,7 +5,7 @@ Handles password hashing, JWT token generation,
 and extracting the authenticated user from tokens.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 from jose import JWTError, jwt
 import bcrypt  # using bcrypt directly instead of passlib to avoid 72-byte string bug
@@ -37,11 +37,12 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     """Generate a new JWT token containing the given payload data."""
     to_encode = data.copy()
+    now = datetime.now(timezone.utc)
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = now + expires_delta
     else:
         # Default expiration from settings
-        expire = datetime.utcnow() + timedelta(minutes=settings.JWT_EXPIRATION_MINUTES)
+        expire = now + timedelta(minutes=settings.JWT_EXPIRATION_MINUTES)
         
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
@@ -71,7 +72,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
         raise credentials_exception
 
     # Fetch user from DB to ensure they still exist
-    users_collection = get_users_collection()
+    users_collection = await get_users_collection()
     user = await users_collection.find_one({"_id": user_id})
     if user is None:
         raise credentials_exception

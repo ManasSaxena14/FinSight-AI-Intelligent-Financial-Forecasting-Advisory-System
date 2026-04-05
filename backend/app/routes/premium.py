@@ -62,7 +62,7 @@ def _assess_goal_track(target_amount: float, current_savings: float, target_date
 @router.post("/goals", response_model=GoalResponse)
 async def create_goal(goal: GoalCreate, current_user: dict = Depends(get_current_user)):
     """Create a new financial goal."""
-    db = get_database()
+    db = await get_database()
     goal_id = str(uuid.uuid4())
     
     document = {
@@ -72,7 +72,7 @@ async def create_goal(goal: GoalCreate, current_user: dict = Depends(get_current
         "target_amount": goal.target_amount,
         "target_date": goal.target_date,
         "current_savings": 0.0,
-        "created_at": datetime.utcnow()
+        "created_at": datetime.now(timezone.utc)
     }
     
     await db["goals"].insert_one(document)
@@ -94,7 +94,7 @@ async def create_goal(goal: GoalCreate, current_user: dict = Depends(get_current
 @router.get("/goals", response_model=List[GoalResponse])
 async def get_goals(current_user: dict = Depends(get_current_user)):
     """Retrieve all goals for the user with proper progress and track assessment."""
-    db = get_database()
+    db = await get_database()
     
     goals_cursor = db["goals"].find({"user_id": current_user["id"]}).sort("created_at", -1)
     
@@ -121,7 +121,7 @@ async def get_goals(current_user: dict = Depends(get_current_user)):
 @router.put("/goals/{goal_id}/contribute", response_model=GoalResponse)
 async def contribute_to_goal(goal_id: str, contribution: GoalContribution, current_user: dict = Depends(get_current_user)):
     """Add a manual savings contribution to a specific goal."""
-    db = get_database()
+    db = await get_database()
     
     goal_doc = await db["goals"].find_one({"_id": goal_id, "user_id": current_user["id"]})
     if not goal_doc:
@@ -154,7 +154,7 @@ async def contribute_to_goal(goal_id: str, contribution: GoalContribution, curre
 @router.delete("/goals/{goal_id}", response_model=GoalDeleteResponse)
 async def delete_goal(goal_id: str, current_user: dict = Depends(get_current_user)):
     """Delete a financial goal."""
-    db = get_database()
+    db = await get_database()
     
     result = await db["goals"].delete_one({"_id": goal_id, "user_id": current_user["id"]})
     if result.deleted_count == 0:
@@ -247,7 +247,7 @@ async def chat_with_advisor(req: ChatMessage, current_user: dict = Depends(get_c
 @router.post("/scenario", response_model=ScenarioResponse)
 async def analyze_scenario(req: ScenarioRequest, current_user: dict = Depends(get_current_user)):
     """Process a 'what-if' budget scenario with real savings_difference."""
-    db = get_database()
+    db = await get_database()
     
     total_proposed_expenses = sum(req.proposed_expenses.values())
     projected_savings = req.current_income - total_proposed_expenses
@@ -397,7 +397,7 @@ async def generate_monthly_summary(req: ChatMessage, current_user: dict = Depend
 @router.get("/smart-savings", response_model=SmartSavingsResponse)
 async def get_smart_savings(current_user: dict = Depends(get_current_user)):
     """Generate personalized smart savings tips based on user's actual spending data."""
-    db = get_database()
+    db = await get_database()
     
     expenses_cursor = db["expenses"].find({"user_id": current_user["id"]}).sort("created_at", -1).limit(3)
     records = []
@@ -506,7 +506,7 @@ async def get_smart_savings(current_user: dict = Depends(get_current_user)):
 @router.get("/budget-live", response_model=BudgetLiveResponse)
 async def get_live_budget(current_user: dict = Depends(get_current_user)):
     """Returns the user's current aggregated budget status for real-time display."""
-    db = get_database()
+    db = await get_database()
     
     cursor = db["expenses"].find({"user_id": current_user["id"]}).sort("created_at", -1).limit(2)
     records = []
@@ -556,7 +556,7 @@ async def get_live_budget(current_user: dict = Depends(get_current_user)):
 @router.get("/notifications", response_model=NotificationsResponse)
 async def get_notifications(current_user: dict = Depends(get_current_user)):
     """Generate real-time notifications based on the user's financial data."""
-    db = get_database()
+    db = await get_database()
     
     cursor = db["expenses"].find({"user_id": current_user["id"]}).sort("created_at", -1).limit(3)
     records = []

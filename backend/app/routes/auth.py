@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.models.schemas import UserCreate, UserResponse, Token, UserLogin
 from app.db import get_users_collection
@@ -15,7 +15,7 @@ async def register(user: UserCreate):
     Register a new user.
     Checks if the email is already registered and securely hashes the password.
     """
-    users_collection = get_users_collection()
+    users_collection = await get_users_collection()
     
     # Check if user already exists
     existing_user = await users_collection.find_one({"email": user.email})
@@ -28,7 +28,7 @@ async def register(user: UserCreate):
     # Create user document
     user_id = str(uuid.uuid4())
     hashed_password = get_password_hash(user.password)
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     
     user_doc = {
         "_id": user_id,
@@ -53,7 +53,7 @@ async def login(user_credentials: UserLogin):
     """
     Authenticate a user and return a JWT access token.
     """
-    users_collection = get_users_collection()
+    users_collection = await get_users_collection()
     
     # Find user
     user = await users_collection.find_one({"email": user_credentials.email})

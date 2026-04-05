@@ -10,6 +10,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
+from app.config import settings
 from app.routes import ml, expenses, auth, premium
 from app.db import DatabaseManager
 
@@ -19,16 +20,16 @@ from app.db import DatabaseManager
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: Connect to MongoDB
-    DatabaseManager.connect_to_database()
+    await DatabaseManager.connect_to_database()
     yield
     # Shutdown: Close MongoDB connection
-    DatabaseManager.close_database_connection()
+    await DatabaseManager.close_database_connection()
 
 # ---------------------------------------------------------------------------
 # App Initialization
 # ---------------------------------------------------------------------------
 app = FastAPI(
-    title="FinSight AI",
+    title=settings.APP_NAME,
     description="Intelligent Financial Forecasting & Advisory System",
     version="1.0.0",
     lifespan=lifespan
@@ -39,7 +40,7 @@ app = FastAPI(
 # ---------------------------------------------------------------------------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],   # Vite dev server
+    allow_origins=settings.ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

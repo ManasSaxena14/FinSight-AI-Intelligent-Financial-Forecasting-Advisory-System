@@ -4,7 +4,7 @@ from app.models.schemas import AddExpenseRequest, ExpenseRecordResponse
 from app.db import get_expenses_collection
 from app.services.auth import get_current_user
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 router = APIRouter(prefix="/api/expenses", tags=["Expenses"])
 
@@ -14,8 +14,12 @@ async def add_expense(req: AddExpenseRequest, current_user: dict = Depends(get_c
     Store new expense data in MongoDB. Protect with JWT.
     """
     try:
-        collection = get_expenses_collection()
+        collection = await get_expenses_collection()
         existing = await collection.find_one({"user_id": current_user["id"], "month": req.month})
+        
+        # Use timezone-aware UTC datetime
+        now = datetime.now(timezone.utc)
+        
         if existing:
             # Add new income to existing income for a cumulative total
             new_income = existing.get("income", 0) + float(req.income)
@@ -32,7 +36,7 @@ async def add_expense(req: AddExpenseRequest, current_user: dict = Depends(get_c
             entry_data = {
                 "income": float(req.income),
                 "expenses": req.expenses.dict(),
-                "added_at": datetime.utcnow()
+                "added_at": now
             }
             existing_entries = existing.get("entries", [])
             existing_entries.append(entry_data)
@@ -40,16 +44,13 @@ async def add_expense(req: AddExpenseRequest, current_user: dict = Depends(get_c
             total = sum(merged_expenses.values())
             savings = new_income - total
             
-            # Update created_at so it bumps to the latest chronological spot in the UI
-            updated_time = datetime.utcnow()
-            
             updated_fields = {
                 "income": float(new_income),
                 "expenses": merged_expenses,
                 "total_expense": round(float(total), 2),
                 "savings": round(float(savings), 2),
-                "created_at": updated_time,
-                "updated_at": updated_time,
+                "created_at": now,
+                "updated_at": now,
                 "entries": existing_entries
             }
             
@@ -61,12 +62,11 @@ async def add_expense(req: AddExpenseRequest, current_user: dict = Depends(get_c
             savings = req.income - total
             
             record_id = str(uuid.uuid4())
-            created_at = datetime.utcnow()
             
             entry_data = {
                 "income": float(req.income),
                 "expenses": req.expenses.dict(),
-                "added_at": created_at
+                "added_at": now
             }
             
             document = {
@@ -77,7 +77,7 @@ async def add_expense(req: AddExpenseRequest, current_user: dict = Depends(get_c
                 "expenses": req.expenses.dict(),
                 "total_expense": round(float(total), 2),
                 "savings": round(float(savings), 2),
-                "created_at": created_at,
+                "created_at": now,
                 "entries": [entry_data]
             }
             
@@ -99,7 +99,7 @@ async def get_expenses(current_user: dict = Depends(get_current_user)):
     Retrieve stored expenses for the authenticated user from MongoDB.
     """
     try:
-        collection = get_expenses_collection()
+        collection = await get_expenses_collection()
         cursor = collection.find({"user_id": current_user["id"]}).sort("created_at", -1)
         
         user_records = []
