@@ -259,28 +259,31 @@ export default function Analytics() {
   }
 
   return (
-    <div className="space-y-10 relative" ref={containerRef}>
+    <div className="space-y-10 relative min-h-screen" ref={containerRef}>
+      {/* Background Ambience */}
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-brand-500/5 blur-[150px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-500/5 blur-[150px] rounded-full pointer-events-none" />
       <div className="absolute inset-0 bg-noise opacity-[0.02] pointer-events-none" />
 
       {/* ── Page Header ─────────────────────────────────────────────────── */}
-      <header className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <header className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6 animate-header">
         <div>
-          <h1 className="text-4xl font-black text-text-primary tracking-tighter italic animate-header">
+          <h1 className="text-4xl font-black text-text-primary tracking-tighter italic">
             Intelligence Dashboard.
           </h1>
-          <p className="text-sm text-text-tertiary mt-2 font-medium tracking-wide animate-header">
+          <p className="text-sm text-text-tertiary mt-2 font-medium tracking-wide">
             Predictive machine learning models and financial growth opportunities.
           </p>
         </div>
 
         {data.healthScore && (
-          <div className="flex gap-4 animate-header">
-            <div className="bg-black/20 border border-white/5 rounded-2xl px-6 py-3 flex flex-col items-center justify-center min-w-[140px] health-indicator">
-              <p className="text-[9px] font-black text-text-tertiary uppercase tracking-widest mb-1">
+          <div className="flex gap-4">
+            <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl px-6 py-3 flex flex-col items-center justify-center min-w-[140px] health-indicator group hover:border-brand-500/30 transition-all duration-500">
+              <p className="text-[9px] font-black text-text-tertiary uppercase tracking-widest mb-1 group-hover:text-brand-400 transition-colors">
                 Stability Status
               </p>
               <p
-                className={`text-2xl font-black italic ${
+                className={`text-2xl font-black italic transition-colors ${
                   data.healthScore.score >= 70 ? 'text-brand-400' : 'text-text-primary'
                 }`}
               >
@@ -288,8 +291,8 @@ export default function Analytics() {
                 <span className="text-xs not-italic ml-1 opacity-40">/100</span>
               </p>
             </div>
-            <div className="bg-black/20 border border-white/5 rounded-2xl px-6 py-3 flex flex-col items-center justify-center min-w-[140px] health-indicator">
-              <p className="text-[9px] font-black text-text-tertiary uppercase tracking-widest mb-1">
+            <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl px-6 py-3 flex flex-col items-center justify-center min-w-[140px] health-indicator group hover:border-brand-500/30 transition-all duration-500">
+              <p className="text-[9px] font-black text-text-tertiary uppercase tracking-widest mb-1 group-hover:text-brand-400 transition-colors">
                 Savings Rate
               </p>
               <p className="text-2xl font-black text-brand-400 italic">

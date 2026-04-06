@@ -6,6 +6,9 @@ import { Button } from './Button';
 import { Input } from './Input';
 import { Target, PlusCircle, CheckCircle2, Trash2, IndianRupee } from 'lucide-react';
 
+const MotionDiv = motion.div;
+const MotionForm = motion.form;
+
 export default function GoalTracker() {
   const [goals, setGoals] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -53,7 +56,6 @@ export default function GoalTracker() {
     if (!window.confirm("Are you sure you want to delete this objective?")) return;
     try {
       // optimistic UI removal
-      const prevGoals = [...goals];
       setGoals(goals.filter(g => g.id !== goalId));
       await premiumService.deleteGoal(goalId);
     } catch (err) {
@@ -77,12 +79,20 @@ export default function GoalTracker() {
   };
 
   if (isLoading && goals.length === 0) {
-    return <div className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.3em] p-8 animate-pulse italic">Synchronizing goals...</div>;
+    return (
+      <Card className="dash-card border-none bg-black/20 shadow-2xl rounded-[2.5rem] overflow-hidden relative p-20 text-center animate-pulse">
+        <div className="flex flex-col items-center gap-4">
+          <Target className="w-12 h-12 text-brand-500/20" />
+          <span className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.4em] italic">Synchronizing Neural Objectives...</span>
+        </div>
+      </Card>
+    );
   }
 
   return (
-    <Card className="dash-card border-none bg-black/20 shadow-2xl rounded-[2.5rem] overflow-hidden relative">
-      <CardHeader className="flex flex-row items-center justify-between py-6 px-8 border-b border-white/5 bg-transparent relative z-10">
+    <Card className="dash-card border-none bg-black/20 shadow-2xl rounded-[2.5rem] overflow-hidden relative group">
+      <div className="absolute -right-20 -top-20 w-80 h-80 bg-brand-500/5 blur-[120px] rounded-full pointer-events-none group-hover:bg-brand-500/10 transition-colors duration-1000" />
+      <CardHeader className="flex flex-row items-center justify-between py-8 px-10 border-b border-white/5 bg-transparent relative z-10">
         <div className="flex items-center gap-4">
           <div className="p-3 bg-brand-500/10 rounded-2xl border border-brand-500/20">
             <Target className="w-5 h-5 text-brand-400 drop-shadow-[0_0_8px_rgba(212,175,55,0.6)]" />
@@ -100,7 +110,7 @@ export default function GoalTracker() {
       <CardContent className="p-8 relative z-10">
         <AnimatePresence>
           {isAdding && (
-            <motion.form 
+            <MotionForm 
               initial={{ height: 0, opacity: 0, marginBottom: 0 }}
               animate={{ height: 'auto', opacity: 1, marginBottom: 40 }}
               exit={{ height: 0, opacity: 0, marginBottom: 0, overflow: 'hidden' }}
@@ -137,23 +147,23 @@ export default function GoalTracker() {
                 />
               </div>
               <Button type="submit" className="w-full bg-gradient-to-br from-brand-400 to-brand-600 text-black shadow-2xl shadow-brand-500/20 h-12 rounded-xl uppercase font-black tracking-widest text-[10px]">Create Goal</Button>
-            </motion.form>
+            </MotionForm>
           )}
         </AnimatePresence>
 
         {goals.length === 0 && !isAdding ? (
-          <motion.div 
+          <MotionDiv 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             className="text-center py-12 text-text-tertiary"
           >
             <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-2">No active goals yet.</p>
             <p className="text-[9px] font-medium tracking-widest opacity-50 uppercase">Set your first financial goal to start tracking progress.</p>
-          </motion.div>
+          </MotionDiv>
         ) : (
           <div className="space-y-10">
             <AnimatePresence>
               {goals.map(goal => (
-                <motion.div 
+                <MotionDiv 
                   key={goal.id}
                   layout
                   initial={{ opacity: 0, y: 20 }}
@@ -202,7 +212,7 @@ export default function GoalTracker() {
                   
                   <AnimatePresence>
                     {activeContribute === goal.id && (
-                       <motion.form 
+                       <MotionForm 
                           initial={{ height: 0, opacity: 0, marginBottom: 0 }}
                           animate={{ height: 'auto', opacity: 1, marginBottom: 16 }}
                           exit={{ height: 0, opacity: 0, marginBottom: 0, overflow: 'hidden' }}
@@ -225,7 +235,7 @@ export default function GoalTracker() {
                           </div>
                           <Button type="submit" className="py-2 px-4 h-auto text-[10px] bg-brand-500 hover:bg-brand-400 text-black rounded-lg uppercase tracking-widest font-bold">Add</Button>
                           <button type="button" onClick={() => setActiveContribute(null)} className="text-[10px] text-text-tertiary uppercase tracking-widest font-bold hover:text-text-secondary px-2">Cancel</button>
-                       </motion.form>
+                       </MotionForm>
                     )}
                   </AnimatePresence>
 
@@ -244,7 +254,7 @@ export default function GoalTracker() {
                       {goal.progress_percentage >= 100 ? 'SUCCESS' : goal.is_on_track ? 'NOMINAL' : 'CRITICAL'}
                     </span>
                   </div>
-                </motion.div>
+                </MotionDiv>
               ))}
             </AnimatePresence>
           </div>
