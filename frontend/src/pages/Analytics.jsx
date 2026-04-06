@@ -8,7 +8,7 @@ import {
 import {
   Activity, CreditCard, PiggyBank, TrendingUp, TrendingDown,
   Brain, HeartPulse, Coins, BarChart3, PieChart as PieIcon,
-  LineChart as LineIcon, Sparkles
+  LineChart as LineIcon, Sparkles, AlertTriangle, UserCheck
 } from 'lucide-react';
 import { Card, CardContent } from '../components/Card';
 import SummaryCard from '../components/SummaryCard';
@@ -17,8 +17,7 @@ import InsightsPanel from '../components/InsightsPanel';
 import ScenarioAnalyzer from '../components/ScenarioAnalyzer';
 import { expenseService } from '../api/expenseService';
 import { mlService } from '../api/mlService';
-
-import { getScoreColors } from './Dashboard';
+import { getScoreColors } from '../utils/scoreColors';
 
 // ── Chart color palette ──────────────────────────────────────────────────────
 const GOLD_PALETTE = [
@@ -40,12 +39,12 @@ const TOOLTIP_ITEM_STYLE = {
   letterSpacing: '0.05em',
 };
 const TOOLTIP_LABEL_STYLE = {
-  color: '#606060',
+  color: '#ffffff',
   marginBottom: '8px',
-  fontSize: '9px',
-  fontWeight: '900',
+  fontSize: '10px',
+  fontWeight: '1000',
   textTransform: 'uppercase',
-  letterSpacing: '0.12em',
+  letterSpacing: '0.15em',
 };
 
 // ── Custom Pie label for category percentages ────────────────────────────────
@@ -55,11 +54,12 @@ const renderPieLabel = ({ name, percent, x, y, midAngle }) => {
     <text
       x={x}
       y={y}
-      fill="#a0a0a0"
+      fill="#ffffff"
       textAnchor={midAngle > 180 ? 'end' : 'start'}
       dominantBaseline="central"
-      fontSize={10}
-      fontWeight={800}
+      fontSize={11}
+      fontWeight={1000}
+      style={{ filter: 'drop-shadow(0 0 2px rgba(0,0,0,0.5))' }}
     >
       {`${name} ${(percent * 100).toFixed(0)}%`}
     </text>
@@ -90,6 +90,8 @@ export default function Analytics() {
     healthScore: null,
     prediction: null,
     classification: null,
+    savingsRisk: null,
+    spendingPattern: null,
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -117,6 +119,8 @@ export default function Analytics() {
             mlService.getRecommendations(payload),
             mlService.getHealthScore(payload),
             mlService.getClassification(payload),
+            mlService.getSavingsRisk(payload),
+            mlService.getSpendingPattern(payload),
           ]);
 
           setData({
@@ -126,6 +130,8 @@ export default function Analytics() {
             healthScore: results[2].status === 'fulfilled' ? results[2].value : null,
             prediction: results[0].status === 'fulfilled' ? results[0].value : null,
             classification: results[3].status === 'fulfilled' ? results[3].value : null,
+            savingsRisk: results[4].status === 'fulfilled' ? results[4].value : null,
+            spendingPattern: results[5].status === 'fulfilled' ? results[5].value : null,
           });
         } else {
           setData((prev) => ({ ...prev, expenses: [] }));
@@ -144,11 +150,32 @@ export default function Analytics() {
   // ── GSAP entrance for summary cards ──────────────────────────────────────
   useEffect(() => {
     if (!isLoading && containerRef.current) {
-      gsap.fromTo(
-        containerRef.current.querySelectorAll('.summary-card'),
-        { y: 30, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.6, stagger: 0.08, ease: 'power2.out', delay: 0.1 }
-      );
+      const ctx = gsap.context(() => {
+        // Header animation
+        gsap.fromTo(
+          ".animate-header",
+          { y: 20, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.8, stagger: 0.1, ease: 'power3.out' }
+        );
+
+        // Summary cards animation
+        gsap.fromTo(
+          '.summary-card',
+          { y: 40, opacity: 0, scale: 0.95 },
+          { y: 0, opacity: 1, scale: 1, duration: 0.7, stagger: 0.05, ease: 'back.out(1.2)', delay: 0.2 }
+        );
+
+        // Health score indicators pulse
+        gsap.to(".health-indicator", {
+          boxShadow: "0 0 15px rgba(212, 175, 55, 0.3)",
+          repeat: -1,
+          yoyo: true,
+          duration: 1.5,
+          ease: "sine.inOut"
+        });
+      }, containerRef);
+      
+      return () => ctx.revert();
     }
   }, [isLoading]);
 
@@ -215,7 +242,15 @@ export default function Analytics() {
     Actual: e.total_expense,
   }));
 
-  if (data.forecast) {
+  if (data.forecast && data.forecast.forecast) {
+    data.forecast.forecast.forEach((f) => {
+      forecastChartData.push({
+        name: f.month_name || `Month ${f.month}`,
+        Actual: null,
+        Predicted: f.predicted_expense,
+      });
+    });
+  } else if (data.forecast) {
     forecastChartData.push({
       name: 'Next Month',
       Actual: null,
@@ -230,17 +265,17 @@ export default function Analytics() {
       {/* ── Page Header ─────────────────────────────────────────────────── */}
       <header className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h1 className="text-4xl font-black text-text-primary tracking-tighter italic">
+          <h1 className="text-4xl font-black text-text-primary tracking-tighter italic animate-header">
             Intelligence Dashboard.
           </h1>
-          <p className="text-sm text-text-tertiary mt-2 font-medium tracking-wide">
+          <p className="text-sm text-text-tertiary mt-2 font-medium tracking-wide animate-header">
             Predictive machine learning models and financial growth opportunities.
           </p>
         </div>
 
         {data.healthScore && (
-          <div className="flex gap-4">
-            <div className="bg-black/20 border border-white/5 rounded-2xl px-6 py-3 flex flex-col items-center justify-center min-w-[140px]">
+          <div className="flex gap-4 animate-header">
+            <div className="bg-black/20 border border-white/5 rounded-2xl px-6 py-3 flex flex-col items-center justify-center min-w-[140px] health-indicator">
               <p className="text-[9px] font-black text-text-tertiary uppercase tracking-widest mb-1">
                 Stability Status
               </p>
@@ -253,7 +288,7 @@ export default function Analytics() {
                 <span className="text-xs not-italic ml-1 opacity-40">/100</span>
               </p>
             </div>
-            <div className="bg-black/20 border border-white/5 rounded-2xl px-6 py-3 flex flex-col items-center justify-center min-w-[140px]">
+            <div className="bg-black/20 border border-white/5 rounded-2xl px-6 py-3 flex flex-col items-center justify-center min-w-[140px] health-indicator">
               <p className="text-[9px] font-black text-text-tertiary uppercase tracking-widest mb-1">
                 Savings Rate
               </p>
@@ -309,44 +344,55 @@ export default function Analytics() {
           <h3 className="text-lg font-black text-brand-500 tracking-widest uppercase mb-4 pl-1">
             Neural Intelligence
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-        <div className="summary-card">
-          <SummaryCard
-            label="Predicted Next"
-            value={
-              data.forecast
-                ? `₹${data.forecast.predicted_next_month_expense.toLocaleString()}`
-                : '—'
-            }
-            subValue={data.forecast ? `Trend: ${data.forecast.trend_direction}` : 'Awaiting Data'}
-            icon={Brain}
-            customColors={getScoreColors(data.healthScore?.score)}
-            badge="AI LIVE"
-            isLoading={isLoading}
-          />
-        </div>
-        <div className="summary-card">
-          <SummaryCard
-            label="Behavioral Class"
-            value={data.classification ? (data.classification.predicted_class === 2 ? 'Good' : data.classification.predicted_class === 1 ? 'Moderate' : 'Poor') : '—'}
-            subValue={data.classification ? `Conf: ${(data.classification.confidence_score * 100).toFixed(1)}%` : 'Awaiting Data'}
-            icon={Activity}
-            accent={data.classification ? (data.classification.predicted_class === 2 ? 'positive' : data.classification.predicted_class === 1 ? 'gold' : 'danger') : 'neutral'}
-            badge="ML CLASSIFIER"
-            isLoading={isLoading}
-          />
-        </div>
-        <div className="summary-card">
-          <SummaryCard
-            label="Health Score"
-            value={data.healthScore ? `${data.healthScore.score}/100` : '—'}
-            subValue={data.healthScore ? data.healthScore.status : 'Awaiting Data'}
-            icon={HeartPulse}
-            customColors={getScoreColors(data.healthScore?.score)}
-            badge="AI LIVE"
-            isLoading={isLoading}
-          />
-        </div>
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-5">
+            <div className="summary-card">
+              <SummaryCard
+                label="Predicted Next"
+                value={
+                  data.forecast
+                    ? `₹${data.forecast.predicted_next_month_expense.toLocaleString()}`
+                    : '—'
+                }
+                subValue={data.forecast ? `Trend: ${data.forecast.trend_direction}` : 'Awaiting Data'}
+                icon={Brain}
+                customColors={getScoreColors(data.healthScore?.score)}
+                badge="AI LIVE"
+                isLoading={isLoading}
+              />
+            </div>
+            <div className="summary-card">
+              <SummaryCard
+                label="Savings Risk"
+                value={data.savingsRisk ? data.savingsRisk.class_label : '—'}
+                subValue={data.savingsRisk ? `Risk: ${data.savingsRisk.risk_score}/100` : 'Awaiting Data'}
+                icon={AlertTriangle}
+                accent={data.savingsRisk ? (data.savingsRisk.risk_level === 'low' ? 'positive' : data.savingsRisk.risk_level === 'medium' ? 'gold' : 'danger') : 'neutral'}
+                badge="GBM RISK"
+                isLoading={isLoading}
+              />
+            </div>
+            <div className="summary-card">
+              <SummaryCard
+                label="Pattern Archetype"
+                value={data.spendingPattern ? data.spendingPattern.archetype : '—'}
+                subValue={data.spendingPattern ? data.spendingPattern.dominant_category : 'Awaiting Data'}
+                icon={UserCheck}
+                accent="gold"
+                badge="ML PATTERN"
+                isLoading={isLoading}
+              />
+            </div>
+            <div className="summary-card">
+              <SummaryCard
+                label="Health Score"
+                value={data.healthScore ? `${data.healthScore.score}/100` : '—'}
+                subValue={data.healthScore ? data.healthScore.status : 'Awaiting Data'}
+                icon={HeartPulse}
+                customColors={getScoreColors(data.healthScore?.score)}
+                badge="AI LIVE"
+                isLoading={isLoading}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -402,10 +448,11 @@ export default function Analytics() {
                 iconSize={8}
                 wrapperStyle={{
                   paddingTop: '20px',
-                  fontSize: '10px',
-                  fontWeight: '800',
+                  fontSize: '11px',
+                  fontWeight: '1000',
                   textTransform: 'uppercase',
-                  letterSpacing: '0.08em',
+                  letterSpacing: '0.1em',
+                  color: '#ffffff'
                 }}
               />
             </PieChart>
@@ -435,23 +482,23 @@ export default function Analytics() {
                   <stop offset="95%" stopColor="#34d399" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1f1f1f" />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#333333" />
               <XAxis
                 dataKey="name"
-                stroke="#404040"
-                fontSize={10}
+                stroke="#ffffff"
+                fontSize={11}
                 tickLine={false}
                 axisLine={false}
                 dy={15}
-                fontWeight="bold"
+                fontWeight="1000"
               />
               <YAxis
-                stroke="#404040"
-                fontSize={10}
+                stroke="#ffffff"
+                fontSize={11}
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(v) => `₹${v}`}
-                fontWeight="bold"
+                fontWeight="1000"
               />
               <Tooltip content={<CustomTooltip />} />
               <Legend
@@ -460,10 +507,11 @@ export default function Analytics() {
                 iconType="rect"
                 wrapperStyle={{
                   paddingBottom: '30px',
-                  fontSize: '10px',
-                  fontWeight: '900',
+                  fontSize: '11px',
+                  fontWeight: '1000',
                   textTransform: 'uppercase',
-                  letterSpacing: '0.1em',
+                  letterSpacing: '0.12em',
+                  color: '#ffffff'
                 }}
               />
               <Area
@@ -516,14 +564,14 @@ export default function Analytics() {
               layout="vertical"
               margin={{ top: 5, right: 30, left: 40, bottom: 20 }}
             >
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#1f1f1f" />
+              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#333333" />
               <XAxis type="number" hide />
               <YAxis
                 dataKey="name"
                 type="category"
-                stroke="#a0a0a0"
-                fontSize={11}
-                fontWeight="900"
+                stroke="#ffffff"
+                fontSize={12}
+                fontWeight="1000"
                 tickLine={false}
                 axisLine={false}
                 width={120}
@@ -531,7 +579,7 @@ export default function Analytics() {
               />
               <Tooltip
                 content={<CustomTooltip />}
-                cursor={{ fill: 'rgba(255,255,255,0.02)' }}
+                cursor={{ fill: 'rgba(255,255,255,0.05)' }}
               />
               <Bar
                 dataKey="amount"
@@ -560,23 +608,23 @@ export default function Analytics() {
         >
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={forecastChartData} margin={{ top: 20, right: 20, left: 20, bottom: 15 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1f1f1f" />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#333333" />
               <XAxis
                 dataKey="name"
-                stroke="#404040"
-                fontSize={10}
+                stroke="#ffffff"
+                fontSize={11}
                 tickLine={false}
                 axisLine={false}
                 dy={15}
-                fontWeight="bold"
+                fontWeight="1000"
               />
               <YAxis
-                stroke="#404040"
-                fontSize={10}
+                stroke="#ffffff"
+                fontSize={11}
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(v) => `₹${v}`}
-                fontWeight="bold"
+                fontWeight="1000"
               />
               <Tooltip content={<CustomTooltip />} />
               <Legend
@@ -585,10 +633,11 @@ export default function Analytics() {
                 iconType="rect"
                 wrapperStyle={{
                   paddingBottom: '30px',
-                  fontSize: '10px',
-                  fontWeight: '900',
+                  fontSize: '11px',
+                  fontWeight: '1000',
                   textTransform: 'uppercase',
-                  letterSpacing: '0.1em',
+                  letterSpacing: '0.12em',
+                  color: '#ffffff'
                 }}
               />
               <Line

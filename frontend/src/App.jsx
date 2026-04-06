@@ -12,6 +12,7 @@ import Advisor from './pages/Advisor';
 import Plans from './pages/Plans';
 import Profile from './pages/Profile';
 import Goals from './pages/Goals';
+import HowItWorks from './pages/HowItWorks';
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
               <Route path="/plans" element={<Plans />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/goals" element={<Goals />} />
+              <Route path="/how-it-works" element={<HowItWorks />} />
             </Route>
           </Route>
 

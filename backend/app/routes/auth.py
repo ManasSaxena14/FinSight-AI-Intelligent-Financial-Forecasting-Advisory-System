@@ -17,8 +17,11 @@ async def register(user: UserCreate):
     """
     users_collection = await get_users_collection()
     
+    # Normalize email to lowercase
+    email_normalized = user.email.lower().strip()
+    
     # Check if user already exists
-    existing_user = await users_collection.find_one({"email": user.email})
+    existing_user = await users_collection.find_one({"email": email_normalized})
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -33,7 +36,7 @@ async def register(user: UserCreate):
     user_doc = {
         "_id": user_id,
         "name": user.name,
-        "email": user.email,
+        "email": email_normalized,
         "hashed_password": hashed_password,
         "created_at": now
     }
@@ -44,7 +47,7 @@ async def register(user: UserCreate):
     return UserResponse(
         id=user_id,
         name=user.name,
-        email=user.email,
+        email=email_normalized,
         created_at=now
     )
 
@@ -53,39 +56,55 @@ async def login(user_credentials: UserLogin):
     """
     Authenticate a user and return a JWT access token.
     """
-    users_collection = await get_users_collection()
-    
-    # Find user
-    user = await users_collection.find_one({"email": user_credentials.email})
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+    print(f"Login attempt for email: {user_credentials.email}")
+    try:
+        users_collection = await get_users_collection()
         
-    # Verify password
-    if not verify_password(user_credentials.password, user["hashed_password"]):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        # Normalize email to lowercase for lookup
+        email_normalized = user_credentials.email.lower().strip()
         
-    # Generate token
-    # Convention is to store user ID in the 'sub' (subject) claim
-    access_token = create_access_token(data={"sub": str(user["_id"])})
-    
-    return {
-        "access_token": access_token, 
-        "token_type": "bearer",
-        "user": UserResponse(
+        # Find user
+        user = await users_collection.find_one({"email": email_normalized})
+        if not user:
+            print(f"User not found: {email_normalized}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect email or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+            
+        # Verify password
+        if not verify_password(user_credentials.password, user["hashed_password"]):
+            print(f"Invalid password for: {email_normalized}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect email or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+            
+        # Generate token
+        access_token = create_access_token(data={"sub": str(user["_id"])})
+        
+        print(f"Login successful for: {email_normalized}")
+        
+        # Ensure all fields exist
+        user_response = UserResponse(
             id=str(user["_id"]),
-            name=user["name"],
-            email=user["email"],
-            created_at=user["created_at"]
+            name=user.get("name", "Unknown"),
+            email=user.get("email", email_normalized),
+            created_at=user.get("created_at", datetime.now(timezone.utc))
         )
-    }
+        
+        return {
+            "access_token": access_token, 
+            "token_type": "bearer",
+            "user": user_response
+        }
+    except Exception as e:
+        print(f"ERROR IN LOGIN ROUTE: {e}")
+        import traceback
+        traceback.print_exc()
+        raise e
 
 @router.get("/me", response_model=UserResponse)
 async def get_me(current_user: dict = Depends(get_current_user)):

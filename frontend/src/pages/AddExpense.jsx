@@ -1,29 +1,59 @@
-import { useState, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import gsap from 'gsap';
+import { cn } from '../utils/cn';
 import { expenseService } from '../api/expenseService';
 import { Card, CardContent } from '../components/Card';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
+import { 
+  Wallet, ChevronRight, Calendar, Banknote, 
+  Utensils, Car, Home, ShoppingBag, Zap, Clapperboard,
+  CheckCircle2, Sparkles, ShieldCheck, ArrowRight, Brain,
+  Info, Cpu, Lock
+} from 'lucide-react';
 
-// Matches the backend schema
-const CATEGORIES = ["Food", "Travel", "Rent", "Shopping", "Bills", "Entertainment"];
+const CATEGORIES = [
+  { name: "Food", icon: Utensils, color: "text-orange-400", bg: "bg-orange-500/10", border: "border-orange-500/20", glow: "shadow-orange-500/20" },
+  { name: "Travel", icon: Car, color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20", glow: "shadow-blue-500/20" },
+  { name: "Rent", icon: Home, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20", glow: "shadow-emerald-500/20" },
+  { name: "Shopping", icon: ShoppingBag, color: "text-purple-400", bg: "bg-purple-500/10", border: "border-purple-500/20", glow: "shadow-purple-500/20" },
+  { name: "Bills", icon: Zap, color: "text-rose-400", bg: "bg-rose-500/10", border: "border-rose-500/20", glow: "shadow-rose-500/20" },
+  { name: "Entertainment", icon: Clapperboard, color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20", glow: "shadow-amber-500/20" }
+];
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+const MotionDiv = motion.div;
 
 export default function AddExpense() {
   const navigate = useNavigate();
-  
+  const formRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   
-  // Form State
   const [month, setMonth] = useState(MONTHS[new Date().getMonth()]);
   const [income, setIncome] = useState('');
   const [expenses, setExpenses] = useState({
     Food: '', Travel: '', Rent: '', Shopping: '', Bills: '', Entertainment: ''
   });
+
+  useEffect(() => {
+    if (!success) {
+      const ctx = gsap.context(() => {
+        gsap.from(".animate-field", {
+          y: 30,
+          opacity: 0,
+          duration: 0.8,
+          stagger: 0.1,
+          ease: "power3.out",
+          delay: 0.2
+        });
+      }, formRef);
+      return () => ctx.revert();
+    }
+  }, [success]);
 
   const handleExpenseChange = (category, value) => {
     setExpenses(prev => ({ ...prev, [category]: value }));
@@ -34,7 +64,6 @@ export default function AddExpense() {
     setIsLoading(true);
     setError('');
 
-    // Transform string inputs to numbers & default 0 for empty strings
     const payload = {
       month,
       income: parseFloat(income) || 0,
@@ -46,163 +75,239 @@ export default function AddExpense() {
     try {
       await expenseService.addExpense(payload);
       setSuccess(true);
-      
-      // Reset form
       setIncome('');
       setExpenses({ Food: '', Travel: '', Rent: '', Shopping: '', Bills: '', Entertainment: '' });
-      
-    } catch (err) {
-      setError('Failed to add expense record. Please try again.');
-      // Shake animation on error (keeping GSAP for this specific effect as it's quick and clean)
-      gsap.fromTo(".form-container", 
-        { x: -5 }, 
-        { x: 5, duration: 0.1, yoyo: true, repeat: 3, onComplete: () => gsap.set(".form-container", {x: 0}) }
-      );
+    } catch {
+      setError('System authentication failed. Please retry transmission.');
+      gsap.fromTo(formRef.current, { x: -4 }, { x: 4, duration: 0.08, yoyo: true, repeat: 5, ease: "power1.inOut" });
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-10 relative py-10 px-4 sm:px-0">
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-500/20 to-transparent" />
+    <div className="max-w-7xl mx-auto space-y-16 py-12 px-6 lg:px-8 relative" ref={formRef}>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(212,175,55,0.05),transparent_50%)] pointer-events-none" />
       
       <AnimatePresence mode="wait">
         {!success ? (
-          <motion.div
+          <MotionDiv
             key="form"
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, filter: 'blur(10px)' }}
-            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="form-container space-y-10"
+            exit={{ opacity: 0, scale: 0.95, filter: 'blur(20px)' }}
+            transition={{ duration: 0.6, ease: "circOut" }}
+            className="space-y-16"
           >
-            <header className="relative z-10">
-              <h1 className="text-4xl sm:text-5xl font-black text-text-primary tracking-tighter italic">Ledger Entry.</h1>
-              <p className="text-sm text-text-tertiary mt-2 font-medium tracking-wide italic">Track and synchronize your monthly spending with FinSight AI.</p>
+            {/* ── High-Impact Header ────────────────────────────────────────── */}
+            <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-white/5 pb-12 animate-field">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <Cpu className="h-4 w-4 text-brand-500 animate-pulse" />
+                  <span className="text-[10px] font-black text-brand-500 uppercase tracking-[0.6em]">Core Ledger Node</span>
+                </div>
+                <h1 className="text-6xl lg:text-8xl font-black text-white tracking-tighter italic leading-[0.85]">
+                  Data <span className="text-brand-500">Ingestion.</span>
+                </h1>
+                <p className="text-lg text-text-secondary font-medium tracking-tight max-w-2xl">
+                  Synchronize your monthly fiscal matrix with our neural processing core for deep-scale predictive modeling.
+                </p>
+              </div>
+              <div className="hidden lg:block">
+                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 flex items-center gap-6 shadow-2xl">
+                  <div className="h-12 w-12 rounded-2xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center">
+                    <Lock className="h-6 w-6 text-brand-400" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[9px] font-black text-brand-500 uppercase tracking-widest">Protocol Status</p>
+                    <p className="text-sm font-black text-white italic">AES-256 SECURED</p>
+                  </div>
+                </div>
+              </div>
             </header>
 
-            <Card className="glass-card border-none bg-black/20 shadow-2xl rounded-[3rem] overflow-hidden relative z-10">
-              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-500/20 to-transparent" />
-              <CardContent className="p-8 sm:p-14">
-                <form onSubmit={handleSubmit} className="space-y-12">
-                  {error && (
-                    <motion.div 
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      className="rounded-2xl bg-rose-500/10 border border-rose-500/20 p-5 text-[10px] font-black text-rose-400 uppercase tracking-[0.2em] text-center shadow-2xl"
-                    >
-                      {error}
-                    </motion.div>
-                  )}
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+              {/* ── Primary Form Core ────────────────────────────────────────── */}
+              <div className="lg:col-span-8 space-y-12 animate-field">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* Temporal Cycle Selector */}
+                  <div className="group space-y-4">
+                    <div className="flex items-center gap-3 px-2">
+                      <Calendar className="h-4 w-4 text-brand-400" />
+                      <label className="text-[11px] font-black text-white uppercase tracking-[0.4em] drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">Temporal Cycle</label>
+                    </div>
+                    <div className="relative">
+                      <select
+                        className="w-full h-20 rounded-[2rem] bg-white/[0.03] border-2 border-white/5 px-8 text-xl text-white font-black appearance-none focus:outline-none focus:border-brand-500/50 focus:ring-8 focus:ring-brand-500/5 transition-all cursor-pointer hover:bg-white/[0.06] shadow-2xl"
+                        value={month}
+                        onChange={(e) => setMonth(e.target.value)}
+                      >
+                        {MONTHS.map(m => <option key={m} value={m} className="bg-[#0a0a0a] text-white">{m}</option>)}
+                      </select>
+                      <ChevronRight className="absolute right-8 top-1/2 -translate-y-1/2 h-6 w-6 text-brand-500 rotate-90 pointer-events-none group-hover:scale-110 transition-transform" />
+                    </div>
+                  </div>
+
+                  {/* Asset Liquidity Input */}
+                  <div className="group space-y-4">
+                    <div className="flex items-center gap-3 px-2">
+                      <Banknote className="h-4 w-4 text-emerald-400" />
+                      <label className="text-[11px] font-black text-white uppercase tracking-[0.4em] drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">Asset Liquidity (₹)</label>
+                    </div>
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        min="0"
+                        step="any"
+                        value={income}
+                        onChange={(e) => setIncome(e.target.value)}
+                        placeholder="[ 000,000.00 ]"
+                        className="w-full h-20 rounded-[2rem] bg-white/[0.03] border-2 border-white/5 px-8 text-2xl text-white font-black placeholder:text-white/10 placeholder:italic placeholder:tracking-widest focus:border-emerald-500/50 focus:ring-8 focus:ring-emerald-500/5 transition-all shadow-2xl pulsing-placeholder"
+                      />
+                      <div className="absolute right-8 top-1/2 -translate-y-1/2 text-emerald-500/30 font-black text-xs uppercase tracking-widest pointer-events-none">Credits</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Expense Matrix Grid */}
+                <div className="space-y-8">
+                  <div className="flex items-center gap-6 px-2">
+                    <h2 className="text-[11px] font-black text-white uppercase tracking-[0.5em] drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">Expense Matrix Breakdown</h2>
+                    <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
+                  </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                    <div className="space-y-3">
-                      <label className="block text-[10px] font-black text-text-tertiary uppercase tracking-[0.3em] px-2">Select Month</label>
-                      <div className="relative group">
-                         <select
-                          className="flex h-14 w-full rounded-2xl border border-white/5 bg-bg-panel/40 px-6 py-2 text-sm text-text-primary font-black focus:outline-none focus:ring-4 focus:ring-brand-500/5 focus:border-brand-500/40 appearance-none transition-all shadow-2xl group-hover:border-white/10"
-                          value={month}
-                          onChange={(e) => setMonth(e.target.value)}
-                        >
-                          {MONTHS.map(m => <option key={m} value={m} className="bg-bg-base text-text-primary">{m}</option>)}
-                        </select>
-                        <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-text-tertiary group-hover:text-brand-400 transition-colors">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7" /></svg>
-                        </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {CATEGORIES.map((cat) => (
+                      <div key={cat.name} className="group/item relative">
+                        <div className={cn(
+                          "absolute inset-0 rounded-[2.5rem] bg-gradient-to-br opacity-0 group-hover/item:opacity-5 transition-opacity duration-500",
+                          cat.bg
+                        )} />
+                        <Card className="glass-card border-none bg-white/[0.02] border border-white/5 rounded-[2.5rem] p-8 transition-all duration-500 group-hover/item:bg-white/[0.04] group-hover/item:translate-y-[-4px] group-hover/item:shadow-2xl">
+                          <div className="space-y-6">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-4">
+                                <div className={cn(
+                                  "h-12 w-12 rounded-2xl flex items-center justify-center border-2 transition-all duration-500 group-hover/item:scale-110",
+                                  cat.bg, cat.border, cat.glow
+                                )}>
+                                  <cat.icon className={cn("h-6 w-6", cat.color)} />
+                                </div>
+                                <h3 className="text-sm font-black text-white uppercase tracking-widest group-hover/item:text-brand-400 transition-colors">{cat.name}</h3>
+                              </div>
+                              {expenses[cat.name] > 0 && (
+                                <div className="h-2 w-2 rounded-full bg-brand-500 animate-pulse shadow-[0_0_10px_rgba(212,175,55,0.8)]" />
+                              )}
+                            </div>
+                            <div className="relative">
+                              <Input
+                                type="number"
+                                min="0"
+                                step="any"
+                                value={expenses[cat.name]}
+                                onChange={(e) => handleExpenseChange(cat.name, e.target.value)}
+                                placeholder="[ 0.00 ]"
+                                className="h-14 bg-transparent border-b-2 border-white/5 rounded-none px-0 text-xl font-black text-white focus:border-brand-500 transition-all placeholder:text-white/10 placeholder:italic placeholder:tracking-widest pulsing-placeholder"
+                              />
+                              <span className="absolute right-0 top-1/2 -translate-y-1/2 text-[10px] font-black text-text-tertiary uppercase tracking-widest opacity-0 group-hover/item:opacity-100 transition-opacity">Debit Stream</span>
+                            </div>
+                          </div>
+                        </Card>
                       </div>
-                    </div>
-
-                    <Input
-                      label="Total Monthly Income (₹)"
-                      type="number"
-                      min="0"
-                      step="any"
-                      value={income}
-                      onChange={(e) => setIncome(e.target.value)}
-                      placeholder="0.00"
-                      className="font-black h-14 rounded-2xl bg-bg-panel/40 border-white/5 focus:border-brand-500/40 focus:ring-brand-500/5"
-                    />
+                    ))}
                   </div>
-
-                  <div>
-                    <div className="flex items-center gap-4 mb-10">
-                       <h4 className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.4em]">Monthly Expenses</h4>
-                       <div className="h-px flex-1 bg-white/5" />
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
-                      {CATEGORIES.map((category, idx) => (
-                        <Input
-                          key={category}
-                          label={`${category} Spending`}
-                          type="number"
-                          min="0"
-                          step="any"
-                          value={expenses[category]}
-                          onChange={(e) => handleExpenseChange(category, e.target.value)}
-                          placeholder="0.00"
-                          className="font-black h-12 rounded-xl bg-bg-panel/20 border-white/5 focus:border-brand-500/30"
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="pt-8 border-t border-white/5 flex justify-end">
-                    <Button type="submit" isLoading={isLoading} className="w-full md:w-auto h-14 px-12 rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 hover:scale-[1.02] text-black font-black uppercase tracking-[0.2em] text-[10px] shadow-2xl shadow-brand-500/20 transition-all active:scale-[0.98]">
-                      Update Financial Records
-                    </Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="success"
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ type: 'spring', damping: 20, stiffness: 100 }}
-            className="flex h-[80vh] items-center justify-center relative"
-          >
-            <div className="absolute inset-0 bg-brand-500/5 blur-[150px] rounded-full" />
-            <div className="text-center space-y-10 relative z-10 glass-card p-12 sm:p-20 rounded-[4rem] border border-white/5 shadow-2xl shadow-brand-500/10 max-w-2xl w-full">
-              <motion.div 
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.3, type: 'spring', damping: 12 }}
-                className="mx-auto h-32 w-32 rounded-[3.5rem] bg-brand-500/10 border border-brand-500/20 flex items-center justify-center shadow-2xl shadow-brand-500/20 group"
-              >
-                <svg className="h-16 w-16 text-brand-400 drop-shadow-[0_0_20px_rgba(212,175,55,0.8)] group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                </svg>
-              </motion.div>
-              <div className="space-y-4">
-                <h2 className="text-5xl font-black text-text-primary tracking-tighter italic">Record Processed.</h2>
-                <p className="text-text-tertiary font-bold uppercase tracking-widest text-xs">Your monthly analytical footprint has been established.</p>
+                </div>
               </div>
-              <div className="pt-10 flex flex-col sm:flex-row gap-5 justify-center px-4">
-                <Button variant="secondary" onClick={() => setSuccess(false)} className="flex-1 py-5 rounded-2xl border-white/5 text-text-secondary font-black hover:bg-white/5 transition-all text-[10px] uppercase tracking-widest">New Entry</Button>
-                <Button variant="primary" onClick={() => navigate('/analytics')} className="flex-1 py-5 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 hover:scale-[1.02] text-white font-black shadow-2xl shadow-blue-500/20 transition-all text-[10px] uppercase tracking-widest">Analytics</Button>
-                <Button variant="primary" onClick={() => navigate('/')} className="flex-1 py-5 rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 hover:scale-[1.02] text-black font-black shadow-2xl shadow-brand-500/20 transition-all text-[10px] uppercase tracking-widest">Console</Button>
+
+              {/* ── Sidebar Context & Action ─────────────────────────────────── */}
+              <div className="lg:col-span-4 space-y-8 animate-field">
+                <div className="sticky top-12 space-y-8">
+                  <Card className="glass-card border-none bg-gradient-to-br from-brand-500/10 to-transparent border border-brand-500/20 rounded-[3rem] p-10 shadow-3xl overflow-hidden relative group">
+                    <div className="absolute -right-8 -top-8 opacity-10 group-hover:rotate-12 transition-transform duration-1000">
+                      <Brain className="h-48 w-48 text-brand-500" />
+                    </div>
+                    <div className="relative z-10 space-y-8">
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-3">
+                          <Info className="h-4 w-4 text-brand-400" />
+                          <h3 className="text-[10px] font-black text-brand-400 uppercase tracking-[0.4em]">Submission Protocol</h3>
+                        </div>
+                        <p className="text-sm text-text-secondary leading-relaxed font-medium">
+                          Authorize the synchronization of your fiscal data. This action triggers a full neural recalibration of your financial trajectory models.
+                        </p>
+                      </div>
+
+                      <Button 
+                        type="submit" 
+                        isLoading={isLoading} 
+                        className="w-full h-20 rounded-[2rem] bg-white text-black hover:bg-brand-500 hover:text-black font-black uppercase tracking-[0.4em] text-[13px] shadow-[0_20px_50px_rgba(255,255,255,0.1)] transition-all hover:scale-[1.03] active:scale-[0.97] group flex items-center justify-center gap-4"
+                      >
+                        Authorize Sync
+                        <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-2" />
+                      </Button>
+
+                      {error && (
+                        <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-[10px] font-black text-rose-400 uppercase tracking-widest text-center">
+                          {error}
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+
+                  <div className="px-6 space-y-6">
+                    <div className="flex items-center gap-4">
+                      <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="text-[9px] font-black text-text-tertiary uppercase tracking-[0.3em]">Neural Node: Active</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="text-[9px] font-black text-text-tertiary uppercase tracking-[0.3em]">Encryption: AES-256</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </MotionDiv>
+        ) : (
+          <MotionDiv
+            key="success"
+            initial={{ opacity: 0, scale: 0.9, filter: 'blur(20px)' }}
+            animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+            className="flex flex-col items-center justify-center py-32 text-center space-y-12"
+          >
+            <div className="relative">
+              <div className="absolute inset-0 bg-brand-500/30 blur-[100px] rounded-full animate-pulse" />
+              <div className="relative h-32 w-32 rounded-[3rem] bg-white text-black flex items-center justify-center shadow-3xl rotate-12">
+                <CheckCircle2 className="h-16 w-12 -rotate-12" />
               </div>
             </div>
-          </motion.div>
+            
+            <div className="space-y-6 max-w-2xl">
+              <h2 className="text-6xl lg:text-8xl font-black text-white italic tracking-tighter leading-none">
+                Protocol <span className="text-brand-500">Finalized.</span>
+              </h2>
+              <p className="text-xl text-text-secondary font-medium tracking-tight">
+                Data packet has been successfully synchronized. Neural trajectory models are now updating in the background.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-6 pt-8">
+              <Button 
+                onClick={() => setSuccess(false)}
+                className="h-16 px-12 rounded-2xl border-2 border-white/10 bg-white/5 text-white font-black uppercase tracking-[0.3em] text-[11px] hover:bg-white/10 transition-all shadow-2xl"
+              >
+                New Transmission
+              </Button>
+              <Button 
+                onClick={() => navigate('/analytics')}
+                className="h-16 px-12 rounded-2xl bg-brand-500 text-black font-black uppercase tracking-[0.3em] text-[11px] hover:bg-brand-400 shadow-[0_20px_40px_rgba(212,175,55,0.2)] transition-all"
+              >
+                View Intelligence
+              </Button>
+            </div>
+          </MotionDiv>
         )}
       </AnimatePresence>
-      
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 0.3 }}
-        transition={{ delay: 1 }}
-        className="flex items-center justify-center gap-6"
-      >
-         <div className="h-px w-12 bg-text-tertiary" />
-         <p className="text-[9px] text-text-tertiary font-black uppercase tracking-[0.5em]">
-            ISO-27001 Certified • Neural Protocol
-         </p>
-         <div className="h-px w-12 bg-text-tertiary" />
-      </motion.div>
     </div>
   );
 }
-

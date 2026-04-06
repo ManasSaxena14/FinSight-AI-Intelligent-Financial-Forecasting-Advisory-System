@@ -8,14 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/Card';
 import { Activity, CreditCard, PiggyBank, Target, Sparkles, TrendingUp, ChevronRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import GoalTracker from '../components/GoalTracker';
-
-export const getScoreColors = (score) => {
-  if (!score) return { bg: 'from-brand-500/5 to-transparent', border: 'border-brand-500/20', text: 'text-brand-500', glow: 'shadow-brand-500/10', badge: 'bg-brand-500/10 text-brand-500', icon: 'text-brand-400' };
-  if (score >= 90) return { bg: 'from-emerald-500/10 to-transparent', border: 'border-emerald-500/40', text: 'text-emerald-400', glow: 'shadow-emerald-500/20', badge: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30', icon: 'text-emerald-400' };
-  if (score >= 70) return { bg: 'from-brand-500/10 to-transparent', border: 'border-brand-500/40', text: 'text-brand-400', glow: 'shadow-brand-500/20', badge: 'bg-brand-500/20 text-brand-400 border-brand-500/30', icon: 'text-brand-400' };
-  if (score >= 40) return { bg: 'from-amber-500/10 to-transparent', border: 'border-amber-500/40', text: 'text-amber-400', glow: 'shadow-amber-500/20', badge: 'bg-amber-500/20 text-amber-400 border-amber-500/30', icon: 'text-amber-400' };
-  return { bg: 'from-rose-500/10 to-transparent', border: 'border-rose-500/40', text: 'text-rose-400', glow: 'shadow-rose-500/20', badge: 'bg-rose-500/20 text-rose-400 border-rose-500/30', icon: 'text-rose-400' };
-};
+import { getScoreColors } from '../utils/scoreColors';
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -155,19 +148,24 @@ export default function Dashboard() {
           >
             {/* AI Narrative Summary Card */}
             {aiSummary && (
-              <Card className="dash-card border-none bg-gradient-to-br from-bg-panel/80 via-black/40 to-bg-panel/80 shadow-2xl relative overflow-hidden group border border-white/5 rounded-[2.5rem]">
+              <Card className="dash-card border-none bg-gradient-to-br from-bg-panel/80 via-black/40 to-bg-panel/80 shadow-2xl relative overflow-hidden group border border-white/5 rounded-[2.5rem] hover:shadow-brand-500/5 transition-all duration-700">
                  <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-500/20 to-transparent" />
-                <CardContent className="p-8 sm:p-10">
+                 <div className="absolute -right-10 -top-10 h-40 w-40 bg-brand-500/5 blur-[80px] rounded-full group-hover:bg-brand-500/10 transition-colors duration-700" />
+                <CardContent className="p-8 sm:p-10 relative z-10">
                   <div className="flex flex-col md:flex-row items-start gap-8">
-                    <div className="shrink-0 p-4 bg-brand-500/10 rounded-[2rem] border border-brand-500/20 shadow-2xl shadow-brand-500/5">
+                    <motion.div 
+                      whileHover={{ scale: 1.1, rotate: 5 }}
+                      className="shrink-0 p-4 bg-brand-500/10 rounded-[2rem] border border-brand-500/20 shadow-2xl shadow-brand-500/5"
+                    >
                       <Sparkles className="h-8 w-8 text-brand-400 drop-shadow-[0_0_10px_rgba(212,175,55,0.4)]" />
-                    </div>
-                    <div className="space-y-3">
+                    </motion.div>
+                    <div className="space-y-4">
                       <div className="flex items-center gap-3">
                          <p className="text-[10px] text-brand-500 font-black uppercase tracking-[0.3em]">AI Synthesis Report</p>
                          <div className="h-px w-12 bg-brand-500/20" />
+                         <span className="flex h-1.5 w-1.5 rounded-full bg-brand-500 animate-ping" />
                       </div>
-                      <p className="text-text-primary text-xl md:text-2xl font-medium leading-relaxed tracking-tight">
+                      <p className="text-text-primary text-xl md:text-2xl font-medium leading-relaxed tracking-tight group-hover:text-white transition-colors duration-500">
                         {aiSummary}
                       </p>
                     </div>
@@ -183,41 +181,53 @@ export default function Dashboard() {
                 { label: 'Total Expenses', value: stats.totalExpense, icon: CreditCard, color: 'neutral' },
                 { label: 'Net Savings', value: stats.totalIncome - stats.totalExpense, icon: PiggyBank, color: 'brand' },
               ].map((metric, i) => (
-                <Card key={i} className="dash-card glass-card border-none group">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className={`p-3 rounded-2xl ${metric.color === 'brand' ? 'bg-brand-500/10 border border-brand-500/20' : 'bg-white/5 border border-white/10'} transition-all duration-500 group-hover:scale-110 shadow-lg shadow-black/20`}>
+                <Card key={i} className="dash-card glass-card border-none group hover:bg-white/[0.03] transition-colors duration-500">
+                  <CardContent className="p-6 relative overflow-hidden">
+                    <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-700 pointer-events-none">
+                      <metric.icon size={100} className={metric.color === 'brand' ? 'text-brand-500' : 'text-white'} />
+                    </div>
+                    <div className="flex items-center justify-between mb-4 relative z-10">
+                      <div className={`p-3 rounded-2xl ${metric.color === 'brand' ? 'bg-brand-500/10 border border-brand-500/20 shadow-lg shadow-brand-500/5' : 'bg-white/5 border border-white/10 shadow-lg shadow-black/20'} transition-all duration-500 group-hover:scale-110 group-hover:rotate-3`}>
                         <metric.icon className={`h-5 w-5 ${metric.color === 'brand' ? 'text-brand-400' : 'text-text-tertiary'}`} />
                       </div>
-                      <TrendingUp className="h-4 w-4 text-brand-500/30" />
+                      <div className="flex items-center gap-1 opacity-40 group-hover:opacity-100 transition-opacity">
+                        <div className="h-1 w-1 rounded-full bg-brand-500 animate-pulse" />
+                        <span className="text-[8px] font-black text-brand-500 uppercase tracking-tighter">Live Sync</span>
+                      </div>
                     </div>
-                    <dl>
+                    <dl className="relative z-10">
                       <dt className="text-[10px] font-black text-text-tertiary uppercase tracking-widest pl-1">{metric.label}</dt>
-                      <dd className="text-3xl font-black text-text-primary tracking-tighter mt-1">₹{metric.value.toLocaleString()}</dd>
+                      <dd className="text-3xl font-black text-text-primary tracking-tighter mt-1 flex items-baseline">
+                        ₹{metric.value.toLocaleString()}
+                        <span className="text-[10px] font-bold text-brand-500/40 ml-1.5 group-hover:translate-x-1 transition-transform">→</span>
+                      </dd>
                     </dl>
                   </CardContent>
                 </Card>
               ))}
 
-              <Card className={`dash-card glass-card border-none group bg-gradient-to-br ${scoreColor.bg}`}>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className={`p-3 rounded-2xl bg-black/40 border ${scoreColor.border} transition-all duration-500 group-hover:scale-110 shadow-lg ${scoreColor.glow}`}>
+              <Card className={`dash-card glass-card border-none group bg-gradient-to-br ${scoreColor.bg} hover:bg-white/[0.05] transition-all duration-500`}>
+                <CardContent className="p-6 relative overflow-hidden">
+                  <div className="absolute -right-4 -bottom-4 opacity-[0.03] group-hover:opacity-[0.1] transition-opacity duration-700 pointer-events-none">
+                    <Target size={100} className={scoreColor.icon} />
+                  </div>
+                  <div className="flex items-center justify-between mb-4 relative z-10">
+                    <div className={`p-3 rounded-2xl bg-black/40 border ${scoreColor.border} transition-all duration-500 group-hover:scale-110 group-hover:-rotate-3 shadow-lg ${scoreColor.glow}`}>
                       <Target className={`h-5 w-5 ${scoreColor.icon}`} />
                     </div>
                      <motion.div 
-                       animate={{ opacity: [1, 0.5, 1] }} 
-                       transition={{ duration: 2, repeat: Infinity }}
-                       className={`text-[10px] font-black px-3 py-1.5 rounded-lg border ${scoreColor.badge}`}
+                       animate={{ opacity: [1, 0.5, 1], scale: [1, 1.05, 1] }} 
+                       transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                       className={`text-[10px] font-black px-3 py-1.5 rounded-lg border backdrop-blur-md ${scoreColor.badge}`}
                      >
                        AI LIVE
                      </motion.div>
                   </div>
-                  <dl>
+                  <dl className="relative z-10">
                     <dt className="text-[10px] font-black text-text-tertiary uppercase tracking-widest pl-1">Intelligence Score</dt>
                     <dd className={`text-3xl font-black tracking-tighter mt-1 flex items-baseline ${scoreColor.text}`}>
                       {healthScore ? healthScore.score : '--'}
-                      <span className="text-xs font-bold text-text-tertiary ml-2">/ 100</span>
+                      <span className="text-xs font-bold text-text-tertiary ml-2 opacity-50">/ 100</span>
                     </dd>
                   </dl>
                 </CardContent>
@@ -280,33 +290,48 @@ export default function Dashboard() {
                 <CardContent className="p-0">
                   <div className="overflow-hidden rounded-b-[2.5rem]">
                     <ul className="divide-y divide-white/5">
-                      {expenses.slice(0, 5).map((record) => {
+                      {expenses.slice(0, 5).map((record, index) => {
                         const isExpanded = expandedRecordId === record.id;
                         return (
-                        <li key={record.id} className="flex flex-col transition-all duration-500 group">
+                        <motion.li 
+                          key={record.id} 
+                          className="flex flex-col transition-all duration-500 group border-b border-white/5 last:border-none"
+                        >
                           <div 
-                            className="p-6 hover:bg-white/[0.02] cursor-pointer flex items-center justify-between"
+                            className="p-6 hover:bg-white/[0.04] cursor-pointer flex items-center justify-between relative overflow-hidden"
                             onClick={() => setExpandedRecordId(isExpanded ? null : record.id)}
                           >
-                            <div className="flex items-center gap-4">
-                              <div className={`h-12 w-12 rounded-2xl bg-bg-panel border border-white/5 flex items-center justify-center transition-all duration-500 ${isExpanded ? 'text-brand-400 border-brand-500/40' : 'text-text-tertiary group-hover:text-brand-400 group-hover:border-brand-500/20'}`}>
+                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-brand-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <div className="flex items-center gap-4 relative z-10">
+                              <div className={`h-12 w-12 rounded-2xl bg-bg-panel border border-white/5 flex items-center justify-center transition-all duration-500 ${isExpanded ? 'text-brand-400 border-brand-500/40 bg-brand-500/5 rotate-6' : 'text-text-tertiary group-hover:text-brand-400 group-hover:border-brand-500/20 group-hover:-rotate-3'}`}>
                                  <Activity className="w-5 h-5" />
                               </div>
                               <div>
-                                <p className="text-sm font-black text-text-primary tracking-tight">{record.month} Snapshot</p>
+                                <p className="text-sm font-black text-text-primary tracking-tight flex items-center gap-2">
+                                  {record.month} Snapshot
+                                  {index === 0 && (
+                                    <span className="text-[8px] bg-brand-500/10 text-brand-500 px-1.5 py-0.5 rounded-full border border-brand-500/20">LATEST</span>
+                                  )}
+                                </p>
                                 <p className="text-[10px] text-text-tertiary font-bold uppercase tracking-widest mt-1">
                                   Net Savings: <span className="text-brand-500 font-black">₹{record.savings.toLocaleString()}</span>
                                 </p>
                               </div>
                             </div>
-                            <div className="flex items-center gap-6">
+                            <div className="flex items-center gap-6 relative z-10">
                               <div className="text-right hidden sm:block">
                                  <p className="text-xs font-black text-text-primary tracking-tighter">₹{record.total_expense.toLocaleString()}</p>
-                                 <p className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">Utilized</p>
+                                 <div className="flex items-center justify-end gap-1">
+                                   <div className={`h-1 w-1 rounded-full ${record.savings > 0 ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                                   <p className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">Utilized</p>
+                                 </div>
                               </div>
-                              <div className="h-8 w-8 rounded-full border border-white/10 flex items-center justify-center group-hover:border-brand-500/40 transition-all cursor-pointer">
-                                 <ChevronRight className={`w-4 h-4 text-text-tertiary group-hover:text-brand-400 transition-transform duration-300 ${isExpanded ? 'rotate-90' : ''}`} />
-                              </div>
+                              <motion.div 
+                                animate={{ rotate: isExpanded ? 90 : 0 }}
+                                className="h-8 w-8 rounded-full border border-white/10 flex items-center justify-center group-hover:border-brand-500/40 group-hover:bg-brand-500/5 transition-all cursor-pointer"
+                              >
+                                 <ChevronRight className="w-4 h-4 text-text-tertiary group-hover:text-brand-400" />
+                              </motion.div>
                             </div>
                           </div>
 
@@ -316,32 +341,42 @@ export default function Dashboard() {
                                 initial={{ height: 0, opacity: 0 }}
                                 animate={{ height: 'auto', opacity: 1 }}
                                 exit={{ height: 0, opacity: 0 }}
-                                className="overflow-hidden bg-black/20"
+                                transition={{ duration: 0.4, ease: "circOut" }}
+                                className="overflow-hidden bg-black/40 backdrop-blur-sm"
                               >
-                                <ul className="px-6 pb-6 pt-2 space-y-3">
+                                <ul className="px-6 pb-6 pt-4 space-y-3">
                                   {record.entries.map((entry, idx) => {
                                     const entryExpense = Object.values(entry.expenses).reduce((a, b) => a + b, 0);
                                     return (
-                                      <li key={idx} className="flex items-center justify-between pl-16 pr-6 py-4 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-brand-500/20 transition-all group/entry shadow-lg">
+                                      <motion.li 
+                                        key={idx}
+                                        initial={{ x: -20, opacity: 0 }}
+                                        animate={{ x: 0, opacity: 1 }}
+                                        transition={{ delay: idx * 0.05 }}
+                                        className="flex items-center justify-between pl-12 pr-6 py-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-brand-500/20 transition-all group/entry hover:bg-white/[0.05]"
+                                      >
                                         <div className="flex flex-col">
                                           <div className="flex items-center gap-2">
-                                            <span className="text-xs font-black text-text-primary tracking-tight">Entry {(idx + 1).toString().padStart(2, '0')}.</span>
+                                            <span className="text-xs font-black text-text-primary tracking-tight">Protocol { (idx + 1).toString().padStart(2, '0') }</span>
                                             <div className="h-1 w-1 rounded-full bg-brand-500/40" />
                                           </div>
-                                          <span className="text-[8px] text-text-tertiary font-black uppercase tracking-widest mt-0.5">Authorized {new Date(entry.added_at).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                                          <span className="text-[8px] text-text-tertiary font-black uppercase tracking-widest mt-1 flex items-center gap-1">
+                                            <div className="h-0.5 w-2 bg-white/10" />
+                                            {new Date(entry.added_at).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                          </span>
                                         </div>
                                         <div className="text-right">
-                                          <span className="text-sm font-black text-text-primary tracking-tighter block group-hover:text-brand-400 transition-colors">₹{entryExpense.toLocaleString()}</span>
-                                          <div className="text-[8px] text-text-tertiary font-black uppercase tracking-widest text-right">Debit Snapshot</div>
+                                          <span className="text-sm font-black text-text-primary tracking-tighter block group-hover/entry:text-brand-400 transition-colors">₹{entryExpense.toLocaleString()}</span>
+                                          <div className="text-[8px] text-text-tertiary font-black uppercase tracking-widest text-right">Debit Hash</div>
                                         </div>
-                                      </li>
+                                      </motion.li>
                                     );
                                   })}
                                 </ul>
                               </motion.div>
                             )}
                           </AnimatePresence>
-                        </li>
+                        </motion.li>
                       )})}
                     </ul>
                   </div>

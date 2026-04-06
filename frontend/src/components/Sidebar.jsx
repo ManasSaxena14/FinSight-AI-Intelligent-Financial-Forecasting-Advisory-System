@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, PlusCircle, PieChart, Bot, LogOut, Hexagon, Crown, Target } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, PieChart, Bot, LogOut, Hexagon, Crown, Target, HelpCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const navigation = [
@@ -8,6 +8,7 @@ const navigation = [
   { name: 'Analytics', href: '/analytics', icon: PieChart },
   { name: 'Financial Goals', href: '/goals', icon: Target },
   { name: 'AI Advisor', href: '/advisor', icon: Bot },
+  { name: 'How It Works', href: '/how-it-works', icon: HelpCircle },
   { name: 'Membership', href: '/plans', icon: Crown },
 ];
 

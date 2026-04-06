@@ -84,4 +84,13 @@
     background-size: 200% 100%;
     animation: shimmer 3s linear infinite;
   }
+
+  @keyframes pulsing-placeholder {
+    0%, 100% { opacity: 0.05; }
+    50% { opacity: 0.15; }
+  }
+
+  .pulsing-placeholder::placeholder {
+    animation: pulsing-placeholder 3s ease-in-out infinite;
+  }
 }
