@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, PlusCircle, PieChart, Bot, LogOut, Hexagon, Crown, Target, HelpCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 
 const navigation = [
@@ -18,6 +19,7 @@ export default function Sidebar() {
 
   const handleLogout = () => {
     logout();
+    toast.success('Signed out');
     navigate('/login');
   };
 
@@ -78,7 +80,7 @@ export default function Sidebar() {
           </div>
           <div className="flex-1 truncate">
             <p className="truncate text-sm font-bold text-text-primary">{user?.name || user?.email || 'Authorized User'}</p>
-            <p className="truncate text-[10px] text-brand-500/70 font-black uppercase tracking-widest">Neural Architect</p>
+            <p className="truncate text-[10px] text-brand-500/70 font-black uppercase tracking-widest">FinSight member</p>
           </div>
           <button
             onClick={handleLogout}

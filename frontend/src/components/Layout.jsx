@@ -1,9 +1,9 @@
-import { Outlet, Link } from 'react-router-dom';
+import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useLayoutEffect, useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import Sidebar from './Sidebar';
 import Chatbot from './Chatbot';
-import { Bell, LogOut, CheckCircle2, AlertTriangle, TrendingUp, Info } from 'lucide-react';
+import { Bell, CheckCircle2, AlertTriangle, Info } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { premiumService } from '../api/premiumService';
 
@@ -16,7 +16,8 @@ const SEVERITY_CONFIG = {
 
 export default function Layout() {
   const mainRef = useRef(null);
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
+  const location = useLocation();
   
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -50,6 +51,29 @@ export default function Layout() {
     if (!showNotifications) setUnreadCount(0); // Mark as read when opened
   };
 
+  const pageTitle = (() => {
+    switch (location.pathname) {
+      case '/':
+        return 'Dashboard';
+      case '/add-expense':
+        return 'Add Expense';
+      case '/analytics':
+        return 'Analytics';
+      case '/advisor':
+        return 'AI Advisor';
+      case '/goals':
+        return 'Financial Goals';
+      case '/plans':
+        return 'Membership';
+      case '/profile':
+        return 'Profile';
+      case '/how-it-works':
+        return 'How It Works';
+      default:
+        return 'Overview';
+    }
+  })();
+
   return (
     <div className="flex h-screen bg-bg-base text-text-primary font-sans relative overflow-hidden">
       <div className="absolute inset-0 bg-noise opacity-[0.03] pointer-events-none" />
@@ -63,8 +87,13 @@ export default function Layout() {
         {/* Top Navbar / Global Header */}
         <header className="h-20 bg-bg-panel/40 backdrop-blur-2xl border-b border-white/5 flex items-center px-10 shadow-2xl relative z-40">
           <div className="flex flex-col">
-            <h2 className="text-xl font-black tracking-tight text-text-primary flex items-baseline gap-2">
-              Overview <span className="text-text-tertiary font-bold text-xs uppercase tracking-[0.2em] ml-2">/ Intelligence Suite</span>
+            <h2 className="text-xl font-black tracking-tight text-text-primary flex items-baseline gap-3">
+              <span className="inline-flex items-center gap-2">
+                FinSight AI
+                <span className="text-text-tertiary font-bold text-xs uppercase tracking-[0.2em] ml-1">
+                  {pageTitle}
+                </span>
+              </span>
             </h2>
           </div>
           
@@ -86,7 +115,7 @@ export default function Layout() {
               {showNotifications && (
                 <div className="absolute right-0 mt-6 w-96 max-h-[32rem] bg-black/60 backdrop-blur-3xl border border-white/5 shadow-2xl shadow-black/80 rounded-3xl overflow-hidden flex flex-col z-50 animate-in fade-in slide-in-from-top-4 duration-300">
                   <div className="p-4 border-b border-white/5 bg-white/[0.02]">
-                    <h4 className="font-black italic text-sm tracking-widest uppercase">System Alerts</h4>
+                    <h4 className="font-black italic text-sm tracking-widest uppercase">Notifications</h4>
                   </div>
                   <div className="overflow-y-auto w-full custom-scrollbar flex-1">
                     {notifications.length === 0 ? (
@@ -121,7 +150,7 @@ export default function Layout() {
             <Link to="/profile" className="flex items-center gap-4 group cursor-pointer border-l border-white/5 pl-8 py-2 relative">
               <div className="text-right hidden sm:block">
                 <p className="text-sm font-black text-text-primary tracking-tight">{user?.name || 'Authorized Member'}</p>
-                <p className="text-[10px] text-brand-500 font-bold uppercase tracking-widest">Neural Strategist</p>
+                <p className="text-[10px] text-brand-500 font-bold uppercase tracking-widest">Member</p>
               </div>
               <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-bg-elevated to-bg-panel border border-brand-500/20 flex items-center justify-center text-brand-400 font-black shadow-lg group-hover:border-brand-500/50 transition-all duration-500 group-hover:scale-105 overflow-hidden">
                 {user?.name?.charAt(0).toUpperCase() || 'U'}

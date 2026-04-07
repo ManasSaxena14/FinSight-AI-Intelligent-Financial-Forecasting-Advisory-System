@@ -59,6 +59,32 @@ def _assess_goal_track(target_amount: float, current_savings: float, target_date
     }
 
 
+async def _get_available_goal_savings(db, user_id: str, exclude_goal_id: str | None = None) -> float:
+    """
+    Calculate the total available liquidity for goals.
+    Available = (Sum of all monthly savings) - (Total currently allocated to all goals)
+    """
+    # Sum up all savings from all expense records
+    savings_pipeline = [
+        {"$match": {"user_id": user_id}},
+        {"$group": {"_id": None, "total_savings": {"$sum": "$savings"}}}
+    ]
+    savings_result = await db["expenses"].aggregate(savings_pipeline).to_list(length=1)
+    total_lifetime_savings = float(savings_result[0]["total_savings"]) if savings_result else 0.0
+
+    # Sum up all currently allocated savings across all goals
+    goal_filter = {"user_id": user_id}
+    if exclude_goal_id:
+        goal_filter["_id"] = {"$ne": exclude_goal_id}
+
+    allocated = 0.0
+    cursor = db["goals"].find(goal_filter)
+    async for g in cursor:
+        allocated += float(g.get("current_savings", 0.0))
+
+    return round(max(0.0, total_lifetime_savings - allocated), 2)
+
+
 @router.post("/goals", response_model=GoalResponse)
 async def create_goal(goal: GoalCreate, current_user: dict = Depends(get_current_user)):
     """Create a new financial goal."""
@@ -78,6 +104,7 @@ async def create_goal(goal: GoalCreate, current_user: dict = Depends(get_current
     await db["goals"].insert_one(document)
     
     track = _assess_goal_track(goal.target_amount, 0.0, goal.target_date)
+    available_savings = await _get_available_goal_savings(db, current_user["id"])
     
     return GoalResponse(
         id=goal_id,
@@ -87,6 +114,7 @@ async def create_goal(goal: GoalCreate, current_user: dict = Depends(get_current
         target_date=goal.target_date,
         current_savings=0.0,
         progress_percentage=0.0,
+        available_savings_balance=available_savings,
         **track,
     )
 
@@ -98,6 +126,7 @@ async def get_goals(current_user: dict = Depends(get_current_user)):
     
     goals_cursor = db["goals"].find({"user_id": current_user["id"]}).sort("created_at", -1)
     
+    available_savings = await _get_available_goal_savings(db, current_user["id"])
     goals = []
     async for doc in goals_cursor:
         doc["id"] = doc.pop("_id")
@@ -107,6 +136,7 @@ async def get_goals(current_user: dict = Depends(get_current_user)):
         
         progress = (current_savings / target_amount) * 100.0 if target_amount > 0 else 0.0
         doc["progress_percentage"] = min(100.0, round(progress, 1))
+        doc["available_savings_balance"] = available_savings
         
         track = _assess_goal_track(target_amount, current_savings, doc.get("target_date", ""))
         doc["is_on_track"] = track["is_on_track"]
@@ -126,18 +156,26 @@ async def contribute_to_goal(goal_id: str, contribution: GoalContribution, curre
     goal_doc = await db["goals"].find_one({"_id": goal_id, "user_id": current_user["id"]})
     if not goal_doc:
         raise HTTPException(status_code=404, detail="Goal not found")
+
+    available_savings = await _get_available_goal_savings(db, current_user["id"], exclude_goal_id=goal_id)
+    if contribution.amount > available_savings:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Insufficient available savings. You can allocate up to ₹{available_savings:,.2f} right now."
+        )
     
     new_savings = float(goal_doc.get("current_savings", 0.0)) + contribution.amount
     new_savings = min(new_savings, float(goal_doc["target_amount"]))  # Cap at target
     
     await db["goals"].update_one(
         {"_id": goal_id},
-        {"₹set": {"current_savings": new_savings}}
+        {"$set": {"current_savings": new_savings}}
     )
     
     target_amount = float(goal_doc["target_amount"])
     progress = (new_savings / target_amount) * 100.0 if target_amount > 0 else 0.0
     track = _assess_goal_track(target_amount, new_savings, goal_doc.get("target_date", ""))
+    refreshed_available = await _get_available_goal_savings(db, current_user["id"])
     
     return GoalResponse(
         id=goal_id,
@@ -147,6 +185,7 @@ async def contribute_to_goal(goal_id: str, contribution: GoalContribution, curre
         target_date=goal_doc["target_date"],
         current_savings=new_savings,
         progress_percentage=min(100.0, round(progress, 1)),
+        available_savings_balance=refreshed_available,
         **track,
     )
 
@@ -186,30 +225,93 @@ RULE_BASED_REPLIES = {
     "side hustle": "A side income stream of just ₹500/month (₹6,000/year) invested at 8% average return becomes over ₹87,000 in 10 years through compounding.",
 }
 
+
+def _pick_fallback_reply(message: str, context: dict | None, history: list[dict] | None) -> str:
+    lower_msg = message.lower()
+    matched = [reply for keyword, reply in RULE_BASED_REPLIES.items() if keyword in lower_msg]
+
+    # Track recently used advisor replies to avoid verbatim repetition
+    used_replies = set()
+    last_advisor_reply = None
+    for item in history or []:
+        if item.get("role") == "advisor":
+            text = item.get("text", "").strip()
+            used_replies.add(text)
+            last_advisor_reply = text
+
+    # Build a short prefix based on the user's current savings position
+    context_prefix = ""
+    income = float(context.get("income", 0) or 0) if context else 0.0
+    savings = float(context.get("savings", 0) or 0) if context else 0.0
+    savings_rate = (savings / income * 100) if income > 0 else 0.0
+    if context:
+        if savings_rate < 0:
+            context_prefix = f"You are currently overspending by ₹{abs(savings):,.0f}. "
+        elif savings_rate < 10:
+            context_prefix = f"Your current savings rate is {savings_rate:.1f}%. "
+        elif savings_rate >= 20:
+            context_prefix = f"Great work on a {savings_rate:.1f}% savings rate. "
+
+    # Special case: user explicitly asks about "savings"
+    if "savings" in lower_msg and context:
+        detail = (
+            f"Right now you are saving about ₹{savings:,.0f} this month "
+            f"out of ₹{income:,.0f} income, which is a {savings_rate:.1f}% savings rate."
+        )
+        if savings_rate < 10:
+            tail = " That is quite tight; try to push this towards at least 10–20% over the next few months."
+        elif savings_rate < 20:
+            tail = " This is a good base; nudging this towards 20% will materially accelerate your progress."
+        else:
+            tail = " This is an excellent level of savings; you can start thinking about how to deploy this into investments."
+        reply = context_prefix + detail + tail
+        # If this is identical to the last reply, add a small follow-up for variety
+        if reply == last_advisor_reply:
+            reply += " If you share how much you want to accumulate and by when, I can turn this into a concrete monthly target."
+        return reply
+
+    # Keyword-based rule replies (e.g., save, invest, budget, debt…)
+    if matched:
+        for candidate in matched:
+            if candidate not in used_replies:
+                return context_prefix + candidate
+        # All candidates were used recently — soften repetition with an extra actionable line.
+        reply = context_prefix + matched[0] + " To make this more concrete, tell me your monthly income and top 3 spending categories."
+        if reply == last_advisor_reply:
+            reply += " That way I can tailor the numbers directly to your situation."
+        return reply
+
+    # No direct keyword match — fall back to data-driven top-category guidance
+    if context and isinstance(context.get("expenses"), dict):
+        expenses = context.get("expenses", {})
+        if expenses:
+            top_cat = max(expenses.items(), key=lambda x: float(x[1]))
+            base_reply = (
+                context_prefix
+                + f"I can help with that. From your current data, `{top_cat[0]}` is your largest expense at about ₹{float(top_cat[1]):,.0f}. "
+                + "A good next move is to target a 10% reduction there first, then we can refine based on your question."
+            )
+            # If we just said the same thing, vary the tail slightly so it does not feel stuck.
+            if base_reply == last_advisor_reply:
+                base_reply = (
+                    context_prefix
+                    + f"Looking at your latest numbers, `{top_cat[0]}` dominates your spending at roughly ₹{float(top_cat[1]):,.0f}. "
+                    + "Even a 5–10% trim there would free up meaningful cash flow you can redirect into savings or debt payoff."
+                )
+            return base_reply
+
+    # Generic fallback when there is no context and no keyword match
+    return (
+        "I can answer that in detail. Ask me a specific goal like: "
+        "'How can I reduce rent?', 'How much should I save monthly?', or 'Can I start investing with my current budget?'"
+    )
+
 @router.post("/chat", response_model=ChatResponse)
 async def chat_with_advisor(req: ChatMessage, current_user: dict = Depends(get_current_user)):
     """Chat with the AI Financial Advisor via Groq or rule-based fallback."""
     if not groq_client:
-        lower_msg = req.message.lower()
-
-        # Build context-aware prefix
-        context_prefix = ""
-        if req.context:
-            income = req.context.get("income", 0)
-            savings = req.context.get("savings", 0)
-            savings_rate = (savings / income * 100) if income > 0 else 0
-            if savings_rate < 0:
-                context_prefix = f"Based on your current data (overspending by ₹{abs(savings):,.0f}): "
-            elif savings_rate < 10:
-                context_prefix = f"With your {savings_rate:.1f}% savings rate: "
-            elif savings_rate >= 20:
-                context_prefix = f"Great job on your {savings_rate:.1f}% savings rate! "
-
-        for keyword, reply in RULE_BASED_REPLIES.items():
-            if keyword in lower_msg:
-                return ChatResponse(reply=context_prefix + reply)
-
-        return ChatResponse(reply=context_prefix + "I am your FinSight AI Advisor. Ask me about budgeting, saving, investing, debt, emergency funds, taxes, credit, retirement, or inflation. For example: 'How do I save more?' or 'Help me budget better.'")
+        reply = _pick_fallback_reply(req.message, req.context, req.history)
+        return ChatResponse(reply=reply)
             
     # LLM branch using Groq
     try:
@@ -222,17 +324,16 @@ async def chat_with_advisor(req: ChatMessage, current_user: dict = Depends(get_c
             
         system_prompt = f"You are a highly professional, concise, and helpful AI Financial Advisor for the application 'FinSight AI'. You give factual, practical financial advice. Do NOT give boilerplate disclaimers constantly, just act like a smart embedded tool. Here is the user's current context: {context_str}"
         
+        messages = [{"role": "system", "content": system_prompt}]
+        for turn in (req.history or [])[-8:]:
+            role = "assistant" if turn.get("role") == "advisor" else "user"
+            text = turn.get("text", "").strip()
+            if text:
+                messages.append({"role": role, "content": text})
+        messages.append({"role": "user", "content": req.message})
+
         chat_completion = client.chat.completions.create(
-            messages=[
-                {
-                    "role": "system",
-                    "content": system_prompt
-                },
-                {
-                    "role": "user",
-                    "content": req.message
-                }
-            ],
+            messages=messages,
             model="llama-3.1-8b-instant",
             temperature=0.5,
             max_tokens=1024

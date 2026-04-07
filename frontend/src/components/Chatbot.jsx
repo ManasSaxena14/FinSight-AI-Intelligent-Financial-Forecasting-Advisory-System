@@ -16,7 +16,7 @@ const QUICK_PROMPTS = [
 export default function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { role: 'advisor', text: 'Hi! I am your FinSight AI Advisor. How can I help you optimize your finances today? Try one of the quick prompts below or ask anything.' }
+    { role: 'advisor', text: 'Hi! I am your FinSight assistant. Ask about budgeting, saving, or debt—or tap a quick prompt below.' }
   ]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -65,13 +65,14 @@ export default function Chatbot() {
 
   const sendMessage = async (text) => {
     if (!text.trim()) return;
+    const history = messages.slice(-8).map((m) => ({ role: m.role, text: m.text }));
     setInputText('');
     setMessages(prev => [...prev, { role: 'user', text }]);
     setIsLoading(true);
     try {
-      const response = await premiumService.sendChatMessage(text, context);
+      const response = await premiumService.sendChatMessage(text, context, history);
       setMessages(prev => [...prev, { role: 'advisor', text: response.reply }]);
-    } catch (err) {
+    } catch {
       setMessages(prev => [...prev, { role: 'advisor', text: 'I encountered a connection issue. Please verify your network and try again.' }]);
     } finally {
       setIsLoading(false);
@@ -122,10 +123,10 @@ export default function Chatbot() {
               <Bot className="w-7 h-7 text-brand-400 drop-shadow-[0_0_10px_rgba(212,175,55,0.6)]" />
             </div>
             <div>
-              <h3 className="font-black text-lg tracking-tighter italic">AI Oracle.</h3>
+              <h3 className="font-black text-lg tracking-tighter italic">AI assistant</h3>
               <div className="flex items-center gap-2 mt-0.5">
                 <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(16,185,129,1)]"></span>
-                <p className="text-[9px] text-text-tertiary font-black uppercase tracking-[0.3em]">Advisory Active</p>
+                <p className="text-[9px] text-text-tertiary font-black uppercase tracking-[0.3em]">Online</p>
               </div>
             </div>
           </div>
@@ -193,7 +194,7 @@ export default function Chatbot() {
             type="text"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            placeholder="Ask the Oracle..."
+            placeholder="Ask a money question…"
             className="flex-1 bg-black/20 border border-white/5 rounded-[1.5rem] px-6 py-4 text-sm text-text-primary focus:outline-none focus:border-brand-500/40 focus:ring-4 focus:ring-brand-500/5 transition-all placeholder:text-text-tertiary font-bold shadow-inner"
           />
           <button 

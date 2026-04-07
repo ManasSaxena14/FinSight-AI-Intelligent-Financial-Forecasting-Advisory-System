@@ -18,7 +18,7 @@ export default function Profile() {
         const data = await expenseService.getExpenses();
         setExpenses(data);
       } catch (err) {
-        console.error("Failed to load fiscal history", err);
+        console.error("Failed to load expense history", err);
       } finally {
         setIsLoading(false);
       }
@@ -44,8 +44,8 @@ export default function Profile() {
       
       <header className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h1 className="text-4xl font-black text-text-primary tracking-tighter italic">Neural Profile.</h1>
-          <p className="text-sm text-text-tertiary mt-2 font-medium tracking-wide italic">Verified Identity & Security Authorization.</p>
+          <h1 className="text-4xl font-black text-text-primary tracking-tighter italic">Your profile</h1>
+          <p className="text-sm text-text-tertiary mt-2 font-medium tracking-wide italic">Your account and sign-in details.</p>
         </div>
         <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-400 text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-brand-500/5">
           <ShieldCheck className="w-4 h-4" />
@@ -62,7 +62,7 @@ export default function Profile() {
             </div>
             <div>
               <CardTitle className="text-2xl font-black text-text-primary italic tracking-tight">{user.name || 'Account Holder'}</CardTitle>
-              <p className="text-[10px] text-text-tertiary font-black uppercase tracking-[0.3em] mt-1">Neural Profile: {user.name || 'Anonymous'}</p>
+              <p className="text-[10px] text-text-tertiary font-black uppercase tracking-[0.3em] mt-1">Signed in as {user.name || 'Guest'}</p>
             </div>
           </CardHeader>
           <CardContent className="p-10 pt-12 space-y-10">
@@ -75,7 +75,7 @@ export default function Profile() {
                 </div>
               </div>
               <div className="space-y-2 group">
-                <label className="text-[9px] font-black text-text-tertiary uppercase tracking-widest block mb-2 px-1">Identity UID</label>
+                <label className="text-[9px] font-black text-text-tertiary uppercase tracking-widest block mb-2 px-1">User ID</label>
                 <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/5 transition-all group-hover:border-white/10 overflow-hidden">
                   <div className="h-2 w-2 rounded-full bg-brand-500 shrink-0 shadow-[0_0_8px_rgba(212,175,55,0.6)]" />
                   <span className="text-[10px] font-mono text-text-tertiary truncate lowercase">{user.id || 'SYNC_PHASE_ACTIVE'}</span>
@@ -89,11 +89,10 @@ export default function Profile() {
               </div>
               <div className="flex items-center gap-3 relative z-10">
                 <Sparkles className="w-4 h-4 text-brand-400" />
-                <p className="text-[10px] font-black text-brand-500 uppercase tracking-widest italic">Financial Intelligence Status</p>
+                <p className="text-[10px] font-black text-brand-500 uppercase tracking-widest italic">Account security</p>
               </div>
               <p className="text-sm text-text-secondary leading-relaxed font-medium relative z-10">
-                Your neural profile is currently optimized for <span className="text-brand-400 font-bold italic">Elite-Tier Analysis</span>. 
-                All data transit is guarded by end-to-end quantum-resistant encryption, ensuring your fiscal sovereignty remains absolute.
+                Your account uses a secure, encrypted connection when you sign in and use the app.
               </p>
             </div>
           </CardContent>
@@ -107,9 +106,9 @@ export default function Profile() {
                 <Sparkles className="w-8 h-8" />
               </div>
               <div>
-                <p className="text-[10px] font-black text-text-tertiary uppercase tracking-widest mb-2">Member Authorization</p>
-                <h3 className="text-2xl font-black text-text-primary italic tracking-tight uppercase">Legacy Elite</h3>
-                <p className="text-[9px] font-bold text-brand-500 uppercase tracking-[0.2em] mt-2">Active Authorization</p>
+                <p className="text-[10px] font-black text-text-tertiary uppercase tracking-widest mb-2">Plan</p>
+                <h3 className="text-2xl font-black text-text-primary italic tracking-tight uppercase">Standard</h3>
+                <p className="text-[9px] font-bold text-brand-500 uppercase tracking-[0.2em] mt-2">Active</p>
               </div>
               <Button onClick={() => window.location.href='/plans'} variant="secondary" className="w-full py-4 rounded-2xl border-brand-500/20 text-brand-400 font-black hover:bg-brand-500/10 transition-all text-[10px] uppercase tracking-widest">
                 Optimize Access
@@ -187,7 +186,7 @@ export default function Profile() {
       <div className="flex items-center justify-center gap-6 opacity-30 pt-10">
         <div className="h-px w-12 bg-text-tertiary" />
         <p className="text-[9px] text-text-tertiary font-black uppercase tracking-[0.5em]">
-          ISO-27001 Certified • Neural Protocol
+          Industry-standard security practices
         </p>
         <div className="h-px w-12 bg-text-tertiary" />
       </div>

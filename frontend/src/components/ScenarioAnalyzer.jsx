@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import { premiumService } from '../api/premiumService';
 import { Card, CardContent, CardHeader, CardTitle } from './Card';
@@ -60,8 +61,8 @@ export default function ScenarioAnalyzer({ currentIncome, currentExpenses }) {
             <Calculator className="w-7 h-7 text-brand-400 drop-shadow-[0_0_10px_rgba(212,175,55,0.6)]" />
           </div>
           <div>
-            <CardTitle className="text-sm font-black tracking-[0.3em] text-text-primary uppercase italic">Stress Test Engine</CardTitle>
-            <p className="text-[10px] text-text-tertiary mt-1 font-black uppercase tracking-[0.2em]">Neural Predictive Budget Simulation v4.0</p>
+            <CardTitle className="text-sm font-black tracking-[0.3em] text-text-primary uppercase italic">Budget “what-if”</CardTitle>
+            <p className="text-[10px] text-text-tertiary mt-1 font-black uppercase tracking-[0.2em]">See how different spending affects your savings</p>
           </div>
         </div>
       </CardHeader>
@@ -72,7 +73,7 @@ export default function ScenarioAnalyzer({ currentIncome, currentExpenses }) {
           {/* Inputs */}
           <div className="space-y-10">
             <div>
-              <label className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.4em] block mb-4 px-2">Liquidity Injection / Income</label>
+              <label className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.4em] block mb-4 px-2">Monthly income (₹)</label>
               <div className="relative group">
                 <span className="absolute left-6 top-1/2 -translate-y-1/2 text-brand-500 font-black italic">₹</span>
                 <input 
@@ -86,11 +87,11 @@ export default function ScenarioAnalyzer({ currentIncome, currentExpenses }) {
 
             <div className="space-y-10">
               <div className="flex items-center gap-4 mb-2">
-                 <h4 className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.3em]">Monthly Expense Targets</h4>
+                 <h4 className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.3em]">Monthly spending by category</h4>
                  <div className="h-px flex-1 bg-white/5" />
               </div>
               {CATEGORIES.map(cat => {
-                const maxVal = Math.max(5000, (currentExpenses[cat] || 0) * 3);
+                const maxVal = Math.max(5000, (currentExpenses?.[cat] || 0) * 3);
                 const currentVal = proposedExpenses[cat] || 0;
                 const fillPercentage = Math.min(100, Math.max(0, (currentVal / maxVal) * 100));
 
@@ -98,7 +99,7 @@ export default function ScenarioAnalyzer({ currentIncome, currentExpenses }) {
                 <div key={cat} className="group">
                   <div className="flex justify-between text-[10px] font-black text-text-tertiary mb-3 group-hover:text-text-secondary transition-colors uppercase tracking-widest">
                     <span className="flex items-center gap-3 italic">
-                       <span className={`w-1.5 h-1.5 rounded-full ${currentVal !== currentExpenses[cat] ? 'bg-brand-500 shadow-[0_0_8px_rgba(212,175,55,1)]' : 'bg-white/10 group-hover:bg-brand-500 group-hover:shadow-[0_0_8px_rgba(212,175,55,1)]'} transition-all`} />
+                       <span className={`w-1.5 h-1.5 rounded-full ${currentVal !== (currentExpenses?.[cat] || 0) ? 'bg-brand-500 shadow-[0_0_8px_rgba(212,175,55,1)]' : 'bg-white/10 group-hover:bg-brand-500 group-hover:shadow-[0_0_8px_rgba(212,175,55,1)]'} transition-all`} />
                        {cat}
                     </span>
                     <span className="text-text-primary font-black italic tracking-tight text-xs">₹{currentVal.toLocaleString()}</span>
@@ -121,7 +122,7 @@ export default function ScenarioAnalyzer({ currentIncome, currentExpenses }) {
             
             <div className="pt-6">
               <Button onClick={handleAnalyze} isLoading={isLoading} className="w-full h-14 rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 text-black font-black uppercase tracking-[0.3em] text-[10px] shadow-2xl shadow-brand-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]">
-                Run Stress Simulation
+                Run simulation
               </Button>
             </div>
           </div>
@@ -168,7 +169,7 @@ export default function ScenarioAnalyzer({ currentIncome, currentExpenses }) {
                         </div>
                       </div>
                       <div>
-                          <p className="text-[9px] font-black text-brand-500 uppercase tracking-[0.3em] mb-2">Forensic Advice</p>
+                          <p className="text-[9px] font-black text-brand-500 uppercase tracking-[0.3em] mb-2">Suggestion</p>
                           <p className="leading-relaxed font-bold italic text-text-primary tracking-tight">"{result.advice}"</p>
                       </div>
                     </div>
@@ -187,8 +188,8 @@ export default function ScenarioAnalyzer({ currentIncome, currentExpenses }) {
                     <Calculator className="w-24 h-24 text-white/5 opacity-50" />
                     <ArrowRight className="w-8 h-8 text-brand-500 absolute -bottom-2 -right-2 drop-shadow-[0_0_10px_rgba(212,175,55,1)]" />
                   </div>
-                  <h4 className="text-text-secondary font-black tracking-widest uppercase text-xs mb-3">Awaiting Parameters</h4>
-                  <p className="text-[10px] text-text-tertiary max-w-[220px] mx-auto font-bold uppercase tracking-[0.2em] leading-relaxed">Initialize spending profile to execute neural stress simulation.</p>
+                  <h4 className="text-text-secondary font-black tracking-widest uppercase text-xs mb-3">No results yet</h4>
+                  <p className="text-[10px] text-text-tertiary max-w-[220px] mx-auto font-bold uppercase tracking-[0.2em] leading-relaxed">Set income and spending above, then run the simulation.</p>
                 </motion.div>
               )}
             </AnimatePresence>

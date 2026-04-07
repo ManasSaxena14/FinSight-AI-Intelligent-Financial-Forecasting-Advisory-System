@@ -36,8 +36,8 @@ export const premiumService = {
   /**
    * Send a chat message to the AI advisor
    */
-  sendChatMessage: async (message, context = null) => {
-    const response = await apiClient.post('/premium/chat', { message, context });
+  sendChatMessage: async (message, context = null, history = null) => {
+    const response = await apiClient.post('/premium/chat', { message, context, history });
     return response.data;
   },
 

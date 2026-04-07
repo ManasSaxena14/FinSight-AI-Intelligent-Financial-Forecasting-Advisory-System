@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+// eslint-disable-next-line no-unused-vars
+import { AnimatePresence, motion } from 'framer-motion';
 import { premiumService } from '../api/premiumService';
 import { Activity, TrendingUp, TrendingDown, Minus, RefreshCw } from 'lucide-react';
 
@@ -86,7 +87,7 @@ export default function LiveBudgetTracker() {
                 <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,1)] top-0 right-0" />
               </div>
               <p className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.35em]">
-                Live Budget Monitor
+                Live budget
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -132,7 +133,7 @@ export default function LiveBudgetTracker() {
               <p className="text-xl font-black text-text-primary italic tracking-tight">₹{data.total_income.toLocaleString()}</p>
               <div className="flex items-center gap-1.5 mt-2">
                 <Activity className="w-3 h-3 text-brand-500" />
-                <p className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">This Cycle</p>
+                <p className="text-[9px] text-text-tertiary font-bold uppercase tracking-widest">This month</p>
               </div>
             </div>
 

@@ -17,27 +17,41 @@ class DatabaseManager:
     client: Any = None
     db: Any = None
 
+    # Motor client options — fail within ~10s instead of hanging (common Atlas/DNS issue)
+    _CLIENT_KWARGS = {"serverSelectionTimeoutMS": 10_000, "connectTimeoutMS": 10_000}
+
     @classmethod
     async def connect_to_database(cls, uri: str = None):
         """Initialize MongoDB Async Client."""
         db_uri = uri or settings.MONGODB_URI
-        logger.info(f"Connecting to MongoDB at {db_uri[:40]}...")
+        logger.info("Connecting to MongoDB at %s...", db_uri[:48])
+        cls.client = None
+        cls.db = None
         try:
             # Use certifi for Atlas (mongodb+srv) but skip for local connections
             if "mongodb+srv://" in db_uri:
-                cls.client = AsyncIOMotorClient(db_uri, tlsCAFile=certifi.where())
+                cls.client = AsyncIOMotorClient(
+                    db_uri, tlsCAFile=certifi.where(), **cls._CLIENT_KWARGS
+                )
             else:
-                cls.client = AsyncIOMotorClient(db_uri)
-            
+                cls.client = AsyncIOMotorClient(db_uri, **cls._CLIENT_KWARGS)
+
             cls.db = cls.client[settings.DATABASE_NAME]
-            logger.info(f"Successfully connected to MongoDB! Database: {settings.DATABASE_NAME}")
-            
+            # First round-trip — surfaces auth/network issues early
+            await cls.client.admin.command("ping")
+
+            logger.info("Successfully connected to MongoDB! Database: %s", settings.DATABASE_NAME)
+
             # Ensure unique index on email for the users collection
             await cls.db["users"].create_index("email", unique=True)
             logger.info("Ensured unique index on users.email")
         except Exception as e:
-            logger.error(f"Failed to connect to MongoDB: {e}")
-            raise e
+            logger.error("Failed to connect to MongoDB: %s", e)
+            if cls.client:
+                cls.client.close()
+            cls.client = None
+            cls.db = None
+            raise
 
     @classmethod
     async def close_database_connection(cls):

@@ -1,5 +1,6 @@
 import { useRef, useEffect } from 'react';
 import { gsap } from 'gsap';
+// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 import { cn } from '../utils/cn';
 

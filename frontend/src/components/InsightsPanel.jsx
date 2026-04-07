@@ -96,7 +96,7 @@ export default function InsightsPanel({ recommendations, isLoading = false }) {
        )}
  
        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-         {/* Budget Forensic Alerts */}
+         {/* Budget alerts */}
          <Card className="insight-card glass-card border-none bg-black/20 border-l-[4px] border-l-brand-600/40 shadow-2xl relative overflow-hidden group rounded-[2rem]">
            <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.07] transition-opacity pointer-events-none">
              <AlertCircle size={100} className="text-brand-500" />
@@ -107,7 +107,7 @@ export default function InsightsPanel({ recommendations, isLoading = false }) {
                  <AlertCircle className="h-5 w-5 text-brand-400 drop-shadow-[0_0_8px_rgba(212,175,55,0.6)]" />
                </div>
                <CardTitle className="text-text-primary font-black uppercase text-xs tracking-[0.2em]">
-                 Budget Forensic Alerts
+                 Budget alerts
                </CardTitle>
              </div>
            </CardHeader>
@@ -166,7 +166,9 @@ export default function InsightsPanel({ recommendations, isLoading = false }) {
                          </span>
                        </div>
                        <p className="text-[11px] text-text-tertiary font-medium pl-5">
-                         {a.message ? a.message : `Unusual spending detected: Z-Score ${a.z_score?.toFixed(2)}`}
+                         {a.message
+                           ? a.message
+                           : `Spending in this area looks unusually high compared to your normal pattern this month.`}
                        </p>
                      </li>
                    ))}
@@ -187,7 +189,7 @@ export default function InsightsPanel({ recommendations, isLoading = false }) {
                  <Lightbulb className="h-5 w-5 text-brand-400 drop-shadow-[0_0_8px_rgba(212,175,55,0.6)]" />
                </div>
                <CardTitle className="text-text-primary font-black uppercase text-xs tracking-[0.2em]">
-                 Optimization Engine
+                 Simple money tips
                </CardTitle>
              </div>
            </CardHeader>

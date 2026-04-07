@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import { premiumService } from '../api/premiumService';
 import { Card, CardContent, CardHeader, CardTitle } from './Card';
@@ -58,10 +59,10 @@ export default function SmartSavings() {
                   </div>
                   <div>
                     <CardTitle className="text-sm font-black tracking-[0.3em] text-text-primary uppercase italic">
-                      Smart Savings Engine
+                      Smart savings
                     </CardTitle>
                     <p className="text-[10px] text-text-tertiary mt-1 font-black uppercase tracking-[0.2em]">
-                      AI Personalized Optimization Protocol
+                      Personalized savings tips
                     </p>
                   </div>
                 </div>

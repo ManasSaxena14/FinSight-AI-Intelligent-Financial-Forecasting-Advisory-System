@@ -32,8 +32,8 @@ const MotionDiv = motion.div;
 const FLOW_STEPS = [
   {
     id: 'data-entry',
-    title: 'Data Ingestion',
-    description: 'User inputs monthly income and expenses across categorized fiscal streams.',
+    title: 'You add your numbers',
+    description: 'Enter monthly income and spending by category.',
     icon: Database,
     color: 'text-blue-400',
     bg: 'bg-blue-500/10',
@@ -41,8 +41,8 @@ const FLOW_STEPS = [
   },
   {
     id: 'encryption',
-    title: 'Neural Encryption',
-    description: 'AES-256 standards secure data packets before transmission to isolated storage.',
+    title: 'Secure storage',
+    description: 'Your data is encrypted and stored safely.',
     icon: Fingerprint,
     color: 'text-emerald-400',
     bg: 'bg-emerald-500/10',
@@ -50,8 +50,8 @@ const FLOW_STEPS = [
   },
   {
     id: 'analysis',
-    title: 'Pattern Recognition',
-    description: 'Proprietary ML models scan for anomalies, trends, and growth opportunities.',
+    title: 'Smart analysis',
+    description: 'Models look for patterns, unusual spending, and trends.',
     icon: Cpu,
     color: 'text-brand-400',
     bg: 'bg-brand-500/10',
@@ -59,8 +59,8 @@ const FLOW_STEPS = [
   },
   {
     id: 'output',
-    title: 'Intelligence Delivery',
-    description: 'Visualized trajectory forecasts and tailored advisory protocols are generated.',
+    title: 'Clear insights',
+    description: 'You get charts, forecasts, and plain-language tips.',
     icon: LineChart,
     color: 'text-purple-400',
     bg: 'bg-purple-500/10',
@@ -73,55 +73,55 @@ export default function HowItWorks() {
 
   const FEATURES = [
     {
-      title: "Financial Goal Engine",
-      description: "Define high-priority neural targets for savings or significant acquisitions. Our engine calculates the most efficient liquidity allocation, providing a day-by-day roadmap to your 'Trophy' milestones while maintaining operational stability.",
+      title: "Savings goals",
+      description: "Set targets and dates. We show progress and how much to save each month to stay on track.",
       icon: Target,
-      highlight: "Smart Prioritization",
+      highlight: "Stay on track",
       iconColor: "text-rose-400",
       bgColor: "bg-rose-500/5",
       borderColor: "border-rose-500/10"
     },
     {
-      title: "AI Advisory Module",
-      description: "Engage with a 24/7 autonomous financial consultant. Utilizing advanced natural language processing, the module audits your 'Ledger' to provide hyper-personalized insights on cost optimization and surplus liquidity deployment.",
+      title: "AI chat advisor",
+      description: "Ask questions in everyday language. Tips are based on your income, spending, and goals.",
       icon: Bot,
-      highlight: "Neural Support 24/7",
+      highlight: "Help when you need it",
       iconColor: "text-brand-400",
       bgColor: "bg-brand-500/5",
       borderColor: "border-brand-500/10"
     },
     {
-      title: "Predictive Analytics",
-      description: "Forecast your financial trajectory with high-fidelity 'Momentum' charts. Our regression models identify potential 'Fiscal Leaks' before they manifest, allowing for preemptive course correction and net-worth protection.",
+      title: "Forecasts & trends",
+      description: "See charts and projections so you can spot overspending early and plan ahead.",
       icon: TrendingUp,
-      highlight: "Future Projection",
+      highlight: "Plan ahead",
       iconColor: "text-blue-400",
       bgColor: "bg-blue-500/5",
       borderColor: "border-blue-500/10"
     },
     {
-      title: "Categorical Matrix",
-      description: "Perform deep-scale analysis of your spending DNA. We decompose every credit and debit stream—from 'Asset Liquidity' to 'Entertainment'—using multi-dimensional visualizations that reveal hidden behavioral patterns.",
+      title: "Spending by category",
+      description: "Break down where your money goes—from rent and bills to food and fun—with simple visuals.",
       icon: PieChart,
-      highlight: "DNA Decomposition",
+      highlight: "See the big picture",
       iconColor: "text-purple-400",
       bgColor: "bg-purple-500/5",
       borderColor: "border-purple-500/10"
     },
     {
-      title: "Dynamic Budgeting",
-      description: "Establish flexible spending boundaries that adapt to your income velocity. The system automatically recalibrates your monthly limits based on real-time ingestion of your expense matrix.",
+      title: "Budget tracking",
+      description: "Adjust limits as your income changes. Updates use your latest spending and savings.",
       icon: History,
-      highlight: "Adaptive Limits",
+      highlight: "Flexible budgets",
       iconColor: "text-emerald-400",
       bgColor: "bg-emerald-500/5",
       borderColor: "border-emerald-500/10"
     },
     {
-      title: "Secure Node Sync",
-      description: "Synchronize your data across multiple access points with total confidence. Our decentralized architecture ensures that your financial intelligence is always available, yet protected by industry-leading encryption.",
+      title: "Safe & private",
+      description: "Sign in from any device. Your information is encrypted and never sold to advertisers.",
       icon: ShieldCheck,
-      highlight: "Node Integrity",
+      highlight: "Privacy first",
       iconColor: "text-brand-500",
       bgColor: "bg-brand-500/5",
       borderColor: "border-brand-500/10"
@@ -131,31 +131,31 @@ export default function HowItWorks() {
   const FAQS = [
     {
       question: "How does the AI advisor generate recommendations?",
-      answer: "Our system utilizes an ensemble of machine learning models that analyze your historical spending patterns, income stability, and goal progression. It compares your data against optimal fiscal benchmarks to provide context-aware, actionable advice."
+      answer: "We use machine learning on your past spending, income, and goals. Suggestions compare your habits to healthy ranges and focus on practical next steps."
     },
     {
       question: "Is my financial data shared with third parties?",
-      answer: "No. FinSight AI operates on a principle of total fiscal isolation. Your data is encrypted at the source and used exclusively to train your personal local forecasting model. We never sell or share user data."
+      answer: "No. Your data is encrypted and used only to power your account. We do not sell or share it with marketers."
     },
     {
-      question: "What makes the forecasting model 'predictive'?",
-      answer: "Unlike simple budget trackers, our system looks at velocity and acceleration of spending. It identifies seasonal trends and non-linear patterns to predict your end-of-month balance with up to 98% accuracy."
+      question: "What makes the forecasts useful?",
+      answer: "We look at how spending changes over time and pick up seasonal patterns. That helps estimate where you might end the month if habits continue."
     },
     {
       question: "What are 'Financial Goals' in the system?",
-      answer: "Goals are neural targets that the AI uses to prioritize your spending. When you set a goal, the system automatically adjusts its advisory logic to ensure your surplus liquidity is directed toward that target."
+      answer: "Goals are savings targets with a date. We use them to show progress and suggest how much to set aside."
     },
     {
-      question: "How often should I synchronize my ledger?",
-      answer: "For maximum accuracy, we recommend a monthly sync cycle. This provides the neural engine with enough 'Temporal Cycles' to recognize your evolving financial momentum."
+      question: "How often should I update my expenses?",
+      answer: "At least once a month. If you add more often, forecasts and tips stay more accurate."
     },
     {
-      question: "Can I export my fiscal intelligence data?",
-      answer: "Yes. The system allows for high-fidelity data exports in multiple formats, ensuring you maintain full sovereignty over your financial history and trajectory reports."
+      question: "Can I export my data?",
+      answer: "Yes. You can export your history in common formats so you always own your records."
     },
     {
-      question: "How secure is the AES-256 encryption?",
-      answer: "AES-256 is the global standard for military-grade encryption. Every data packet ingested by our nodes is encrypted before it ever leaves your local environment, making it virtually impenetrable."
+      question: "How is my data protected?",
+      answer: "We use strong encryption (AES-256) in line with industry practice so your information is protected in transit and at rest."
     }
   ];
 
@@ -248,11 +248,11 @@ export default function HowItWorks() {
       <header className="text-center space-y-6 relative z-10">
         <div className="flex items-center justify-center gap-3 animate-header">
           <div className="h-px w-12 bg-brand-500/40" />
-          <span className="text-[10px] font-black text-brand-500 uppercase tracking-[0.6em]">System Architecture</span>
+          <span className="text-[10px] font-black text-brand-500 uppercase tracking-[0.6em]">How it works</span>
           <div className="h-px w-12 bg-brand-500/40" />
         </div>
         <h1 className="text-6xl sm:text-7xl font-black text-text-primary tracking-tighter italic leading-tight animate-header">
-          Neural <span className="text-brand-500">Infrastructure.</span>
+          Simple <span className="text-brand-500">by design.</span>
         </h1>
         <p className="text-lg text-text-secondary font-medium tracking-tight max-w-2xl mx-auto animate-header">
           Explore the sophisticated intelligence layers and security protocols that power your financial evolution.
@@ -344,7 +344,7 @@ export default function HowItWorks() {
               <HelpCircle className="w-6 h-6 text-brand-400 relative z-10" />
               <div className="absolute inset-0 bg-brand-400/20 blur-lg security-glow" />
             </div>
-            <h2 className="text-2xl font-black italic tracking-tight text-text-primary">Intelligence Briefing</h2>
+            <h2 className="text-2xl font-black italic tracking-tight text-text-primary">What you get</h2>
           </div>
           <p className="text-sm text-text-secondary font-medium leading-relaxed">
             Common inquiries regarding system protocols, security measures, and predictive methodologies.
@@ -411,7 +411,7 @@ export default function HowItWorks() {
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
               <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
-              <span className="text-[9px] font-black text-text-tertiary uppercase tracking-[0.2em]">Neural Engine v4.2.0</span>
+              <span className="text-[9px] font-black text-text-tertiary uppercase tracking-[0.2em]">FinSight AI</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]" />

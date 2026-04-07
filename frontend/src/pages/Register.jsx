@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import gsap from 'gsap';
+import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { Card, CardContent } from '../components/Card';
 import { Input } from '../components/Input';
@@ -34,9 +35,11 @@ export default function Register() {
     const result = await register(name, email, password);
     
     if (result.success) {
+      toast.success('Account Created Successfully');
       navigate('/');
     } else {
       setError(result.message);
+      toast.error(result.message);
       setIsLoading(false);
       gsap.fromTo(formRef.current, 
         { x: -10 }, 
@@ -55,10 +58,10 @@ export default function Register() {
             <img src="/MAIN_LOGO.png" alt="FinSight AI Logo" className="h-40 w-auto object-contain drop-shadow-[0_0_20px_rgba(212,175,55,0.3)] hover:scale-105 transition-transform duration-500" />
           </div>
           <h2 className="text-4xl font-black tracking-tight text-text-primary mb-3">
-            Genesis.
+            Create account
           </h2>
           <p className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.4em]">
-            Initialize Neural Profile • Secure Protocol
+            Your data stays private
           </p>
         </div>
 
@@ -114,15 +117,15 @@ export default function Register() {
             </div>
 
             <Button type="submit" variant="primary" className="w-full h-14 rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 text-black font-black uppercase tracking-[0.2em] text-[10px] shadow-2xl shadow-brand-500/10 transition-all hover:scale-[1.02] active:scale-[0.98]" isLoading={isLoading}>
-              Initialize Neural Vault
+              Create account
             </Button>
           </form>
 
           <div className="mt-10 text-center border-t border-white/5 pt-10">
             <p className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.2em]">
-              Already Identified?{' '}
+              Already have an account?{' '}
               <Link to="/login" className="text-brand-400 hover:text-brand-300 transition-colors ml-2 underline underline-offset-4 decoration-brand-500/30">
-                Secure Log In
+                Sign in
               </Link>
             </p>
           </div>
@@ -131,7 +134,7 @@ export default function Register() {
         <div className="flex items-center justify-center gap-6 opacity-30">
           <div className="h-px w-8 bg-text-tertiary" />
           <p className="text-[9px] text-text-tertiary font-black uppercase tracking-[0.5em]">
-            AES-256 Quantum Shielded
+            Data encrypted in transit
           </p>
           <div className="h-px w-8 bg-text-tertiary" />
         </div>

@@ -7,6 +7,7 @@ Uses pydantic-settings for validation and type safety.
 
 import os
 from typing import List
+from pydantic import ConfigDict
 from pydantic_settings import BaseSettings
 
 # Compute the path to backend/.env regardless of where the process was started
@@ -37,9 +38,7 @@ class Settings(BaseSettings):
         "http://127.0.0.1:3000"
     ]
 
-    class Config:
-        env_file = _ENV_FILE
-        extra = "ignore"
+    model_config = ConfigDict(env_file=_ENV_FILE, extra="ignore")
 
 
 # Single settings instance used across the app

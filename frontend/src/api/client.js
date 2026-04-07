@@ -1,7 +1,10 @@
 import axios from 'axios';
 
-// Base API URL pointing to the FastAPI backend
-const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api';
+// Production / explicit: VITE_API_URL (e.g. https://your-api.onrender.com/api)
+// Dev default: same-origin `/api` → Vite proxy → http://127.0.0.1:8000 (run: cd backend && uvicorn app.main:app --reload)
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  (import.meta.env.DEV ? '/api' : 'http://127.0.0.1:8000/api');
 
 const apiClient = axios.create({
   baseURL: API_URL,

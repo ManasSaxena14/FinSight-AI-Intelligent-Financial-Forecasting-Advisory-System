@@ -82,7 +82,7 @@ def _build_monthly_seasonality(df: pd.DataFrame) -> pd.DataFrame:
     ratio_cols = [f"{col}_ratio" for col in EXPENSE_COLS]
     monthly_ratios = ratios.groupby("Month")[ratio_cols].mean()
     # Reindex to ensure correct month order
-    monthly_ratios = monthly_ratios.reindex(MONTH_ORDER).fillna(method="ffill").fillna(method="bfill")
+    monthly_ratios = monthly_ratios.reindex(MONTH_ORDER).ffill().bfill()
     return monthly_ratios
 
 

@@ -64,8 +64,8 @@ export default function Plans() {
       features: [
         { name: 'Advanced AI Routing', active: true },
         { name: 'Unlimited Financial Goals', active: true },
-        { name: 'Pro Predictive Stress Testing', active: true },
-        { name: 'Automated Tax Optimization', active: true },
+        { name: 'What-if budget scenarios', active: true },
+        { name: 'Tax planning helpers', active: true },
         { name: 'Custom AI Personas', active: false }
       ]
     },
@@ -80,7 +80,7 @@ export default function Plans() {
       tag: 'Upcoming',
       highlight: true,
       features: [
-        { name: 'Full Neural Forecasting Model', active: true },
+        { name: 'Full spending forecasts', active: true },
         { name: 'Direct Portfolio Management', active: true },
         { name: 'Crypto & Real Estate Assets', active: true },
         { name: '24/7 AI CPA/Tax Consultant', active: true },
@@ -106,7 +106,7 @@ export default function Plans() {
            Elevate your <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-brand-600">Financial Future.</span>
         </h1>
         <p className="header-reveal text-text-tertiary text-lg max-w-xl mx-auto font-medium leading-relaxed">
-          Upgrade to unlock institutional-grade AI analysis, predictive stress testing, and autonomous tax optimization.
+          Future paid tiers may include deeper AI insights, scenario tools, and tax help—coming soon.
         </p>
       </div>
 

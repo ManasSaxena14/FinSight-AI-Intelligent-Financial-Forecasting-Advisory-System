@@ -94,45 +94,19 @@ export default function Analytics() {
     spendingPattern: null,
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [isMlLoading, setIsMlLoading] = useState(false);
   const [error, setError] = useState(null);
   const containerRef = useRef(null);
 
-  // ── Data fetching ────────────────────────────────────────────────────────
+  // ── Data fetching (step 1: load expense history quickly) ─────────────────
   useEffect(() => {
-    const fetchAnalytics = async () => {
+    const fetchHistory = async () => {
       try {
         const rawExpenses = await expenseService.getExpenses();
         const history = [...rawExpenses].reverse(); // chronological
 
         if (history.length > 0) {
-          const latest = history[history.length - 1];
-          const previous = history.length > 1 ? history[history.length - 2] : null;
-          const payload = {
-            income: latest.income,
-            expenses: latest.expenses,
-            ...(previous ? { previous_expenses: previous.expenses } : {}),
-          };
-
-          // Parallel ML calls
-          const results = await Promise.allSettled([
-            mlService.getForecast(payload),
-            mlService.getRecommendations(payload),
-            mlService.getHealthScore(payload),
-            mlService.getClassification(payload),
-            mlService.getSavingsRisk(payload),
-            mlService.getSpendingPattern(payload),
-          ]);
-
-          setData({
-            expenses: history,
-            forecast: results[0].status === 'fulfilled' ? results[0].value : null,
-            recommendations: results[1].status === 'fulfilled' ? results[1].value : null,
-            healthScore: results[2].status === 'fulfilled' ? results[2].value : null,
-            prediction: results[0].status === 'fulfilled' ? results[0].value : null,
-            classification: results[3].status === 'fulfilled' ? results[3].value : null,
-            savingsRisk: results[4].status === 'fulfilled' ? results[4].value : null,
-            spendingPattern: results[5].status === 'fulfilled' ? results[5].value : null,
-          });
+          setData((prev) => ({ ...prev, expenses: history }));
         } else {
           setData((prev) => ({ ...prev, expenses: [] }));
         }
@@ -144,8 +118,60 @@ export default function Analytics() {
       }
     };
 
-    fetchAnalytics();
+    fetchHistory();
+
+    const handleUpdated = () => {
+      setIsLoading(true);
+      fetchHistory();
+    };
+
+    window.addEventListener('expenses:updated', handleUpdated);
+    return () => window.removeEventListener('expenses:updated', handleUpdated);
   }, []);
+
+  // ── Data fetching (step 2: run heavier AI/ML in background) ──────────────
+  useEffect(() => {
+    const runMl = async () => {
+      if (!data.expenses || data.expenses.length === 0) return;
+      setIsMlLoading(true);
+      try {
+        const history = data.expenses;
+        const latest = history[history.length - 1];
+        const previous = history.length > 1 ? history[history.length - 2] : null;
+        const payload = {
+          income: latest.income,
+          expenses: latest.expenses,
+          ...(previous ? { previous_expenses: previous.expenses } : {}),
+        };
+
+        const results = await Promise.allSettled([
+          mlService.getForecast(payload),
+          mlService.getRecommendations(payload),
+          mlService.getHealthScore(payload),
+          mlService.getClassification(payload),
+          mlService.getSavingsRisk(payload),
+          mlService.getSpendingPattern(payload),
+        ]);
+
+        setData((prev) => ({
+          ...prev,
+          forecast: results[0].status === 'fulfilled' ? results[0].value : prev.forecast,
+          recommendations: results[1].status === 'fulfilled' ? results[1].value : prev.recommendations,
+          healthScore: results[2].status === 'fulfilled' ? results[2].value : prev.healthScore,
+          prediction: results[0].status === 'fulfilled' ? results[0].value : prev.prediction,
+          classification: results[3].status === 'fulfilled' ? results[3].value : prev.classification,
+          savingsRisk: results[4].status === 'fulfilled' ? results[4].value : prev.savingsRisk,
+          spendingPattern: results[5].status === 'fulfilled' ? results[5].value : prev.spendingPattern,
+        }));
+      } catch (err) {
+        console.error('Failed to load ML analytics', err);
+      } finally {
+        setIsMlLoading(false);
+      }
+    };
+
+    runMl();
+  }, [data.expenses]);
 
   // ── GSAP entrance for summary cards ──────────────────────────────────────
   useEffect(() => {
@@ -206,10 +232,10 @@ export default function Analytics() {
             <Sparkles className="h-8 w-8 text-brand-400 drop-shadow-[0_0_10px_rgba(212,175,55,0.4)]" />
           </div>
           <h3 className="text-xl font-black text-text-primary tracking-tighter italic uppercase">
-            Initialization Required.
+            No data yet
           </h3>
           <p className="mt-4 text-[10px] text-text-tertiary uppercase tracking-[0.2em] max-w-xs mx-auto">
-            Upload a fiscal dataset to activate predictive neural modeling and unlock intelligence analytics.
+            Add your income and expenses to see charts, forecasts, and insights.
           </p>
         </CardContent>
       </Card>
@@ -269,10 +295,10 @@ export default function Analytics() {
       <header className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6 animate-header">
         <div>
           <h1 className="text-4xl font-black text-text-primary tracking-tighter italic">
-            Intelligence Dashboard.
+            Analytics
           </h1>
           <p className="text-sm text-text-tertiary mt-2 font-medium tracking-wide">
-            Predictive machine learning models and financial growth opportunities.
+            Charts and forecasts based on your own spending and income.
           </p>
         </div>
 
@@ -280,7 +306,7 @@ export default function Analytics() {
           <div className="flex gap-4">
             <div className="bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl px-6 py-3 flex flex-col items-center justify-center min-w-[140px] health-indicator group hover:border-brand-500/30 transition-all duration-500">
               <p className="text-[9px] font-black text-text-tertiary uppercase tracking-widest mb-1 group-hover:text-brand-400 transition-colors">
-                Stability Status
+                Health status
               </p>
               <p
                 className={`text-2xl font-black italic transition-colors ${
@@ -345,7 +371,7 @@ export default function Analytics() {
 
         <div>
           <h3 className="text-lg font-black text-brand-500 tracking-widest uppercase mb-4 pl-1">
-            Neural Intelligence
+            Forecasts & insights
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-5">
             <div className="summary-card">
@@ -404,7 +430,7 @@ export default function Analytics() {
       <div className="relative z-10">
         <InsightsPanel
           recommendations={data.recommendations}
-          isLoading={isLoading}
+          isLoading={isLoading || isMlLoading}
         />
       </div>
 
@@ -464,8 +490,8 @@ export default function Analytics() {
 
         {/* Line Chart — Monthly expense trend */}
         <ChartCard
-          title="Financial Momentum"
-          subtitle="Income vs. expense trajectory over time"
+          title="Income & spending over time"
+          subtitle="Compare income, spending, and savings by month"
           icon={LineIcon}
           isLoading={isLoading}
         >
@@ -684,15 +710,15 @@ export default function Analytics() {
                     </div>
                     <div className="space-y-1">
                       <p className="text-[10px] text-brand-500 font-black uppercase tracking-[0.4em]">
-                        Forecasting Engine v4.2
+                        Spending outlook
                       </p>
                       <h3 className="text-3xl font-black tracking-tighter">
-                        Predictive Analysis.
+                        Next month at a glance
                       </h3>
                     </div>
                   </div>
                   <p className="text-text-secondary text-xl font-medium leading-relaxed max-w-2xl tracking-tight">
-                    Our neural network projects your liability matrix will{' '}
+                    Based on your history, total spending may{' '}
                     <span
                       className={`font-black tracking-tighter ${
                         data.forecast.trend_direction === 'increase'
@@ -702,19 +728,19 @@ export default function Analytics() {
                     >
                       {data.forecast.trend_direction}
                     </span>{' '}
-                    to approximately{' '}
+                    to about{' '}
                     <strong className="text-text-primary underline decoration-brand-500/30 decoration-4 underline-offset-8">
                       ₹{data.forecast.predicted_next_month_expense.toLocaleString()}
                     </strong>{' '}
-                    in the next billing cycle.
+                    next month. This is an estimate—not financial advice.
                   </p>
                   <div className="flex gap-4 pt-4 flex-wrap">
                     <div className="px-5 py-2.5 bg-white/[0.03] rounded-full border border-white/5 text-[9px] font-black text-text-tertiary uppercase tracking-[0.2em] flex items-center gap-2">
                       <div className="h-1.5 w-1.5 rounded-full bg-brand-500 shadow-[0_0_8px_rgba(212,175,55,1)]" />
-                      Confidence: 94.2%
+                      Estimate only
                     </div>
                     <div className="px-5 py-2.5 bg-white/[0.03] rounded-full border border-white/5 text-[9px] font-black text-text-tertiary uppercase tracking-[0.2em]">
-                      Model: GRU-LSTM Ensemble
+                      Based on your past months
                     </div>
                   </div>
                 </div>
@@ -761,7 +787,7 @@ export default function Analytics() {
       {/* ── Loading overlay ─────────────────────────────────────────────── */}
       {isLoading && (
         <div className="p-16 text-center text-text-tertiary animate-pulse tracking-[0.3em] font-black uppercase italic text-xs">
-          Processing neural analytics...
+          Loading analytics…
         </div>
       )}
     </div>

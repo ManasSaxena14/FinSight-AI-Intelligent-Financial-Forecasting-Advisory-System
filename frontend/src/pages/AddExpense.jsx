@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import gsap from 'gsap';
+import toast from 'react-hot-toast';
 import { cn } from '../utils/cn';
 import { expenseService } from '../api/expenseService';
 import { Card, CardContent } from '../components/Card';
@@ -74,11 +75,22 @@ export default function AddExpense() {
 
     try {
       await expenseService.addExpense(payload);
+      toast.success('Expenses saved');
+      // Notify other views (Dashboard, Analytics, Advisor, etc.)
+      // so they can refetch and recompute AI summaries instantly.
+      try {
+        window.dispatchEvent(new Event('expenses:updated'));
+      } catch {
+        // window may not exist in some environments; ignore.
+      }
       setSuccess(true);
       setIncome('');
       setExpenses({ Food: '', Travel: '', Rent: '', Shopping: '', Bills: '', Entertainment: '' });
-    } catch {
-      setError('System authentication failed. Please retry transmission.');
+    } catch (err) {
+      console.error('Submission failed:', err);
+      const errorMessage = err.response?.data?.detail || 'Could not save. Check you are signed in and try again.';
+      setError(errorMessage);
+      toast.error(errorMessage);
       gsap.fromTo(formRef.current, { x: -4 }, { x: 4, duration: 0.08, yoyo: true, repeat: 5, ease: "power1.inOut" });
     } finally {
       setIsLoading(false);
@@ -104,13 +116,13 @@ export default function AddExpense() {
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
                   <Cpu className="h-4 w-4 text-brand-500 animate-pulse" />
-                  <span className="text-[10px] font-black text-brand-500 uppercase tracking-[0.6em]">Core Ledger Node</span>
+                  <span className="text-[10px] font-black text-brand-500 uppercase tracking-[0.6em]">Add spending</span>
                 </div>
                 <h1 className="text-6xl lg:text-8xl font-black text-white tracking-tighter italic leading-[0.85]">
-                  Data <span className="text-brand-500">Ingestion.</span>
+                  Add your <span className="text-brand-500">monthly data</span>
                 </h1>
                 <p className="text-lg text-text-secondary font-medium tracking-tight max-w-2xl">
-                  Synchronize your monthly fiscal matrix with our neural processing core for deep-scale predictive modeling.
+                  Enter income and expenses so forecasts, your health score, and tips stay up to date.
                 </p>
               </div>
               <div className="hidden lg:block">
@@ -119,8 +131,8 @@ export default function AddExpense() {
                     <Lock className="h-6 w-6 text-brand-400" />
                   </div>
                   <div className="space-y-1">
-                    <p className="text-[9px] font-black text-brand-500 uppercase tracking-widest">Protocol Status</p>
-                    <p className="text-sm font-black text-white italic">AES-256 SECURED</p>
+                    <p className="text-[9px] font-black text-brand-500 uppercase tracking-widest">Connection</p>
+                    <p className="text-sm font-black text-white italic">Secure</p>
                   </div>
                 </div>
               </div>
@@ -134,7 +146,7 @@ export default function AddExpense() {
                   <div className="group space-y-4">
                     <div className="flex items-center gap-3 px-2">
                       <Calendar className="h-4 w-4 text-brand-400" />
-                      <label className="text-[11px] font-black text-white uppercase tracking-[0.4em] drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">Temporal Cycle</label>
+                      <label className="text-[11px] font-black text-white uppercase tracking-[0.4em] drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">Month</label>
                     </div>
                     <div className="relative">
                       <select
@@ -152,7 +164,7 @@ export default function AddExpense() {
                   <div className="group space-y-4">
                     <div className="flex items-center gap-3 px-2">
                       <Banknote className="h-4 w-4 text-emerald-400" />
-                      <label className="text-[11px] font-black text-white uppercase tracking-[0.4em] drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">Asset Liquidity (₹)</label>
+                      <label className="text-[11px] font-black text-white uppercase tracking-[0.4em] drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">Income (₹)</label>
                     </div>
                     <div className="relative">
                       <Input
@@ -172,7 +184,7 @@ export default function AddExpense() {
                 {/* Expense Matrix Grid */}
                 <div className="space-y-8">
                   <div className="flex items-center gap-6 px-2">
-                    <h2 className="text-[11px] font-black text-white uppercase tracking-[0.5em] drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">Expense Matrix Breakdown</h2>
+                    <h2 className="text-[11px] font-black text-white uppercase tracking-[0.5em] drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]">Spending by category</h2>
                     <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
                   </div>
                   
@@ -209,7 +221,7 @@ export default function AddExpense() {
                                 placeholder="[ 0.00 ]"
                                 className="h-14 bg-transparent border-b-2 border-white/5 rounded-none px-0 text-xl font-black text-white focus:border-brand-500 transition-all placeholder:text-white/10 placeholder:italic placeholder:tracking-widest pulsing-placeholder"
                               />
-                              <span className="absolute right-0 top-1/2 -translate-y-1/2 text-[10px] font-black text-text-tertiary uppercase tracking-widest opacity-0 group-hover/item:opacity-100 transition-opacity">Debit Stream</span>
+                              <span className="absolute right-0 top-1/2 -translate-y-1/2 text-[10px] font-black text-text-tertiary uppercase tracking-widest opacity-0 group-hover/item:opacity-100 transition-opacity">Amount</span>
                             </div>
                           </div>
                         </Card>
@@ -230,10 +242,10 @@ export default function AddExpense() {
                       <div className="space-y-4">
                         <div className="flex items-center gap-3">
                           <Info className="h-4 w-4 text-brand-400" />
-                          <h3 className="text-[10px] font-black text-brand-400 uppercase tracking-[0.4em]">Submission Protocol</h3>
+                          <h3 className="text-[10px] font-black text-brand-400 uppercase tracking-[0.4em]">Before you save</h3>
                         </div>
                         <p className="text-sm text-text-secondary leading-relaxed font-medium">
-                          Authorize the synchronization of your fiscal data. This action triggers a full neural recalibration of your financial trajectory models.
+                          Saving updates your monthly totals and feeds forecasts and AI insights. You can add more entries for the same month later.
                         </p>
                       </div>
 
@@ -242,7 +254,7 @@ export default function AddExpense() {
                         isLoading={isLoading} 
                         className="w-full h-20 rounded-[2rem] bg-white text-black hover:bg-brand-500 hover:text-black font-black uppercase tracking-[0.4em] text-[13px] shadow-[0_20px_50px_rgba(255,255,255,0.1)] transition-all hover:scale-[1.03] active:scale-[0.97] group flex items-center justify-center gap-4"
                       >
-                        Authorize Sync
+                        Save
                         <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-2" />
                       </Button>
 
@@ -257,7 +269,7 @@ export default function AddExpense() {
                   <div className="px-6 space-y-6">
                     <div className="flex items-center gap-4">
                       <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      <span className="text-[9px] font-black text-text-tertiary uppercase tracking-[0.3em]">Neural Node: Active</span>
+                      <span className="text-[9px] font-black text-text-tertiary uppercase tracking-[0.3em]">Service ready</span>
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -284,10 +296,10 @@ export default function AddExpense() {
             
             <div className="space-y-6 max-w-2xl">
               <h2 className="text-6xl lg:text-8xl font-black text-white italic tracking-tighter leading-none">
-                Protocol <span className="text-brand-500">Finalized.</span>
+                Saved <span className="text-brand-500">successfully</span>
               </h2>
               <p className="text-xl text-text-secondary font-medium tracking-tight">
-                Data packet has been successfully synchronized. Neural trajectory models are now updating in the background.
+                Your numbers are stored. Forecasts and summaries will refresh shortly.
               </p>
             </div>
 
@@ -296,13 +308,13 @@ export default function AddExpense() {
                 onClick={() => setSuccess(false)}
                 className="h-16 px-12 rounded-2xl border-2 border-white/10 bg-white/5 text-white font-black uppercase tracking-[0.3em] text-[11px] hover:bg-white/10 transition-all shadow-2xl"
               >
-                New Transmission
+                Add another
               </Button>
               <Button 
                 onClick={() => navigate('/analytics')}
                 className="h-16 px-12 rounded-2xl bg-brand-500 text-black font-black uppercase tracking-[0.3em] text-[11px] hover:bg-brand-400 shadow-[0_20px_40px_rgba(212,175,55,0.2)] transition-all"
               >
-                View Intelligence
+                View analytics
               </Button>
             </div>
           </MotionDiv>

@@ -158,6 +158,7 @@ class GoalResponse(GoalCreate):
     user_id:                  str
     current_savings:          float
     progress_percentage:      float
+    available_savings_balance: float = 0.0
     is_on_track:              bool
     days_remaining:           Optional[int]   = None
     required_monthly_saving:  Optional[float] = None
@@ -172,6 +173,7 @@ class GoalDeleteResponse(BaseModel):
 class ChatMessage(BaseModel):
     message: str
     context: dict | None = None
+    history: List[Dict[str, str]] | None = None
 
 class ChatResponse(BaseModel):
     reply: str

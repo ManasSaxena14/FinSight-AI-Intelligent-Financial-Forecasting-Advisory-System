@@ -10,10 +10,10 @@ import { premiumService } from '../api/premiumService';
 import { cn } from '../utils/cn';
 
 const TABS = [
-  { id: 'overview',   label: 'Live Overview',    icon: Sparkles,    desc: 'Real-time budget status & AI narrative' },
-  { id: 'goals',      label: 'Financial Goals',  icon: Target,      desc: 'Set and track your neural targets'        },
-  { id: 'savings',    label: 'Smart Savings',    icon: Lightbulb,   desc: 'Personalized AI savings recommendations'  },
-  { id: 'scenario',   label: 'Stress Test',      icon: Calculator,  desc: 'What-if scenario budget simulation'       },
+  { id: 'overview',   label: 'Overview',         icon: Sparkles,    desc: 'Budget status and monthly summary' },
+  { id: 'goals',      label: 'Financial Goals',  icon: Target,      desc: 'Set and track savings targets' },
+  { id: 'savings',    label: 'Smart Savings',    icon: Lightbulb,   desc: 'Ideas to save more' },
+  { id: 'scenario',   label: 'What-if',          icon: Calculator,  desc: 'Try different spending scenarios' },
 ];
 
 export default function Advisor() {
@@ -42,6 +42,10 @@ export default function Advisor() {
             setAiSummary(summaryData.reply);
             setShowAnalysis(true);
           }
+        } else {
+          setLatest(null);
+          setAiSummary('');
+          setShowAnalysis(false);
         }
       } catch (err) {
         console.error('Advisor data load failed:', err);
@@ -49,7 +53,16 @@ export default function Advisor() {
         setIsLoading(false);
       }
     };
+
     load();
+
+    const handleUpdated = () => {
+      setIsLoading(true);
+      load();
+    };
+
+    window.addEventListener('expenses:updated', handleUpdated);
+    return () => window.removeEventListener('expenses:updated', handleUpdated);
   }, []);
 
   useEffect(() => {
@@ -110,10 +123,10 @@ export default function Advisor() {
           </div>
           <div>
             <h1 className="text-4xl font-black text-text-primary tracking-tighter italic">
-              AI Advisor.
+              AI Advisor
             </h1>
             <p className="text-sm text-text-tertiary mt-1 font-medium tracking-wide">
-              Premium intelligence suite — goals, savings, stress tests & live analysis.
+              Goals, savings tips, what-if scenarios, and your latest numbers in one place.
             </p>
           </div>
         </div>
@@ -156,7 +169,7 @@ export default function Advisor() {
               <div className="advisor-card h-40 bg-white/[0.03] rounded-[2.5rem] animate-pulse flex items-center justify-center border border-white/5">
                 <div className="flex flex-col items-center gap-4">
                   <Sparkles className="w-8 h-8 text-brand-500/30 animate-spin" />
-                  <span className="text-[10px] font-black text-brand-500/40 uppercase tracking-[0.4em]">Synchronizing Neural Core</span>
+                  <span className="text-[10px] font-black text-brand-500/40 uppercase tracking-[0.4em]">Loading summary…</span>
                 </div>
               </div>
             ) : showAnalysis ? (
@@ -174,7 +187,7 @@ export default function Advisor() {
                   <div className="space-y-6">
                     <div className="flex items-center gap-4">
                       <div className="h-px w-8 bg-brand-500/30" />
-                      <p className="text-[10px] text-brand-500 font-black uppercase tracking-[0.4em]">Personalized Fiscal Synthesis</p>
+                      <p className="text-[10px] text-brand-500 font-black uppercase tracking-[0.4em]">Your monthly summary</p>
                       <div className="h-px flex-1 bg-white/5" />
                     </div>
                     <p className="text-text-primary text-xl font-medium leading-relaxed tracking-tight selection:bg-brand-500/30">
@@ -183,11 +196,11 @@ export default function Advisor() {
                     <div className="flex items-center gap-6 pt-4">
                       <div className="flex items-center gap-2">
                         <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        <span className="text-[9px] font-black text-text-tertiary uppercase tracking-widest">Model: GPT-4o Optimized</span>
+                        <span className="text-[9px] font-black text-text-tertiary uppercase tracking-widest">Powered by AI</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="h-1.5 w-1.5 rounded-full bg-brand-500 animate-pulse" />
-                        <span className="text-[9px] font-black text-text-tertiary uppercase tracking-widest">Confidence: 98.4%</span>
+                        <span className="text-[9px] font-black text-text-tertiary uppercase tracking-widest">Based on your data</span>
                       </div>
                     </div>
                   </div>
@@ -199,9 +212,9 @@ export default function Advisor() {
                   <div className="absolute inset-0 bg-brand-500/10 blur-3xl rounded-full group-hover:bg-brand-500/20 transition-colors" />
                   <Bot className="w-full h-full text-white/10 group-hover:text-brand-500/30 transition-colors relative z-10" />
                 </div>
-                <h3 className="text-xl font-black text-white/40 tracking-tighter mb-4 group-hover:text-white/60 transition-colors">Neural Core Offline.</h3>
+                <h3 className="text-xl font-black text-white/40 tracking-tighter mb-4 group-hover:text-white/60 transition-colors">No spending data yet</h3>
                 <p className="text-text-tertiary text-xs font-black uppercase tracking-[0.2em] max-w-sm mx-auto leading-relaxed">
-                  The AI advisor requires fiscal ingestion to generate your personal analysis. Please add your monthly income and expenses to synchronize.
+                  Add your monthly income and expenses to see a personalized summary here.
                 </p>
               </div>
             )}
@@ -217,10 +230,10 @@ export default function Advisor() {
             {latestRecord && (
               <div className="advisor-card grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                  { label: 'Temporal Cycle',   value: latestRecord.month,                                   unit: '', color: 'text-brand-400' },
-                  { label: 'Gross Liquidity',  value: `₹${latestRecord.income.toLocaleString()}`,           unit: '', color: 'text-emerald-400' },
-                  { label: 'Total Outflow',    value: `₹${latestRecord.total_expense.toLocaleString()}`,    unit: '', color: 'text-rose-400' },
-                  { label: 'Net Reserve',      value: `₹${latestRecord.savings.toLocaleString()}`,          unit: '', color: 'text-blue-400' },
+                  { label: 'Month',            value: latestRecord.month,                                   unit: '', color: 'text-brand-400' },
+                  { label: 'Income',           value: `₹${latestRecord.income.toLocaleString()}`,           unit: '', color: 'text-emerald-400' },
+                  { label: 'Total spending',   value: `₹${latestRecord.total_expense.toLocaleString()}`,    unit: '', color: 'text-rose-400' },
+                  { label: 'Net savings',      value: `₹${latestRecord.savings.toLocaleString()}`,          unit: '', color: 'text-blue-400' },
                 ].map(stat => (
                   <div key={stat.label} className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-8 hover:bg-white/[0.04] hover:border-brand-500/20 transition-all duration-500 group">
                     <p className="text-[9px] text-text-tertiary font-black uppercase tracking-[0.3em] mb-4 group-hover:text-brand-500/60 transition-colors">{stat.label}</p>
@@ -259,9 +272,9 @@ export default function Advisor() {
             ) : (
               <div className="bg-black/40 backdrop-blur-md border-2 border-dashed border-white/5 rounded-[3rem] p-20 text-center group hover:border-brand-500/20 transition-all duration-700">
                 <Calculator className="w-16 h-16 text-white/10 mx-auto mb-8 group-hover:text-brand-500/30 transition-colors" />
-                <h3 className="text-xl font-black text-white/40 tracking-tighter mb-4 group-hover:text-white/60 transition-colors">Simulation Engine Inactive.</h3>
+                <h3 className="text-xl font-black text-white/40 tracking-tighter mb-4 group-hover:text-white/60 transition-colors">Add data first</h3>
                 <p className="text-text-tertiary text-xs font-black uppercase tracking-[0.2em] max-w-sm mx-auto leading-relaxed">
-                  Add expense data to run high-fidelity stress tests and scenario simulations on your financial trajectory.
+                  Add your income and expenses to try “what-if” spending scenarios.
                 </p>
               </div>
             )}

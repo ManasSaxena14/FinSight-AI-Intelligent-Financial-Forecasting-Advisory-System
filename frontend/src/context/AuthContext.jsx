@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect } from 'react';
 import { authService } from '../api/authService';
 
@@ -7,6 +8,13 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const logout = () => {
+    setUser(null);
+    setToken(null);
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+  };
 
   // Load user and token from localStorage on fresh reload
   useEffect(() => {
@@ -24,14 +32,34 @@ export const AuthProvider = ({ children }) => {
           }
         }
         
-        // Silently refresh user data from backend to ensure we have latest name/id
+        // Refresh user from backend when API is reachable
         try {
           const freshUser = await authService.getMe();
           setUser(freshUser);
           localStorage.setItem('user', JSON.stringify(freshUser));
         } catch (e) {
-          console.error("Session sync failed", e);
-          if (e.response?.status === 401) logout();
+          const status = e.response?.status;
+          // 401: invalid/expired token — clear session
+          if (status === 401) {
+            logout();
+          } else if (
+            !e.response ||
+            status === 502 ||
+            status === 503 ||
+            status === 504
+          ) {
+            // No response, or gateway/upstream errors: backend down, proxy misconfigured,
+            // host cold-start (e.g. Render), timeout — keep cached user; do not logout
+            if (import.meta.env.DEV) {
+              const hint =
+                status === 502
+                  ? '502 = proxy could not reach API (is uvicorn running on :8000? MongoDB reachable?)'
+                  : 'API temporarily unavailable';
+              console.warn(`[FinSight] Session sync skipped (${hint}). Using cached session.`);
+            }
+          } else {
+            console.error('Session sync failed', e);
+          }
         }
       }
       setIsLoading(false);
@@ -68,13 +96,6 @@ export const AuthProvider = ({ children }) => {
       const message = error.response?.data?.detail || 'Registration failed';
       return { success: false, message };
     }
-  };
-
-  const logout = () => {
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
   };
 
   return (

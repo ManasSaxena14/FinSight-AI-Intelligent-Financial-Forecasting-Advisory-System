@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import gsap from 'gsap';
+import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { Card, CardContent, CardHeader } from '../components/Card';
 import { Input } from '../components/Input';
@@ -33,9 +34,11 @@ export default function Login() {
     const result = await login(email, password);
     
     if (result.success) {
+      toast.success('Signed in successfully.');
       navigate('/');
     } else {
       setError(result.message);
+      toast.error(result.message);
       setIsLoading(false);
       // Shake animation on error
       gsap.fromTo(formRef.current, 
@@ -55,10 +58,10 @@ export default function Login() {
             <img src="/MAIN_LOGO.png" alt="FinSight AI Logo" className="h-40 w-auto object-contain drop-shadow-[0_0_20px_rgba(212,175,55,0.3)] hover:scale-105 transition-transform duration-500" />
           </div>
           <h2 className="text-4xl font-black tracking-tight text-text-primary mb-3">
-            Identity.
+            Sign in
           </h2>
           <p className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.4em]">
-            Neural Network Access • Encrypted Session
+            Secure connection
           </p>
         </div>
 
@@ -101,15 +104,15 @@ export default function Login() {
             </div>
 
             <Button type="submit" variant="primary" className="w-full h-14 rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 text-black font-black uppercase tracking-[0.2em] text-[10px] shadow-2xl shadow-brand-500/10 transition-all hover:scale-[1.02] active:scale-[0.98]" isLoading={isLoading}>
-              Enter Neural Dashboard
+              Continue to dashboard
             </Button>
           </form>
 
           <div className="mt-10 text-center border-t border-white/5 pt-10">
             <p className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.2em]">
-              New Authority?{' '}
+              New here?{' '}
               <Link to="/register" className="text-brand-400 hover:text-brand-300 transition-colors ml-2 underline underline-offset-4 decoration-brand-500/30">
-                Initialize Account
+                Create an account
               </Link>
             </p>
           </div>
@@ -118,7 +121,7 @@ export default function Login() {
         <div className="flex items-center justify-center gap-6 opacity-30">
           <div className="h-px w-8 bg-text-tertiary" />
           <p className="text-[9px] text-text-tertiary font-black uppercase tracking-[0.5em]">
-            AES-256 Quantum Shielded
+            Data encrypted in transit
           </p>
           <div className="h-px w-8 bg-text-tertiary" />
         </div>

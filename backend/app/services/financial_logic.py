@@ -173,19 +173,18 @@ def generate_recommendations(
         )
     elif savings_rate < 20:
         add(
-            f"You are saving {savings_rate:.1f}% of income — good, but there is room to grow. "
-            "Target 20% to build an emergency fund in under 6 months."
+            f"You are saving {savings_rate:.1f}% of your income, which is a good start. "
+            "Try to move closer to 20% over the next few months so you have a stronger safety cushion."
         )
     elif savings_rate >= 30:
         add(
-            f"Outstanding! You are saving {savings_rate:.1f}% of income. "
-            "Consider moving surplus into a high-yield savings account or index fund "
-            "to maximise long-term wealth."
+            f"Great job — you are saving {savings_rate:.1f}% of your income. "
+            "You can think about moving part of this extra money into a simple savings account or basic index fund so it grows over time."
         )
     else:
         add(
-            f"Solid savings rate of {savings_rate:.1f}%. Keep going — "
-            "pushing above 25% significantly accelerates financial independence."
+            f"You are saving {savings_rate:.1f}% of your income. "
+            "If you slowly push this above 25%, you will reach your money goals much faster."
         )
 
     # 2. Top-2 Overspending Categories
@@ -195,16 +194,16 @@ def generate_recommendations(
             pct = (amount / total_expense) * 100
             if pct > 35:
                 add(
-                    f"{cat} is {pct:.1f}% of total expenses — above the 35% threshold. "
-                    f"Reducing it by 10–15% would free up ₹{amount * 0.12:,.0f}/month."
+                    f"You spend a large share of your budget on {cat} ({pct:.1f}% of total spending). "
+                    f"Cutting this by around 10–15% could free up about ₹{amount * 0.12:,.0f} each month."
                 )
 
     # 3. Rent Optimisation
     rent = expenses.get("Rent", 0)
     if income > 0 and (rent / income) > 0.30:
         add(
-            f"Housing costs are {rent/income*100:.1f}% of income (ideal: ≤30%). "
-            "Explore negotiating at lease renewal, adding a flatmate, or relocating."
+            f"Your home rent takes about {rent/income*100:.1f}% of your income (a simple target is 30% or less). "
+            "If possible, think about options like negotiating the rent, sharing the place, or looking for a slightly cheaper home."
         )
 
     # 4. Discretionary Spending
@@ -212,9 +211,8 @@ def generate_recommendations(
     disc_pct = (disc / income) * 100 if income > 0 else 0
     if disc_pct > 25:
         add(
-            f"Discretionary spending (Shopping + Entertainment + Travel) is "
-            f"{disc_pct:.1f}% of income. Try a monthly 'discretionary cap' "
-            "to limit impulse purchases."
+            f"Spending on Shopping, Entertainment and Travel is about {disc_pct:.1f}% of your income. "
+            "You could set yourself a fixed monthly limit for these areas to avoid impulse purchases."
         )
 
     # 5. ML Anomaly Integration (dual-layer)
@@ -223,21 +221,23 @@ def generate_recommendations(
         if a.get("type") == "high":
             cat = a["category"]
             severity = a.get("severity", "")
-            prefix = "⚠️ Critical ML Alert" if severity == "critical" else "ML Notice"
+            if severity == "critical":
+                prefix = "Warning"
+            else:
+                prefix = "Notice"
             add(
-                f"{prefix}: {cat} spending is unusually high for your income profile "
-                f"(z-score: {a.get('z_score', 0):+.1f}). "
-                "Review recent transactions in this category."
+                f"{prefix}: your spending on {cat} looks much higher than normal for your income. "
+                "Take a quick look at recent payments in this area to make sure they all make sense."
             )
         elif a.get("type") == "pattern":
-            add(a.get("message", "Your overall spending pattern is unusual."))
+            add(a.get("message", "Your overall spending pattern looks unusual this month."))
 
     # 6. Emergency Fund Tip (if not overspending)
     if savings_rate >= 10:
         monthly_savings = income * (savings_rate / 100)
         add(
-            f"At your current savings rate, you could build a 3-month emergency fund "
-            f"(₹{income * 3:,.0f}) in {max(1, int(income * 3 / monthly_savings))} months."
+            f"At this pace, you could save a basic 3‑month safety fund of about ₹{income * 3:,.0f} "
+            f"in roughly {max(1, int(income * 3 / monthly_savings))} months."
         )
 
     return recs

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
 import { premiumService } from '../api/premiumService';
 import { Card, CardContent, CardHeader, CardTitle } from './Card';
 import { Button } from './Button';
@@ -25,6 +26,7 @@ export default function GoalTracker() {
       const data = await premiumService.getGoals();
       setGoals(data);
     } catch (err) {
+      toast.error("Failed to load goals");
       console.error("Failed to load goals", err);
     } finally {
       setIsLoading(false);
@@ -46,19 +48,24 @@ export default function GoalTracker() {
       await premiumService.createGoal(payload);
       setIsAdding(false);
       setNewGoal({ name: '', target_amount: '', target_date: '' });
+      toast.success('Goal created');
       fetchGoals(); // refresh the list
     } catch (err) {
+      const msg = err.response?.data?.detail || "Failed to create goal";
+      toast.error(msg);
       console.error("Failed to create goal", err);
     }
   };
 
   const handleDeleteGoal = async (goalId) => {
-    if (!window.confirm("Are you sure you want to delete this objective?")) return;
+    if (!window.confirm("Delete this goal?")) return;
     try {
       // optimistic UI removal
       setGoals(goals.filter(g => g.id !== goalId));
       await premiumService.deleteGoal(goalId);
+      toast.success('Goal deleted');
     } catch (err) {
+      toast.error('Failed to delete objective');
       console.error("Failed to delete goal", err);
       // fallback
       fetchGoals();
@@ -67,13 +74,27 @@ export default function GoalTracker() {
 
   const handleContribute = async (e, goalId) => {
     e.preventDefault();
-    if (!contributeAmount || isNaN(contributeAmount)) return;
+    const amount = parseFloat(contributeAmount);
+    if (!amount || isNaN(amount) || amount <= 0) {
+      toast.error("Please enter a valid contribution amount");
+      return;
+    }
+
+    const available = goals[0]?.available_savings_balance ?? 0;
+    if (amount > available) {
+      toast.error(`Insufficient savings. Max available: ₹${available.toLocaleString()}`);
+      return;
+    }
+
     try {
-      await premiumService.contributeToGoal(goalId, parseFloat(contributeAmount));
+      await premiumService.contributeToGoal(goalId, amount);
+      toast.success('Contribution saved');
       setActiveContribute(null);
       setContributeAmount('');
       fetchGoals();
     } catch (err) {
+      const msg = err?.response?.data?.detail || "Failed to contribute to goal";
+      toast.error(msg);
       console.error("Failed to contribute to goal", err);
     }
   };
@@ -83,7 +104,7 @@ export default function GoalTracker() {
       <Card className="dash-card border-none bg-black/20 shadow-2xl rounded-[2.5rem] overflow-hidden relative p-20 text-center animate-pulse">
         <div className="flex flex-col items-center gap-4">
           <Target className="w-12 h-12 text-brand-500/20" />
-          <span className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.4em] italic">Synchronizing Neural Objectives...</span>
+          <span className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.4em] italic">Loading goals…</span>
         </div>
       </Card>
     );
@@ -161,6 +182,13 @@ export default function GoalTracker() {
           </MotionDiv>
         ) : (
           <div className="space-y-10">
+            {goals.length > 0 && (
+              <div className="px-1 pb-1">
+                <p className="text-[10px] text-text-tertiary font-black uppercase tracking-[0.2em]">
+                  Available to allocate: <span className="text-brand-400">₹{(goals[0].available_savings_balance ?? 0).toLocaleString()}</span>
+                </p>
+              </div>
+            )}
             <AnimatePresence>
               {goals.map(goal => (
                 <MotionDiv 
@@ -182,7 +210,7 @@ export default function GoalTracker() {
                       {goal.days_remaining !== null && (
                         <p className={`text-[9px] font-bold uppercase tracking-widest mt-1 ${goal.is_on_track ? 'text-text-tertiary' : 'text-rose-500'}`}>
                           {goal.days_remaining > 0 ? `${goal.days_remaining} Days Remaining` : 'Deadline Passed'} 
-                          {goal.required_monthly_saving > 0 && ` •  Req ₹${goal.required_monthly_saving}/mo`}
+                          {goal.required_monthly_saving > 0 && ` • ~₹${goal.required_monthly_saving}/mo needed`}
                         </p>
                       )}
                     </div>
@@ -249,9 +277,9 @@ export default function GoalTracker() {
                     </div>
                   </div>
                   <div className="flex justify-between mt-3 px-1">
-                    <span className="text-[10px] text-text-tertiary font-black tracking-[0.2em]">{goal.progress_percentage}% MATRIX COMPLETION</span>
+                    <span className="text-[10px] text-text-tertiary font-black tracking-[0.2em]">{goal.progress_percentage}% complete</span>
                     <span className={`text-[10px] tracking-[0.3em] font-black uppercase ${goal.progress_percentage >= 100 || goal.is_on_track ? 'text-brand-400' : 'text-rose-500'}`}>
-                      {goal.progress_percentage >= 100 ? 'SUCCESS' : goal.is_on_track ? 'NOMINAL' : 'CRITICAL'}
+                      {goal.progress_percentage >= 100 ? 'Done' : goal.is_on_track ? 'On track' : 'Behind'}
                     </span>
                   </div>
                 </MotionDiv>
