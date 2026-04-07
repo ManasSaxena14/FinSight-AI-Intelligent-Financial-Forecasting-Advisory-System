@@ -65,12 +65,31 @@ export default function AddExpense() {
     setIsLoading(true);
     setError('');
 
+    const parsedIncome = parseFloat(income);
+    const parsedExpenses = Object.fromEntries(
+      Object.entries(expenses).map(([k, v]) => [k, parseFloat(v) || 0])
+    );
+    const totalExpense = Object.values(parsedExpenses).reduce((sum, val) => sum + val, 0);
+
+    if (!Number.isFinite(parsedIncome) || parsedIncome <= 0) {
+      const msg = 'Income must be greater than 0.';
+      setError(msg);
+      toast.error(msg);
+      setIsLoading(false);
+      return;
+    }
+    if (totalExpense <= 0) {
+      const msg = 'Add at least one expense greater than 0.';
+      setError(msg);
+      toast.error(msg);
+      setIsLoading(false);
+      return;
+    }
+
     const payload = {
       month,
-      income: parseFloat(income) || 0,
-      expenses: Object.fromEntries(
-        Object.entries(expenses).map(([k, v]) => [k, parseFloat(v) || 0])
-      )
+      income: parsedIncome,
+      expenses: parsedExpenses
     };
 
     try {

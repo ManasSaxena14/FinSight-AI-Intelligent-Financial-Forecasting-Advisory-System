@@ -15,10 +15,8 @@ IMPROVEMENTS OVER ORIGINAL:
 
 import numpy as np
 import pandas as pd
-import joblib
 import os
 from functools import lru_cache
-from sklearn.ensemble import IsolationForest
 
 # ── Paths ────────────────────────────────────────────────────────────────────
 ML_DIR    = os.path.dirname(os.path.abspath(__file__))
@@ -37,6 +35,7 @@ MONTH_ORDER   = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
 
 def _load_main_model():
     """Load the saved regression model and its metadata."""
+    import joblib
     data = joblib.load(MODEL_PKL)
     return data["model"], data["features"]
 
@@ -45,6 +44,7 @@ def _load_classifier():
     """Load the saved classification model."""
     if not os.path.exists(CLF_PKL):
         raise RuntimeError("Classification model not found. Run train_model.py first.")
+    import joblib
     data = joblib.load(CLF_PKL)
     return data["model"], data.get("features", []), data.get("scaler", None)
 
@@ -342,6 +342,7 @@ def anomaly_detection(expenses: dict, threshold: float = 2.0) -> dict:
             normal.append(entry)
 
     # ── Layer 2: IsolationForest (multivariate) ───────────────────────────
+    from sklearn.ensemble import IsolationForest
     iso = IsolationForest(contamination=0.05, random_state=42)
     iso.fit(df[EXPENSE_COLS])
 

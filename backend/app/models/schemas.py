@@ -10,7 +10,7 @@ CHANGES:
 - All existing schemas are UNCHANGED to preserve backward compatibility.
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from typing import Dict, List, Optional
 from datetime import datetime
 
@@ -26,9 +26,15 @@ class ExpenseCategories(BaseModel):
     Entertainment: float = Field(0, ge=0)
 
 class AddExpenseRequest(BaseModel):
-    month:   str
-    income:  float = Field(0, ge=0)
+    month:   str = Field(..., pattern="^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)$")
+    income:  float = Field(..., gt=0)
     expenses: ExpenseCategories
+
+    @model_validator(mode="after")
+    def validate_non_empty_expenses(self):
+        if sum(self.expenses.model_dump().values()) <= 0:
+            raise ValueError("At least one expense amount must be greater than 0.")
+        return self
 
 class ExpenseRecordResponse(AddExpenseRequest):
     id:            str
@@ -43,7 +49,7 @@ class ExpenseRecordResponse(AddExpenseRequest):
 
 class UserCreate(BaseModel):
     name:     str = Field(..., min_length=2, max_length=50)
-    email:    str = Field(..., min_length=5, max_length=255)
+    email:    str = Field(..., min_length=5, max_length=255, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
     password: str = Field(..., min_length=6)
 
 class UserLogin(BaseModel):

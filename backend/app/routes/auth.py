@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, status, Depends
-from fastapi.security import OAuth2PasswordRequestForm
+import logging
 import uuid
 from datetime import datetime, timezone
 
@@ -8,6 +8,7 @@ from app.db import get_users_collection
 from app.services.auth import get_password_hash, verify_password, create_access_token, get_current_user
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
+logger = logging.getLogger(__name__)
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def register(user: UserCreate):
@@ -56,7 +57,6 @@ async def login(user_credentials: UserLogin):
     """
     Authenticate a user and return a JWT access token.
     """
-    print(f"Login attempt for email: {user_credentials.email}")
     try:
         users_collection = await get_users_collection()
         
@@ -66,7 +66,6 @@ async def login(user_credentials: UserLogin):
         # Find user
         user = await users_collection.find_one({"email": email_normalized})
         if not user:
-            print(f"User not found: {email_normalized}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect email or password",
@@ -75,7 +74,6 @@ async def login(user_credentials: UserLogin):
             
         # Verify password
         if not verify_password(user_credentials.password, user["hashed_password"]):
-            print(f"Invalid password for: {email_normalized}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect email or password",
@@ -84,8 +82,6 @@ async def login(user_credentials: UserLogin):
             
         # Generate token
         access_token = create_access_token(data={"sub": str(user["_id"])})
-        
-        print(f"Login successful for: {email_normalized}")
         
         # Ensure all fields exist
         user_response = UserResponse(
@@ -100,11 +96,14 @@ async def login(user_credentials: UserLogin):
             "token_type": "bearer",
             "user": user_response
         }
-    except Exception as e:
-        print(f"ERROR IN LOGIN ROUTE: {e}")
-        import traceback
-        traceback.print_exc()
-        raise e
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("Unexpected auth login failure")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Login failed due to a server error."
+        )
 
 @router.get("/me", response_model=UserResponse)
 async def get_me(current_user: dict = Depends(get_current_user)):

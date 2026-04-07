@@ -1,5 +1,6 @@
 import os
 import uuid
+import re
 from datetime import datetime, timezone, date
 from math import ceil
 from fastapi import APIRouter, HTTPException, Depends  # type: ignore
@@ -25,6 +26,24 @@ from app.config import settings
 # Initialize Groq API if key is present
 GROQ_API_KEY = settings.GROQ_API_KEY
 groq_client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
+
+def _get_groq_client() -> Groq:
+    """
+    Return an initialized Groq client.
+    Re-check env at request time so hot-loaded .env changes are picked up
+    without requiring a full process restart.
+    """
+    global groq_client
+    if groq_client is not None:
+        return groq_client
+    api_key = settings.GROQ_API_KEY or os.getenv("GROQ_API_KEY")
+    if not api_key:
+        raise HTTPException(
+            status_code=503,
+            detail="Groq API key is not configured on the server.",
+        )
+    groq_client = Groq(api_key=api_key)
+    return groq_client
 
 
 # ── 1. Financial Goals ──────────────────────────────────────────────────────────
@@ -252,6 +271,51 @@ def _pick_fallback_reply(message: str, context: dict | None, history: list[dict]
         elif savings_rate >= 20:
             context_prefix = f"Great work on a {savings_rate:.1f}% savings rate. "
 
+    # Greeting/short-salutation should not trigger generic top-category fallback.
+    is_short_greeting = lower_msg.strip() in {"hi", "hey", "hello", "yo", "hii", "helo"}
+    if is_short_greeting:
+        if context and income > 0:
+            return (
+                f"{context_prefix}Ask me anything about your numbers - for example, "
+                "'what does my savings rate mean?' or 'which category should I reduce first?'"
+            )
+        return "Hi! Ask me anything about budgeting, saving, debt, or investing."
+
+    # Explain savings-rate follow-up questions like "what is 89% here?"
+    asks_about_percentage = (
+        "%" in lower_msg
+        or "percent" in lower_msg
+        or "percentage" in lower_msg
+    )
+    asks_what_is = (
+        "what is" in lower_msg
+        or "what's" in lower_msg
+        or "means" in lower_msg
+        or "what us" in lower_msg  # common typo
+        or "wht is" in lower_msg   # common typo
+    )
+    if context and income > 0 and asks_about_percentage and asks_what_is:
+        return (
+            f"That {savings_rate:.1f}% is your savings rate: (monthly savings / monthly income) x 100. "
+            f"With income of ₹{income:,.0f} and savings of ₹{savings:,.0f}, your rate is {savings_rate:.1f}%."
+        )
+
+    # Explain short numeric follow-ups (e.g., "what is 10") based on prior advisor message.
+    numbers = re.findall(r"\d+(?:\.\d+)?", lower_msg)
+    short_follow_up = len(lower_msg.split()) <= 6
+    if numbers and asks_what_is and short_follow_up and last_advisor_reply:
+        asked_num = numbers[0]
+        if "10% reduction" in last_advisor_reply or "5–10%" in last_advisor_reply or "5-10%" in last_advisor_reply:
+            return (
+                f"The {asked_num} refers to a suggested percentage cut in that category. "
+                f"For example, a 10% cut on Travel (₹509,992) is about ₹50,999 saved per month."
+            )
+        if "savings rate" in last_advisor_reply and context and income > 0:
+            return (
+                f"The {asked_num} is being used as a percentage. "
+                f"Your current savings rate is {savings_rate:.1f}% = ₹{savings:,.0f} saved out of ₹{income:,.0f} income."
+            )
+
     # Special case: user explicitly asks about "savings"
     if "savings" in lower_msg and context:
         detail = (
@@ -308,21 +372,23 @@ def _pick_fallback_reply(message: str, context: dict | None, history: list[dict]
 
 @router.post("/chat", response_model=ChatResponse)
 async def chat_with_advisor(req: ChatMessage, current_user: dict = Depends(get_current_user)):
-    """Chat with the AI Financial Advisor via Groq or rule-based fallback."""
-    if not groq_client:
-        reply = _pick_fallback_reply(req.message, req.context, req.history)
-        return ChatResponse(reply=reply)
-            
-    # LLM branch using Groq
+    """Chat with the AI Financial Advisor using Groq."""
     try:
         from typing import cast
-        client = cast(Groq, groq_client)
+        client = cast(Groq, _get_groq_client())
         
         context_str = "No specific financial context provided."
         if req.context:
             context_str = f"User's latest income: ₹{req.context.get('income', 0)}. Expenses breakdown: {req.context.get('expenses', {})}. Total Savings: ₹{req.context.get('savings', 0)}."
             
-        system_prompt = f"You are a highly professional, concise, and helpful AI Financial Advisor for the application 'FinSight AI'. You give factual, practical financial advice. Do NOT give boilerplate disclaimers constantly, just act like a smart embedded tool. Here is the user's current context: {context_str}"
+        system_prompt = (
+            "You are FinSight AI's financial assistant. "
+            "Give clear, correct, context-aware answers in brief format: 1-3 short sentences, usually under 70 words. "
+            "Avoid long explanations unless the user explicitly asks for detail. "
+            "If the user asks what a number means (like 89% or 10), explain exactly what that number refers to using available context. "
+            "End with at most one practical next step when helpful. "
+            f"User context: {context_str}"
+        )
         
         messages = [{"role": "system", "content": system_prompt}]
         for turn in (req.history or [])[-8:]:
@@ -335,13 +401,15 @@ async def chat_with_advisor(req: ChatMessage, current_user: dict = Depends(get_c
         chat_completion = client.chat.completions.create(
             messages=messages,
             model="llama-3.1-8b-instant",
-            temperature=0.5,
-            max_tokens=1024
+            temperature=0.3,
+            max_tokens=220
         )
         
         return ChatResponse(reply=chat_completion.choices[0].message.content)
+    except HTTPException:
+        raise
     except Exception as e:
-        return ChatResponse(reply=f"AI Service Temporarily Unavailable: {str(e)}")
+        raise HTTPException(status_code=502, detail=f"Groq request failed: {str(e)}")
 
 # ── 3. Scenario Analysis ────────────────────────────────────────────────────────
 

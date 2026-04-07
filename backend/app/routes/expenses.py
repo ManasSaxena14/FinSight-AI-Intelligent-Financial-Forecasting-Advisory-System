@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 from typing import List
+import logging
 from app.models.schemas import AddExpenseRequest, ExpenseRecordResponse
 from app.db import get_expenses_collection
 from app.services.auth import get_current_user
@@ -7,6 +8,7 @@ import uuid
 from datetime import datetime, timezone
 
 router = APIRouter(prefix="/api/expenses", tags=["Expenses"])
+logger = logging.getLogger(__name__)
 
 @router.post("/add", response_model=ExpenseRecordResponse)
 async def add_expense(req: AddExpenseRequest, current_user: dict = Depends(get_current_user)):
@@ -89,8 +91,9 @@ async def add_expense(req: AddExpenseRequest, current_user: dict = Depends(get_c
         
         return ExpenseRecordResponse(**response_data)
         
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {e}")
+    except Exception:
+        logger.exception("Failed to add expense for user %s", current_user.get("id"))
+        raise HTTPException(status_code=500, detail="Could not save expense data right now.")
 
 
 @router.get("/get", response_model=List[ExpenseRecordResponse])
@@ -108,5 +111,6 @@ async def get_expenses(current_user: dict = Depends(get_current_user)):
             user_records.append(ExpenseRecordResponse(**doc))
             
         return user_records
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database query error: {e}")
+    except Exception:
+        logger.exception("Failed to fetch expenses for user %s", current_user.get("id"))
+        raise HTTPException(status_code=500, detail="Could not fetch expense data right now.")

@@ -10,7 +10,6 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-import traceback
 import logging
 
 from app.config import settings
@@ -29,6 +28,7 @@ async def lifespan(app: FastAPI):
     binds so the Vite proxy gets a live server (avoids opaque 502 when only DB is down).
     Production (DEBUG=False) fails fast so bad deploys are obvious.
     """
+    settings.validate_startup()
     try:
         await DatabaseManager.connect_to_database()
     except Exception:
@@ -58,7 +58,7 @@ app = FastAPI(
 # We use a broad CORS configuration to ensure no blocking occurs during development
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS + ["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=settings.ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -74,16 +74,12 @@ async def global_exception_handler(request: Request, exc: Exception):
     This ensures that even on 500 errors, we can return CORS headers 
     (if the middleware catches this response) and a helpful message.
     """
-    error_details = traceback.format_exc()
-    print(f"GLOBAL ERROR CAUGHT: {exc}")
-    print(error_details)
+    logger.exception("Unhandled exception on %s", request.url.path)
     
     return JSONResponse(
         status_code=500,
         content={
             "detail": "Internal Server Error",
-            "message": str(exc),
-            "traceback": error_details if settings.DEBUG else None
         },
     )
 

@@ -14,8 +14,7 @@ CHANGES vs original:
 
 from fastapi import APIRouter, HTTPException, Depends
 import os
-import joblib
-import pandas as pd
+import datetime
 
 from app.models.schemas import (
     PredictionRequest,
@@ -55,8 +54,41 @@ CLASSIFIER_PATH = os.path.join(
 def _load_classifier_model():
     if not os.path.exists(CLASSIFIER_PATH):
         raise RuntimeError("Classification model not trained yet.")
+    import joblib
     data = joblib.load(CLASSIFIER_PATH)
     return data["model"], data.get("features", []), data.get("scaler", None)
+
+
+def _build_classifier_feature_row(income: float, expenses: dict) -> dict:
+    """Build classifier features compatible with ENHANCED_FEATURE_COLS."""
+    discretionary = (
+        float(expenses.get("Shopping", 0))
+        + float(expenses.get("Entertainment", 0))
+        + float(expenses.get("Travel", 0))
+    )
+    essential = (
+        float(expenses.get("Rent", 0))
+        + float(expenses.get("Food", 0))
+        + float(expenses.get("Bills", 0))
+    )
+    month_num = datetime.datetime.now().month - 1
+    denom = income + 1e-6
+    return {
+        "Income": float(income),
+        "Food": float(expenses.get("Food", 0)),
+        "Travel": float(expenses.get("Travel", 0)),
+        "Rent": float(expenses.get("Rent", 0)),
+        "Shopping": float(expenses.get("Shopping", 0)),
+        "Bills": float(expenses.get("Bills", 0)),
+        "Entertainment": float(expenses.get("Entertainment", 0)),
+        "Rent_to_Income": float(expenses.get("Rent", 0)) / denom,
+        "Food_to_Income": float(expenses.get("Food", 0)) / denom,
+        "Discretionary": discretionary,
+        "Essential": essential,
+        "Discretionary_to_Income": discretionary / denom,
+        "Essential_to_Income": essential / denom,
+        "Month_Num": month_num,
+    }
 
 
 # ── 1. Predict Total Expense ─────────────────────────────────────────────────
@@ -68,6 +100,7 @@ def predict_expense(
     """Predict total expense for a given month using the trained regression model."""
     try:
         model, features = _load_main_model()
+        import pandas as pd
         row = {"Income": req.income, **req.expenses.dict()}
         X   = pd.DataFrame([row])[features]
         predicted = float(model.predict(X)[0])
@@ -88,8 +121,15 @@ def predict_behavioral_classification(
     """Predict behavioral financial category using the trained classifier."""
     try:
         model, features, scaler = _load_classifier_model()
-        row = {"Income": req.income, **req.expenses.dict()}
-        X   = pd.DataFrame([row])[features]
+        import pandas as pd
+        row = _build_classifier_feature_row(req.income, req.expenses.dict())
+        missing = [feature for feature in features if feature not in row]
+        if missing:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Classification feature mismatch. Missing fields: {missing}",
+            )
+        X = pd.DataFrame([row])[features]
         X_input = scaler.transform(X) if scaler is not None else X.values
 
         pred_class   = int(model.predict(X_input)[0])
@@ -106,9 +146,10 @@ def predict_behavioral_classification(
             confidence_score=round(confidence, 3),
             behavioral_insight=insight_map.get(pred_class, "Unknown State"),
         )
-    except Exception as e:
-        import traceback; traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail="Could not run classification right now.")
 
 
 # ── 3. Multi-Month Forecast (ENHANCED) ──────────────────────────────────────

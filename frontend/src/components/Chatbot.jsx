@@ -64,7 +64,7 @@ export default function Chatbot() {
   }, [messages]);
 
   const sendMessage = async (text) => {
-    if (!text.trim()) return;
+    if (!text.trim() || isLoading) return;
     const history = messages.slice(-8).map((m) => ({ role: m.role, text: m.text }));
     setInputText('');
     setMessages(prev => [...prev, { role: 'user', text }]);
@@ -72,8 +72,12 @@ export default function Chatbot() {
     try {
       const response = await premiumService.sendChatMessage(text, context, history);
       setMessages(prev => [...prev, { role: 'advisor', text: response.reply }]);
-    } catch {
-      setMessages(prev => [...prev, { role: 'advisor', text: 'I encountered a connection issue. Please verify your network and try again.' }]);
+    } catch (error) {
+      const backendMessage = error?.response?.data?.detail || error?.response?.data?.reply;
+      const safeMessage = typeof backendMessage === 'string' && backendMessage.trim()
+        ? backendMessage
+        : 'I encountered a temporary issue. Please try again in a moment.';
+      setMessages(prev => [...prev, { role: 'advisor', text: safeMessage }]);
     } finally {
       setIsLoading(false);
     }
