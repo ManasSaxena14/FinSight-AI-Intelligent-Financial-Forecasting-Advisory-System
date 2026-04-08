@@ -130,7 +130,7 @@ def predict_behavioral_classification(
                 detail=f"Classification feature mismatch. Missing fields: {missing}",
             )
         X = pd.DataFrame([row])[features]
-        X_input = scaler.transform(X) if scaler is not None else X.values
+        X_input = scaler.transform(X) if scaler is not None else X
 
         pred_class   = int(model.predict(X_input)[0])
         probabilities = model.predict_proba(X_input)[0]

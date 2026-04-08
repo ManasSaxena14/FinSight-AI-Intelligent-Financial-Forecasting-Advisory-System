@@ -58,13 +58,20 @@ def _load_dataset_cached() -> pd.DataFrame:
     """
     clean_csv = os.path.join(DATA_DIR, "cleaned_financial_data.csv")
     df = pd.read_csv(clean_csv)
+    # Coerce to numeric and sanitize base columns used by all downstream functions.
+    for col in ["Income", *EXPENSE_COLS]:
+        df[col] = pd.to_numeric(df[col], errors="coerce")
+    df["Income"] = df["Income"].replace([np.inf, -np.inf], np.nan).fillna(0.0)
+    for col in EXPENSE_COLS:
+        df[col] = df[col].replace([np.inf, -np.inf], np.nan).fillna(0.0)
     # Pre-compute engineered features once
     df["Discretionary"]          = df["Shopping"] + df["Entertainment"] + df["Travel"]
     df["Essential"]              = df["Rent"] + df["Food"] + df["Bills"]
-    df["Rent_to_Income"]         = df["Rent"] / df["Income"]
-    df["Food_to_Income"]         = df["Food"] / df["Income"]
-    df["Discretionary_to_Income"] = df["Discretionary"] / df["Income"]
-    df["Essential_to_Income"]    = df["Essential"] / df["Income"]
+    denom = df["Income"].replace(0, np.nan)
+    df["Rent_to_Income"]          = (df["Rent"] / denom).replace([np.inf, -np.inf], np.nan).fillna(0.0)
+    df["Food_to_Income"]          = (df["Food"] / denom).replace([np.inf, -np.inf], np.nan).fillna(0.0)
+    df["Discretionary_to_Income"] = (df["Discretionary"] / denom).replace([np.inf, -np.inf], np.nan).fillna(0.0)
+    df["Essential_to_Income"]     = (df["Essential"] / denom).replace([np.inf, -np.inf], np.nan).fillna(0.0)
     df["Month_Num"] = pd.Categorical(
         df["Month"], categories=MONTH_ORDER, ordered=True
     ).codes
@@ -78,12 +85,13 @@ def _build_monthly_seasonality(df: pd.DataFrame) -> pd.DataFrame:
     Returns DataFrame indexed by Month with ratio columns for each expense category.
     """
     ratios = df.copy()
+    income_safe = ratios["Income"].replace(0, np.nan)
     for col in EXPENSE_COLS:
-        ratios[f"{col}_ratio"] = ratios[col] / ratios["Income"]
+        ratios[f"{col}_ratio"] = (ratios[col] / income_safe).replace([np.inf, -np.inf], np.nan).fillna(0.0)
     ratio_cols = [f"{col}_ratio" for col in EXPENSE_COLS]
     monthly_ratios = ratios.groupby("Month")[ratio_cols].mean()
     # Reindex to ensure correct month order
-    monthly_ratios = monthly_ratios.reindex(MONTH_ORDER).ffill().bfill()
+    monthly_ratios = monthly_ratios.reindex(MONTH_ORDER).ffill().bfill().fillna(0.0)
     return monthly_ratios
 
 
@@ -149,11 +157,14 @@ def multi_month_forecasting(income: float, current_expenses: dict, months: int =
 
         projected_cats = {}
         for col in EXPENSE_COLS:
-            base_ratio  = float(base_ratios[f"{col}_ratio"]) or 1e-6
-            target_ratio = float(season_ratios[f"{col}_ratio"])
+            base_ratio = float(base_ratios[f"{col}_ratio"]) if np.isfinite(base_ratios[f"{col}_ratio"]) else 1e-6
+            base_ratio = base_ratio if abs(base_ratio) > 1e-6 else 1e-6
+            target_ratio = float(season_ratios[f"{col}_ratio"]) if np.isfinite(season_ratios[f"{col}_ratio"]) else 0.0
             seasonal_factor = target_ratio / base_ratio
 
-            raw_val = float(current_expenses.get(col, 0)) * seasonal_factor
+            raw_val = float(current_expenses.get(col, 0) or 0) * seasonal_factor
+            if not np.isfinite(raw_val):
+                raw_val = float(current_expenses.get(col, 0) or 0)
             # Clamp to realistic dataset bounds
             raw_val = float(np.clip(raw_val, cat_p5[col], cat_p95[col]))
             projected_cats[col] = round(raw_val, 2)
@@ -162,6 +173,8 @@ def multi_month_forecasting(income: float, current_expenses: dict, months: int =
         row = {"Income": income, **projected_cats}
         X = pd.DataFrame([row])[features]
         predicted_expense = float(model.predict(X)[0])
+        if not np.isfinite(predicted_expense):
+            predicted_expense = float(sum(projected_cats.values()))
         savings = income - predicted_expense
 
         forecast.append({
@@ -343,12 +356,17 @@ def anomaly_detection(expenses: dict, threshold: float = 2.0) -> dict:
             normal.append(entry)
 
     # ── Layer 2: IsolationForest (multivariate) ───────────────────────────
-    iso = IsolationForest(contamination=0.05, random_state=42)
-    iso.fit(df[EXPENSE_COLS])
-
-    user_vec = pd.DataFrame([{col: float(expenses.get(col, 0)) for col in EXPENSE_COLS}])
-    iso_pred  = int(iso.predict(user_vec)[0])        # 1 = normal, -1 = anomaly
-    iso_score = float(iso.score_samples(user_vec)[0]) # more negative = more anomalous
+    iso_pred = 1
+    iso_score = -0.1
+    try:
+        iso = IsolationForest(contamination=0.05, random_state=42)
+        iso.fit(df[EXPENSE_COLS])
+        user_vec = pd.DataFrame([{col: float(expenses.get(col, 0) or 0) for col in EXPENSE_COLS}])
+        iso_pred = int(iso.predict(user_vec)[0])         # 1 = normal, -1 = anomaly
+        iso_score = float(iso.score_samples(user_vec)[0])  # more negative = more anomalous
+    except Exception:
+        # Keep z-score result available even when IF fails in constrained runtimes.
+        pass
 
     multivariate_anomaly = (iso_pred == -1)
     # Normalise isolation score to 0-100 (score is typically in [-0.8, 0.1])
@@ -476,23 +494,24 @@ def get_spending_pattern_insight(income: float, expenses: dict) -> dict:
     """
     df = _load_dataset_cached()
 
-    total = sum(expenses.get(c, 0) for c in EXPENSE_COLS) or 1
+    clean_expenses = {c: float(expenses.get(c, 0) or 0) for c in EXPENSE_COLS}
+    total = sum(clean_expenses.values()) or 1
     discretionary = (
-        expenses.get("Shopping", 0) + expenses.get("Entertainment", 0) + expenses.get("Travel", 0)
+        clean_expenses.get("Shopping", 0) + clean_expenses.get("Entertainment", 0) + clean_expenses.get("Travel", 0)
     )
     essential = (
-        expenses.get("Rent", 0) + expenses.get("Food", 0) + expenses.get("Bills", 0)
+        clean_expenses.get("Rent", 0) + clean_expenses.get("Food", 0) + clean_expenses.get("Bills", 0)
     )
     savings_amount = income - total
     savings_ratio  = savings_amount / (income + 1e-6)
 
     # Dominant category
-    dominant_cat = max(EXPENSE_COLS, key=lambda c: expenses.get(c, 0))
-    dominant_pct = round(expenses.get(dominant_cat, 0) / total * 100, 1)
+    dominant_cat = max(EXPENSE_COLS, key=lambda c: clean_expenses.get(c, 0))
+    dominant_pct = round(clean_expenses.get(dominant_cat, 0) / total * 100, 1)
 
     # Archetype logic
-    rent_pct  = expenses.get("Rent", 0) / (income + 1e-6) * 100
-    food_pct  = expenses.get("Food", 0) / total * 100
+    rent_pct  = clean_expenses.get("Rent", 0) / (income + 1e-6) * 100
+    food_pct  = clean_expenses.get("Food", 0) / total * 100
     disc_pct  = discretionary / total * 100
 
     if savings_ratio >= 0.30:
@@ -512,9 +531,10 @@ def get_spending_pattern_insight(income: float, expenses: dict) -> dict:
     income_mask = (df["Income"] > income * 0.8) & (df["Income"] < income * 1.2)
     peers = df[income_mask]
     if len(peers) > 10:
-        peer_essential_ratio = (peers["Food"] + peers["Rent"] + peers["Bills"]) / peers["Income"]
+        peer_income = peers["Income"].replace(0, np.nan)
+        peer_essential_ratio = ((peers["Food"] + peers["Rent"] + peers["Bills"]) / peer_income).replace([np.inf, -np.inf], np.nan).dropna()
         user_essential_ratio = essential / (income + 1e-6)
-        pct_rank = float((peer_essential_ratio < user_essential_ratio).mean() * 100)
+        pct_rank = float((peer_essential_ratio < user_essential_ratio).mean() * 100) if len(peer_essential_ratio) else 0.0
         peer_msg = (
             f"Your essential spending is higher than {pct_rank:.0f}% of peers with similar income."
         )
