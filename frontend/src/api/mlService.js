@@ -21,8 +21,18 @@ export const mlService = {
    * }
    */
   getForecast: async (payload) => {
-    const response = await apiClient.post('/ml/forecast', payload);
-    return response.data;
+    try {
+      const response = await apiClient.post('/ml/forecast', payload);
+      return response.data;
+    } catch (error) {
+      // Retry once for transient backend/model warmup failures.
+      const status = error?.response?.status;
+      if (status >= 500) {
+        const retry = await apiClient.post('/ml/forecast', payload);
+        return retry.data;
+      }
+      throw error;
+    }
   },
 
   /**

@@ -17,6 +17,7 @@ import numpy as np
 import pandas as pd
 import os
 from functools import lru_cache
+from sklearn.ensemble import IsolationForest
 
 # ── Paths ────────────────────────────────────────────────────────────────────
 ML_DIR    = os.path.dirname(os.path.abspath(__file__))
@@ -342,7 +343,6 @@ def anomaly_detection(expenses: dict, threshold: float = 2.0) -> dict:
             normal.append(entry)
 
     # ── Layer 2: IsolationForest (multivariate) ───────────────────────────
-    from sklearn.ensemble import IsolationForest
     iso = IsolationForest(contamination=0.05, random_state=42)
     iso.fit(df[EXPENSE_COLS])
 

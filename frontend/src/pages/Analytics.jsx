@@ -191,14 +191,17 @@ export default function Analytics() {
           { y: 0, opacity: 1, scale: 1, duration: 0.7, stagger: 0.05, ease: 'back.out(1.2)', delay: 0.2 }
         );
 
-        // Health score indicators pulse
-        gsap.to(".health-indicator", {
-          boxShadow: "0 0 15px rgba(212, 175, 55, 0.3)",
-          repeat: -1,
-          yoyo: true,
-          duration: 1.5,
-          ease: "sine.inOut"
-        });
+        // Health score indicators pulse (only if present)
+        const indicators = containerRef.current?.querySelectorAll('.health-indicator');
+        if (indicators && indicators.length > 0) {
+          gsap.to(indicators, {
+            boxShadow: "0 0 15px rgba(212, 175, 55, 0.3)",
+            repeat: -1,
+            yoyo: true,
+            duration: 1.5,
+            ease: "sine.inOut"
+          });
+        }
       }, containerRef);
       
       return () => ctx.revert();
@@ -444,8 +447,9 @@ export default function Analytics() {
           icon={PieIcon}
           isLoading={isLoading}
         >
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart margin={{ top: 30, right: 30, left: 30, bottom: 30 }}>
+          <div className="w-full min-h-[320px] h-[320px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart margin={{ top: 30, right: 30, left: 30, bottom: 30 }}>
               <Pie
                 data={categoryData}
                 cx="50%"
@@ -484,8 +488,9 @@ export default function Analytics() {
                   color: '#ffffff'
                 }}
               />
-            </PieChart>
-          </ResponsiveContainer>
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
         </ChartCard>
 
         {/* Line Chart — Monthly expense trend */}
@@ -495,8 +500,9 @@ export default function Analytics() {
           icon={LineIcon}
           isLoading={isLoading}
         >
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={trendData} margin={{ top: 20, right: 20, left: 20, bottom: 15 }}>
+          <div className="w-full min-h-[320px] h-[320px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={trendData} margin={{ top: 20, right: 20, left: 20, bottom: 15 }}>
               <defs>
                 <linearGradient id="gradIncome" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#d4af37" stopOpacity={0.15} />
@@ -576,8 +582,9 @@ export default function Analytics() {
                 dot={false}
                 activeDot={{ r: 4, fill: '#34d399', stroke: '#0a0a0a', strokeWidth: 2 }}
               />
-            </AreaChart>
-          </ResponsiveContainer>
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
         </ChartCard>
 
         {/* Bar Chart — Category comparison */}
@@ -587,12 +594,13 @@ export default function Analytics() {
           icon={BarChart3}
           isLoading={isLoading}
         >
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={categoryData}
-              layout="vertical"
-              margin={{ top: 5, right: 30, left: 40, bottom: 20 }}
-            >
+          <div className="w-full min-h-[320px] h-[320px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={categoryData}
+                layout="vertical"
+                margin={{ top: 5, right: 30, left: 40, bottom: 20 }}
+              >
               <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#333333" />
               <XAxis type="number" hide />
               <YAxis
@@ -624,8 +632,9 @@ export default function Analytics() {
                   />
                 ))}
               </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </ChartCard>
 
         {/* Forecast Chart — Historical + Prediction */}
@@ -635,8 +644,9 @@ export default function Analytics() {
           icon={TrendingUp}
           isLoading={isLoading}
         >
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={forecastChartData} margin={{ top: 20, right: 20, left: 20, bottom: 15 }}>
+          <div className="w-full min-h-[320px] h-[320px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={forecastChartData} margin={{ top: 20, right: 20, left: 20, bottom: 15 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#333333" />
               <XAxis
                 dataKey="name"
@@ -689,8 +699,9 @@ export default function Analytics() {
                 animationDuration={2000}
                 connectNulls={false}
               />
-            </LineChart>
-          </ResponsiveContainer>
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </ChartCard>
       </div>
 

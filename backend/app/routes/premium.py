@@ -5,6 +5,7 @@ from datetime import datetime, timezone, date
 from math import ceil
 from fastapi import APIRouter, HTTPException, Depends  # type: ignore
 from typing import List
+import logging
 from groq import Groq  # type: ignore
 
 from app.models.schemas import (  # type: ignore
@@ -20,6 +21,7 @@ from app.services.auth import get_current_user  # type: ignore
 from app.services.financial_logic import calculate_health_score  # type: ignore
 
 router = APIRouter(prefix="/api/premium", tags=["Premium Features"])
+logger = logging.getLogger(__name__)
 
 from app.config import settings
 
@@ -408,8 +410,13 @@ async def chat_with_advisor(req: ChatMessage, current_user: dict = Depends(get_c
         return ChatResponse(reply=chat_completion.choices[0].message.content)
     except HTTPException:
         raise
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Groq request failed: {str(e)}")
+    except Exception:
+        # Do not leak provider internals to clients.
+        logger.exception("Groq chat request failed")
+        raise HTTPException(
+            status_code=503,
+            detail="AI chat is temporarily unavailable. Please try again in a moment.",
+        )
 
 # ── 3. Scenario Analysis ────────────────────────────────────────────────────────
 
