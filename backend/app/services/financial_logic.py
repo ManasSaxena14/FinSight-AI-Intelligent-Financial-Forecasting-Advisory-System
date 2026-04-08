@@ -215,24 +215,7 @@ def generate_recommendations(
             "You could set yourself a fixed monthly limit for these areas to avoid impulse purchases."
         )
 
-    # 5. ML Anomaly Integration (dual-layer)
-    anomaly_data = anomaly_detection(expenses, threshold=1.5)
-    for a in anomaly_data.get("anomalies", []):
-        if a.get("type") == "high":
-            cat = a["category"]
-            severity = a.get("severity", "")
-            if severity == "critical":
-                prefix = "Warning"
-            else:
-                prefix = "Notice"
-            add(
-                f"{prefix}: your spending on {cat} looks much higher than normal for your income. "
-                "Take a quick look at recent payments in this area to make sure they all make sense."
-            )
-        elif a.get("type") == "pattern":
-            add(a.get("message", "Your overall spending pattern looks unusual this month."))
-
-    # 6. Emergency Fund Tip (if not overspending)
+    # 5. Emergency Fund Tip (if not overspending)
     if savings_rate >= 10:
         monthly_savings = income * (savings_rate / 100)
         add(

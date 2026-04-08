@@ -193,8 +193,8 @@ def forecast_expenses(
             average_predicted_expense=result.get("average_predicted_expense"),
             average_savings=result.get("average_savings"),
         )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=500, detail="Could not generate forecast right now.")
 
 
 # ── 4. Health Score ───────────────────────────────────────────────────────────
@@ -224,22 +224,25 @@ def get_recommendations_and_alerts(
     Provide smart financial recommendations + alerts.
     Now also returns overall_anomaly_score from dual-layer anomaly detection.
     """
-    expense_dict      = req.expenses.dict()
-    prev_expense_dict = req.previous_expenses.dict() if req.previous_expenses else None
+    try:
+        expense_dict = req.expenses.dict()
+        prev_expense_dict = req.previous_expenses.dict() if req.previous_expenses else None
 
-    alerts      = generate_alerts(req.income, expense_dict, prev_expense_dict)
-    recs        = generate_recommendations(req.income, expense_dict)
-    anomaly_data = anomaly_detection(expense_dict, threshold=1.5)
+        alerts = generate_alerts(req.income, expense_dict, prev_expense_dict)
+        recs = generate_recommendations(req.income, expense_dict)
+        anomaly_data = anomaly_detection(expense_dict, threshold=1.5)
 
-    anomalies = anomaly_data.get("anomalies", [])
-    overall_score = anomaly_data.get("overall_anomaly_score", 0)
+        anomalies = anomaly_data.get("anomalies", [])
+        overall_score = anomaly_data.get("overall_anomaly_score", 0)
 
-    return RecommendationsResponse(
-        recommendations=recs,
-        alerts=alerts or None,
-        anomalies=anomalies or None,
-        overall_anomaly_score=overall_score,
-    )
+        return RecommendationsResponse(
+            recommendations=recs,
+            alerts=alerts or None,
+            anomalies=anomalies or None,
+            overall_anomaly_score=overall_score,
+        )
+    except Exception:
+        raise HTTPException(status_code=500, detail="Could not generate recommendations right now.")
 
 
 # ── 6. Savings Risk (NEW) ─────────────────────────────────────────────────────
@@ -255,8 +258,8 @@ def get_savings_risk(
     try:
         result = predict_savings_risk(req.income, req.expenses.dict())
         return SavingsRiskResponse(**result)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=500, detail="Could not evaluate savings risk right now.")
 
 
 # ── 7. Spending Pattern (NEW) ─────────────────────────────────────────────────
@@ -272,5 +275,5 @@ def get_spending_pattern(
     try:
         result = get_spending_pattern_insight(req.income, req.expenses.dict())
         return SpendingPatternResponse(**result)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=500, detail="Could not analyze spending pattern right now.")
