@@ -79,6 +79,8 @@ cp .env.example .env            # Fill in your values
 uvicorn app.main:app --reload
 ```
 
+Backend production URL: `https://finsight-ai-k2yh.onrender.com`
+
 ### Frontend
 
 ```bash
@@ -86,6 +88,14 @@ cd frontend
 npm install
 npm run dev
 ```
+
+Set frontend API env for deployment:
+
+```bash
+VITE_API_URL=https://finsight-ai-k2yh.onrender.com/api
+```
+
+Frontend production URL: `https://finsight-ai-intelligent-financial.vercel.app`
 
 ## Core Features
 
