@@ -195,8 +195,8 @@ def forecast_expenses(
             average_predicted_expense=result.get("average_predicted_expense"),
             average_savings=result.get("average_savings"),
         )
-    except Exception:
-        logger.exception("ML forecast failed")
+    except Exception as e:
+        logger.error(f"ML forecast failed: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail="Could not generate forecast right now.")
 
 
@@ -244,8 +244,8 @@ def get_recommendations_and_alerts(
             anomalies=anomalies or None,
             overall_anomaly_score=overall_score,
         )
-    except Exception:
-        logger.exception("ML recommendations failed")
+    except Exception as e:
+        logger.error(f"ML recommendations failed: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail="Could not generate recommendations right now.")
 
 
@@ -280,6 +280,6 @@ def get_spending_pattern(
     try:
         result = get_spending_pattern_insight(req.income, req.expenses.dict())
         return SpendingPatternResponse(**result)
-    except Exception:
-        logger.exception("ML spending-pattern failed")
+    except Exception as e:
+        logger.error(f"ML spending-pattern failed: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail="Could not analyze spending pattern right now.")

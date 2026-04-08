@@ -456,7 +456,7 @@ export default function Analytics() {
           isLoading={isLoading}
         >
           <div className="w-full min-h-[320px] h-[320px]">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <PieChart margin={{ top: 30, right: 30, left: 30, bottom: 30 }}>
               <Pie
                 data={categoryData}
@@ -509,7 +509,7 @@ export default function Analytics() {
           isLoading={isLoading}
         >
           <div className="w-full min-h-[320px] h-[320px]">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <AreaChart data={trendData} margin={{ top: 20, right: 20, left: 20, bottom: 15 }}>
               <defs>
                 <linearGradient id="gradIncome" x1="0" y1="0" x2="0" y2="1">
@@ -603,7 +603,7 @@ export default function Analytics() {
           isLoading={isLoading}
         >
           <div className="w-full min-h-[320px] h-[320px]">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <BarChart
                 data={categoryData}
                 layout="vertical"
@@ -653,7 +653,7 @@ export default function Analytics() {
           isLoading={isLoading}
         >
           <div className="w-full min-h-[320px] h-[320px]">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <LineChart data={forecastChartData} margin={{ top: 20, right: 20, left: 20, bottom: 15 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#333333" />
               <XAxis
