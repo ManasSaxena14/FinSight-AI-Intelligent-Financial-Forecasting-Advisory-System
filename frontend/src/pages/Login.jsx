@@ -29,16 +29,18 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setIsLoading(true);
+    const loginToast = toast.loading('Authenticating credentials...', {
+      style: { border: '1px solid rgba(212, 175, 55, 0.2)' }
+    });
 
     const result = await login(email, password);
     
     if (result.success) {
-      toast.success('Signed in successfully.');
+      toast.success('Access Granted', { id: loginToast });
       navigate('/');
     } else {
       setError(result.message);
-      toast.error(result.message);
+      toast.error(result.message, { id: loginToast });
       setIsLoading(false);
       // Shake animation on error
       gsap.fromTo(formRef.current, 

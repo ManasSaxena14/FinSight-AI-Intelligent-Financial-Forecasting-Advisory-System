@@ -21,21 +21,40 @@ function App() {
       <Toaster 
         position="top-right"
         toastOptions={{
+          className: 'premium-toast',
+          duration: 4000,
           style: {
-            background: '#1a1a1a',
-            color: '#f5f5f5',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            borderRadius: '1rem',
-            fontFamily: 'Outfit, system-ui, sans-serif',
+            background: 'rgba(17, 17, 17, 0.8)',
+            color: '#ffffff',
+            backdropFilter: 'blur(20px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: '24px',
+            padding: '16px 24px',
             fontSize: '13px',
-            fontWeight: '600',
-            letterSpacing: '0.02em',
+            fontWeight: '900',
+            letterSpacing: '0.05em',
+            textTransform: 'uppercase',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 20px rgba(212, 175, 55, 0.05)',
+            fontFamily: 'Outfit, system-ui, sans-serif',
           },
           success: {
             iconTheme: {
               primary: '#d4af37',
-              secondary: '#1a1a1a',
+              secondary: '#111111',
             },
+            style: {
+              border: '1px solid rgba(212, 175, 55, 0.2)',
+            }
+          },
+          error: {
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#111111',
+            },
+            style: {
+              border: '1px solid rgba(239, 68, 68, 0.2)',
+            }
           },
         }}
       />

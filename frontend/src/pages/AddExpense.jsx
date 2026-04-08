@@ -92,11 +92,14 @@ export default function AddExpense() {
       expenses: parsedExpenses
     };
 
+    const submissionToast = toast.loading('Securing your financial data...', {
+      style: { border: '1px solid rgba(212, 175, 55, 0.2)' }
+    });
+
     try {
       await expenseService.addExpense(payload);
-      toast.success('Expenses saved');
+      toast.success('Fiscal Archives Updated', { id: submissionToast });
       // Notify other views (Dashboard, Analytics, Advisor, etc.)
-      // so they can refetch and recompute AI summaries instantly.
       try {
         window.dispatchEvent(new Event('expenses:updated'));
       } catch {
@@ -107,9 +110,9 @@ export default function AddExpense() {
       setExpenses({ Food: '', Travel: '', Rent: '', Shopping: '', Bills: '', Entertainment: '' });
     } catch (err) {
       console.error('Submission failed:', err);
-      const errorMessage = err.response?.data?.detail || 'Could not save. Check you are signed in and try again.';
+      const errorMessage = err.response?.data?.detail || 'Handshake failed. Protocol restart recommended.';
       setError(errorMessage);
-      toast.error(errorMessage);
+      toast.error(errorMessage, { id: submissionToast });
       gsap.fromTo(formRef.current, { x: -4 }, { x: 4, duration: 0.08, yoyo: true, repeat: 5, ease: "power1.inOut" });
     } finally {
       setIsLoading(false);

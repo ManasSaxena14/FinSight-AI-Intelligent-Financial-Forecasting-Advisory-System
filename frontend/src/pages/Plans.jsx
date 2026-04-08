@@ -3,6 +3,7 @@ import gsap from 'gsap';
 import { Shield, Zap, Crown, CheckCircle2, ChevronRight, Sparkles } from 'lucide-react';
 import { Card, CardContent } from '../components/Card';
 import { Button } from '../components/Button';
+import toast from 'react-hot-toast';
 
 export default function Plans() {
   const containerRef = useRef(null);
@@ -151,6 +152,13 @@ export default function Plans() {
                 </ul>
                 
                 <Button 
+                  onClick={() => {
+                    if (!plan.active) {
+                      toast.success(`${plan.name} Tier: Pre-registration recorded. Coming Soon!`, {
+                        icon: '🚀',
+                      });
+                    }
+                  }}
                   className={`w-full py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] shadow-2xl transition-all h-auto flex items-center justify-center gap-3 ${
                     plan.active 
                       ? 'bg-white/5 text-text-secondary cursor-default hover:bg-white/5 border border-white/10' 

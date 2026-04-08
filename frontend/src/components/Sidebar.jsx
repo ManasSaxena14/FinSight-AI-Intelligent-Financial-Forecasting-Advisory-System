@@ -18,9 +18,42 @@ export default function Sidebar() {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    logout();
-    toast.success('Signed out');
-    navigate('/login');
+    toast((t) => (
+      <div className="flex flex-col gap-4 p-1">
+        <div className="flex items-center gap-3">
+          <div className="h-8 w-8 rounded-full bg-rose-500/20 flex items-center justify-center border border-rose-500/20">
+            <LogOut className="h-4 w-4 text-rose-500" />
+          </div>
+          <p className="font-black text-[10px] uppercase tracking-[0.2em] text-white">Terminate Session?</p>
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={() => {
+              toast.dismiss(t.id);
+              logout();
+              toast.success('Signed out successfully');
+              navigate('/login');
+            }}
+            className="flex-1 bg-rose-500 hover:bg-rose-600 text-white py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-rose-500/20"
+          >
+            Confirm
+          </button>
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="flex-1 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all active:scale-95 border border-white/5"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    ), {
+      duration: 6000,
+      position: 'bottom-right',
+      style: {
+        minWidth: '240px',
+        padding: '20px',
+      }
+    });
   };
 
   return (

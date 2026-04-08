@@ -30,16 +30,18 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setIsLoading(true);
+    const regToast = toast.loading('Initializing secure vault...', {
+      style: { border: '1px solid rgba(212, 175, 55, 0.2)' }
+    });
 
     const result = await register(name, email, password);
     
     if (result.success) {
-      toast.success('Account Created Successfully');
+      toast.success('Vault Created Successfully', { id: regToast });
       navigate('/');
     } else {
       setError(result.message);
-      toast.error(result.message);
+      toast.error(result.message, { id: regToast });
       setIsLoading(false);
       gsap.fromTo(formRef.current, 
         { x: -10 }, 

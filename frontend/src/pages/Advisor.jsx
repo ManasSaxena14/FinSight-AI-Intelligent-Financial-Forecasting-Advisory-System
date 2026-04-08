@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import toast from 'react-hot-toast';
 import gsap from 'gsap';
 import { Bot, Target, Calculator, Lightbulb, Sparkles, ChevronRight } from 'lucide-react';
 import GoalTracker from '../components/GoalTracker';
@@ -27,6 +28,9 @@ export default function Advisor() {
 
   useEffect(() => {
     const load = async () => {
+      const summaryToast = toast.loading('Consulting AI Advisor...', {
+        style: { border: '1px solid rgba(212, 175, 55, 0.2)' }
+      });
       try {
         const expenses = await expenseService.getExpenses();
         if (expenses.length > 0) {
@@ -41,14 +45,19 @@ export default function Advisor() {
           if (summaryData) {
             setAiSummary(summaryData.reply);
             setShowAnalysis(true);
+            toast.success('AI Briefing Received', { id: summaryToast });
+          } else {
+            toast.dismiss(summaryToast);
           }
         } else {
           setLatest(null);
           setAiSummary('');
           setShowAnalysis(false);
+          toast.dismiss(summaryToast);
         }
       } catch (err) {
         console.error('Advisor data load failed:', err);
+        toast.error('Advisor Sync Interrupted', { id: summaryToast });
       } finally {
         setIsLoading(false);
       }
@@ -57,6 +66,10 @@ export default function Advisor() {
     load();
 
     const handleUpdated = () => {
+      toast.success('Refreshing data with latest entries...', {
+        icon: '🔄',
+        style: { border: '1px solid rgba(59, 130, 246, 0.2)' }
+      });
       setIsLoading(true);
       load();
     };

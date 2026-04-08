@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import toast from 'react-hot-toast';
 import gsap from 'gsap';
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
@@ -112,7 +113,9 @@ export default function Analytics() {
         }
       } catch (err) {
         console.error('Failed to load analytics', err);
-        setError('Unable to fetch analytics data. Please try again later.');
+        const msg = 'Unable to fetch analytics data. Check your connection.';
+        setError(msg);
+        toast.error(msg);
       } finally {
         setIsLoading(false);
       }
@@ -134,6 +137,9 @@ export default function Analytics() {
     const runMl = async () => {
       if (!data.expenses || data.expenses.length === 0) return;
       setIsMlLoading(true);
+      const mlToast = toast.loading('Synchronizing AI/ML Insights...', {
+        style: { border: '1px solid rgba(212, 175, 55, 0.2)' }
+      });
       try {
         const history = data.expenses;
         const latest = history[history.length - 1];
@@ -163,8 +169,10 @@ export default function Analytics() {
           savingsRisk: results[4].status === 'fulfilled' ? results[4].value : prev.savingsRisk,
           spendingPattern: results[5].status === 'fulfilled' ? results[5].value : prev.spendingPattern,
         }));
+        toast.success('AI Insights Restored', { id: mlToast });
       } catch (err) {
         console.error('Failed to load ML analytics', err);
+        toast.error('AI Processing Delayed', { id: mlToast });
       } finally {
         setIsMlLoading(false);
       }
