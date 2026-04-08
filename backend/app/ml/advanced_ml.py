@@ -447,7 +447,8 @@ def predict_savings_risk(income: float, expenses: dict) -> dict:
     if scaler is not None:
         X_input = scaler.transform(X)
     else:
-        X_input = X.values
+        # Keep DataFrame shape/feature names when scaler is absent.
+        X_input = X
 
     pred_class  = int(model.predict(X_input)[0])
     proba       = model.predict_proba(X_input)[0]

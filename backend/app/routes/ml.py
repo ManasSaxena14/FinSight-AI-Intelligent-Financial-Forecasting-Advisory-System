@@ -15,6 +15,7 @@ CHANGES vs original:
 from fastapi import APIRouter, HTTPException, Depends
 import os
 import datetime
+import logging
 
 from app.models.schemas import (
     PredictionRequest,
@@ -45,6 +46,7 @@ from app.services.financial_logic import (
 from app.services.auth import get_current_user
 
 router = APIRouter(prefix="/api/ml", tags=["Machine Learning"])
+logger = logging.getLogger(__name__)
 
 # ── Classifier loader (kept local for backward compat) ──────────────────────
 CLASSIFIER_PATH = os.path.join(
@@ -194,6 +196,7 @@ def forecast_expenses(
             average_savings=result.get("average_savings"),
         )
     except Exception:
+        logger.exception("ML forecast failed")
         raise HTTPException(status_code=500, detail="Could not generate forecast right now.")
 
 
@@ -242,6 +245,7 @@ def get_recommendations_and_alerts(
             overall_anomaly_score=overall_score,
         )
     except Exception:
+        logger.exception("ML recommendations failed")
         raise HTTPException(status_code=500, detail="Could not generate recommendations right now.")
 
 
@@ -259,6 +263,7 @@ def get_savings_risk(
         result = predict_savings_risk(req.income, req.expenses.dict())
         return SavingsRiskResponse(**result)
     except Exception:
+        logger.exception("ML savings-risk failed")
         raise HTTPException(status_code=500, detail="Could not evaluate savings risk right now.")
 
 
@@ -276,4 +281,5 @@ def get_spending_pattern(
         result = get_spending_pattern_insight(req.income, req.expenses.dict())
         return SpendingPatternResponse(**result)
     except Exception:
+        logger.exception("ML spending-pattern failed")
         raise HTTPException(status_code=500, detail="Could not analyze spending pattern right now.")
