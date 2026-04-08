@@ -24,11 +24,12 @@ export const AuthProvider = ({ children }) => {
       
       if (storedToken) {
         setToken(storedToken);
-        if (storedUser) {
+        if (storedUser && storedUser !== "undefined" && storedUser !== "null") {
           try {
             setUser(JSON.parse(storedUser));
           } catch (e) {
             console.error("Failed to parse stored user", e);
+            localStorage.removeItem('user'); // Clear corrupted data
           }
         }
         
