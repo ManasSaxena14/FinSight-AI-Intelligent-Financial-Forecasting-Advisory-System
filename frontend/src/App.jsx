@@ -1,19 +1,26 @@
+import React, { Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { Toaster } from 'react-hot-toast';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
-import AddExpense from './pages/AddExpense';
-import Analytics from './pages/Analytics';
-import Advisor from './pages/Advisor';
-import Plans from './pages/Plans';
-import Profile from './pages/Profile';
-import Goals from './pages/Goals';
-import HowItWorks from './pages/HowItWorks';
+const Login = React.lazy(() => import('./pages/Login'));
+const Register = React.lazy(() => import('./pages/Register'));
+const Dashboard = React.lazy(() => import('./pages/Dashboard'));
+const AddExpense = React.lazy(() => import('./pages/AddExpense'));
+const Analytics = React.lazy(() => import('./pages/Analytics'));
+const Advisor = React.lazy(() => import('./pages/Advisor'));
+const Plans = React.lazy(() => import('./pages/Plans'));
+const Profile = React.lazy(() => import('./pages/Profile'));
+const Goals = React.lazy(() => import('./pages/Goals'));
+const HowItWorks = React.lazy(() => import('./pages/HowItWorks'));
+
+const PageLoader = () => (
+  <div className="flex h-screen w-full items-center justify-center bg-[#0a0a0a]">
+    <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#d4af37] border-t-transparent"></div>
+  </div>
+);
 
 function App() {
   return (
@@ -58,28 +65,30 @@ function App() {
           },
         }}
       />
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
-        {/* Protected Routes enclosed by Dashboard Layout */}
-        <Route element={<ProtectedRoute />}>
-          <Route element={<Layout />}>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/add-expense" element={<AddExpense />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/advisor" element={<Advisor />} />
-            <Route path="/plans" element={<Plans />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/goals" element={<Goals />} />
-            <Route path="/how-it-works" element={<HowItWorks />} />
+          {/* Protected Routes enclosed by Dashboard Layout */}
+          <Route element={<ProtectedRoute />}>
+            <Route element={<Layout />}>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/add-expense" element={<AddExpense />} />
+              <Route path="/analytics" element={<Analytics />} />
+              <Route path="/advisor" element={<Advisor />} />
+              <Route path="/plans" element={<Plans />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/goals" element={<Goals />} />
+              <Route path="/how-it-works" element={<HowItWorks />} />
+            </Route>
           </Route>
-        </Route>
 
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }
