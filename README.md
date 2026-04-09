@@ -1,4 +1,4 @@
-# FinSight AI: Intelligent Financial Forecasting & Advisory System 🚀
+# FinSight AI: Intelligent Financial Forecasting & Advisory System
 
 [![Frontend Deployment](https://img.shields.io/badge/Frontend-Vercel-blue?style=for-the-badge&logo=vercel)](https://finsight-ai-intelligent-financial.vercel.app)
 [![Backend Deployment](https://img.shields.io/badge/Backend-Render-green?style=for-the-badge&logo=render)](https://finsight-ai-k2yh.onrender.com)
@@ -8,7 +8,7 @@
 
 ---
 
-## 💡 The Problem & Solution
+## The Problem & Solution
 
 ### The Problem
 Most personal finance apps are retrospective—they tell you what you *spent*, but not what you *will spend*. Users struggle with:
@@ -21,18 +21,18 @@ Most personal finance apps are retrospective—they tell you what you *spent*, b
 
 ---
 
-## ✨ Key Features
+## Key Features
 
-- **📈 Multi-Month Forecasting:** Proprietary engine using seasonal trend analysis to predict expenses for the next 1-12 months with per-category breakdowns.
-- **🛡️ Dual-Layer Anomaly Detection:** Combines **Z-score Analysis** (univariate) and **Isolation Forest** (multivariate) to flag unusual spending patterns with high precision.
-- **🤖 AI Financial Advisor:** Integrated **Groq-powered chatbot** that understands your financial state and provides context-aware savings strategies.
-- **📊 Comparative Peer Analysis:** Percentile-based benchmarking that compares your spending habits against similar income brackets.
-- **🏆 Spending Archetypes:** Automatically categorizes users into personas like "Power Saver," "Lifestyle Spender," or "Housing-Heavy" using heuristic analysis.
-- **🎯 Financial Health Scoring:** A dynamic 0-100 score calculated using risk-assessment GBM models to quantify your financial stability.
+- **Multi-Month Forecasting:** Proprietary engine using seasonal trend analysis to predict expenses for the next 1-12 months with per-category breakdowns.
+- **Dual-Layer Anomaly Detection:** Combines **Z-score Analysis** (univariate) and **Isolation Forest** (multivariate) to flag unusual spending patterns with high precision.
+- **AI Financial Advisor:** Integrated **Groq-powered chatbot** that understands your financial state and provides context-aware savings strategies.
+- **Comparative Peer Analysis:** Percentile-based benchmarking that compares your spending habits against similar income brackets.
+- **Spending Archetypes:** Automatically categorizes users into personas like "Power Saver," "Lifestyle Spender," or "Housing-Heavy" using heuristic analysis.
+- **Financial Health Scoring:** A dynamic 0-100 score calculated using risk-assessment GBM models to quantify your financial stability.
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Frontend
 - **Framework:** React.js (Vite)
@@ -53,7 +53,7 @@ Most personal finance apps are retrospective—they tell you what you *spent*, b
 
 ---
 
-## 🏗️ Architecture & Workflow
+## Architecture & Workflow
 
 1. **Data Ingestion:** User inputs income and Categorized Expenses (Food, Travel, Rent, etc.).
 2. **Preprocessing Layer:** Backend cleanses data and engineers features like "Rent-to-Income" and "Essential-to-Discretionary" ratios.
@@ -66,7 +66,7 @@ Most personal finance apps are retrospective—they tell you what you *spent*, b
 
 ---
 
-## 📁 Folder Structure
+## Folder Structure
 
 ```
 FinSight AI/
@@ -82,7 +82,7 @@ FinSight AI/
 
 ---
 
-## 🚀 Installation & Setup
+## Installation & Setup
 
 ### Prerequisites
 - Python 3.9+
@@ -109,7 +109,7 @@ npm run dev
 
 ---
 
-## 🔮 Future Roadmap
+## Future Roadmap
 - [ ] **Bank API Integration:** Plaid/Yodlee integration for automated expense syncing.
 - [ ] **OCR Receipt Scanning:** Extract data from images using Tesseract or AWS Textract.
 - [ ] **Collaborative Budgeting:** Support for shared family accounts with multi-user tracking.
@@ -117,7 +117,7 @@ npm run dev
 
 ---
 
-## 🤝 Contributing
+## Contributing
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
 
 1. Fork the Project
@@ -128,12 +128,12 @@ Contributions are what make the open source community such an amazing place to l
 
 ---
 
-## 📜 License
+## License
 Distributed under the MIT License. See `LICENSE` for more information.
 
 ---
 
-## 👨‍💼 For Recruiters
+## For Recruiters
 **Resume-worthy Snapshot:**  
 *Built a full-stack predictive financial ecosystem using **FastAPI** and **React**, implementing **Isolation Forest** algorithms for anomaly detection and **Groq LLM** for real-time financial advisory, managing a dataset of 8000+ financial records.*
 
