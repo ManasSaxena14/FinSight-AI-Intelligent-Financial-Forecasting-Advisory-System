@@ -57,6 +57,8 @@ app = FastAPI(
 # CORS — Allow frontend to communicate with backend
 # ---------------------------------------------------------------------------
 # We use a broad CORS configuration to ensure no blocking occurs during development
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_ORIGINS,
@@ -64,7 +66,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # ---------------------------------------------------------------------------
 # Global Exception Handler
