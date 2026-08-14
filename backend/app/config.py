@@ -36,6 +36,7 @@ class Settings(BaseSettings):
         "https://finsight-ai.vercel.app",
         "https://finsight-ai-frontend.vercel.app",
         "https://finsight-ai-intelligent-financial.vercel.app",
+        "https://fin-sight-ai-intelligent-financial-forecasting-advis-5gig1yvfz.vercel.app",
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost:3000",
