@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
   ArrowRight, Car, CalendarDays, Clapperboard, FileUp, Home, Layers, ListPlus, ShoppingBag, Sparkles, Trash2, TrendingUp, Utensils, Zap,
@@ -213,6 +213,7 @@ function MonthlyTotals({ period, setPeriod, onSaved }) {
 }
 
 export default function AddExpense() {
+  const navigate = useNavigate();
   const [tab, setTab] = useState('smart');
   const [period, setPeriod] = useState(currentPeriod());
   const [txs, setTxs] = useState([]);
@@ -220,6 +221,22 @@ export default function AddExpense() {
   const [loadingTxs, setLoadingTxs] = useState(true);
   const listRef = useRef(null);
   const formRef = useRef(null);
+  const redirectTimerRef = useRef(null);
+
+  // Cancel any pending redirect on unmount
+  useEffect(() => () => {
+    if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
+  }, []);
+
+  const scheduleRedirect = () => {
+    if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
+    toast('Redirecting to overview in 7 s…', {
+      icon: '🏠',
+      duration: 7000,
+      id: 'redirect-toast',
+    });
+    redirectTimerRef.current = setTimeout(() => navigate('/dashboard'), 7000);
+  };
 
   const loadMonth = useCallback(async (p) => {
     setLoadingTxs(true);
@@ -252,12 +269,14 @@ export default function AddExpense() {
   const onSaved = (p) => {
     if (p !== period) setPeriod(p);
     else loadMonth(p);
+    scheduleRedirect();
   };
 
   const onBatchSaved = (res) => {
     const latest = res?.periods?.[res.periods.length - 1];
     if (latest && latest !== period) setPeriod(latest);
     else loadMonth(period);
+    scheduleRedirect();
   };
 
   const remove = async (tx) => {
