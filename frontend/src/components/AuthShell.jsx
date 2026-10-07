@@ -114,9 +114,9 @@ export default function AuthShell({ title, subtitle, children, footer, leaving =
       <section className="relative z-10 flex items-center justify-center px-4 py-12 sm:px-8">
         <Link
           to="/welcome"
-          className="absolute left-4 top-5 flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.06] px-3.5 py-1.5 text-sm font-medium text-fg-muted backdrop-blur-sm transition-all duration-200 hover:border-brand-500/40 hover:bg-brand-500/10 hover:text-fg hover:shadow-[0_0_14px_0_rgba(99,102,241,0.25)] sm:left-8"
+          className="absolute left-4 top-5 flex items-center gap-2 rounded-full border border-white/20 bg-white/[0.12] px-4 py-2 text-sm font-semibold text-white shadow-lg backdrop-blur-md transition-all duration-200 hover:border-brand-400/70 hover:bg-brand-500/20 hover:shadow-[0_0_20px_0_rgba(99,102,241,0.4)] sm:left-8"
         >
-          <ArrowLeft className="h-3.5 w-3.5" /> Home
+          <ArrowLeft className="h-4 w-4" /> Home
         </Link>
         <div className="w-full max-w-[420px] [perspective:1200px]">
           <div className="mb-8 flex justify-center lg:hidden">
