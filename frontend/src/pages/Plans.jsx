@@ -1,180 +1,97 @@
-import { useEffect, useRef } from 'react';
-import gsap from 'gsap';
-import { Shield, Zap, Crown, CheckCircle2, ChevronRight, Sparkles } from 'lucide-react';
-import { Card, CardContent } from '../components/Card';
-import { Button } from '../components/Button';
+import { useLayoutEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
+import { Check, Crown, Shield, Zap } from 'lucide-react';
+import { Badge, Button, PageHeader, Panel } from '../components/ui';
+import { cn } from '../lib/cn';
+import { gsap } from '../lib/motion';
+
+const PLANS = [
+  {
+    id: 'basic', name: 'Essential', price: 'Free', icon: Shield, current: true,
+    features: [
+      { name: 'Core Expense Tracking', active: true },
+      { name: 'Basic AI Financial Summaries', active: true },
+      { name: 'Standard Goals (Up to 3)', active: true },
+      { name: 'Basic Market Insights', active: false },
+      { name: 'Real-time Predictive Engine', active: false },
+    ],
+  },
+  {
+    id: 'pro', name: 'Professional', price: '₹1,499', icon: Zap,
+    features: [
+      { name: 'Advanced AI Routing', active: true },
+      { name: 'Unlimited Financial Goals', active: true },
+      { name: 'What-if budget scenarios', active: true },
+      { name: 'Tax planning helpers', active: true },
+      { name: 'Custom AI Personas', active: false },
+    ],
+  },
+  {
+    id: 'premium', name: 'Elite Wealth', price: '₹4,999', icon: Crown, highlight: true,
+    features: [
+      { name: 'Full spending forecasts', active: true },
+      { name: 'Direct Portfolio Management', active: true },
+      { name: 'Crypto & Real Estate Assets', active: true },
+      { name: '24/7 AI CPA/Tax Consultant', active: true },
+      { name: 'API Access for Integrations', active: true },
+    ],
+  },
+];
 
 export default function Plans() {
-  const containerRef = useRef(null);
-  
-  useEffect(() => {
+  const gridRef = useRef(null);
+
+  useLayoutEffect(() => {
+    const cards = gridRef.current.querySelectorAll('[data-plan]');
     const ctx = gsap.context(() => {
-      // Premium entrance animation
-      gsap.fromTo('.plan-card', 
-        { y: 60, opacity: 0, scale: 0.95 },
-        { y: 0, opacity: 1, scale: 1, duration: 1, stagger: 0.2, ease: "power4.out" }
-      );
-      
-      // Floating animation for icons
-      gsap.to('.plan-icon', {
-        y: -10,
-        repeat: -1,
-        yoyo: true,
-        duration: 2,
-        ease: "sine.inOut",
-        stagger: 0.3
-      });
-      
-      // Reveal header
-      gsap.fromTo('.header-reveal',
-        { y: 20, opacity: 0 },
-        { y: 0, opacity: 1, duration: 1, stagger: 0.2, ease: "power3.out" }
-      );
-    }, containerRef);
-    
-    return () => ctx.revert();
+      gsap.from(cards, { opacity: 0, y: 40, rotateX: -12, transformPerspective: 900, stagger: 0.1, duration: 1.2, delay: 0.2 });
+    }, gridRef);
+    // Subtle 3D tilt toward the pointer.
+    const handlers = [...cards].map((card) => {
+      const rx = gsap.quickTo(card, 'rotateX', { duration: 0.6 });
+      const ry = gsap.quickTo(card, 'rotateY', { duration: 0.6 });
+      gsap.set(card, { transformPerspective: 900 });
+      const move = (e) => {
+        const r = card.getBoundingClientRect();
+        ry(((e.clientX - r.left) / r.width - 0.5) * 8);
+        rx(-((e.clientY - r.top) / r.height - 0.5) * 8);
+      };
+      const leave = () => { rx(0); ry(0); };
+      card.addEventListener('pointermove', move);
+      card.addEventListener('pointerleave', leave);
+      return () => { card.removeEventListener('pointermove', move); card.removeEventListener('pointerleave', leave); };
+    });
+    return () => { ctx.revert(); handlers.forEach((h) => h()); };
   }, []);
 
-  const plans = [
-    {
-      id: 'basic',
-      name: 'Essential',
-      price: 'Free',
-      icon: Shield,
-      color: 'text-zinc-400',
-      bgClass: 'bg-zinc-500/10 border-zinc-500/20',
-      active: true,
-      features: [
-        { name: 'Core Expense Tracking', active: true },
-        { name: 'Basic AI Financial Summaries', active: true },
-        { name: 'Standard Goals (Up to 3)', active: true },
-        { name: 'Basic Market Insights', active: false },
-        { name: 'Real-time Predictive Engine', active: false }
-      ]
-    },
-    {
-      id: 'pro',
-      name: 'Professional',
-      price: '₹1,499/mo',
-      icon: Zap,
-      color: 'text-blue-400',
-      bgClass: 'bg-blue-500/10 border-blue-500/30 shadow-[0_0_30px_rgba(59,130,246,0.15)]',
-      active: false,
-      tag: 'Upcoming',
-      features: [
-        { name: 'Advanced AI Routing', active: true },
-        { name: 'Unlimited Financial Goals', active: true },
-        { name: 'What-if budget scenarios', active: true },
-        { name: 'Tax planning helpers', active: true },
-        { name: 'Custom AI Personas', active: false }
-      ]
-    },
-    {
-      id: 'premium',
-      name: 'Elite Wealth',
-      price: '₹4,999/mo',
-      icon: Crown,
-      color: 'text-brand-400',
-      bgClass: 'bg-brand-500/10 border-brand-500/50 shadow-[0_0_50px_rgba(212,175,55,0.25)]',
-      active: false,
-      tag: 'Upcoming',
-      highlight: true,
-      features: [
-        { name: 'Full spending forecasts', active: true },
-        { name: 'Direct Portfolio Management', active: true },
-        { name: 'Crypto & Real Estate Assets', active: true },
-        { name: '24/7 AI CPA/Tax Consultant', active: true },
-        { name: 'API Access for Integrations', active: true }
-      ]
-    }
-  ];
-
   return (
-    <div className="relative min-h-[calc(100vh-80px)] py-12" ref={containerRef}>
-      <div className="absolute inset-0 bg-noise opacity-[0.02] pointer-events-none" />
-      
-      {/* Background Orbs */}
-      <div className="absolute top-0 right-1/4 w-96 h-96 bg-brand-500/5 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-1/4 left-1/4 w-[30rem] h-[30rem] bg-blue-500/5 rounded-full blur-[150px] pointer-events-none" />
-
-      <div className="text-center max-w-3xl mx-auto mb-16 relative z-10">
-        <div className="header-reveal inline-flex items-center gap-2 px-4 py-2 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-400 text-xs font-black uppercase tracking-[0.3em] mb-6">
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>Membership Tiers</span>
-        </div>
-        <h1 className="header-reveal text-5xl md:text-7xl font-black text-text-primary tracking-tighter italic mb-6">
-           Elevate your <br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-brand-600">Financial Future.</span>
-        </h1>
-        <p className="header-reveal text-text-tertiary text-lg max-w-xl mx-auto font-medium leading-relaxed">
-          Future paid tiers may include deeper AI insights, scenario tools, and tax help—coming soon.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto px-4 relative z-10">
-        {plans.map((plan) => {
-          const Icon = plan.icon;
-          return (
-            <Card key={plan.id} className={`plan-card relative overflow-hidden backdrop-blur-3xl border transition-all duration-500 group hover:-translate-y-4 hover:shadow-2xl ${plan.bgClass} ${plan.highlight ? 'md:-mt-8 md:mb-8' : ''}`}>
-              {plan.highlight && (
-                <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-brand-600 via-brand-400 to-brand-600 animate-shimmer bg-[length:200%_100%]" />
-              )}
-              {plan.tag && (
-                <div className="absolute top-6 right-6">
-                  <span className="px-3 py-1 rounded-full bg-black/40 border border-white/10 text-[10px] font-black uppercase tracking-widest text-text-secondary backdrop-blur-md">
-                    {plan.tag}
-                  </span>
-                </div>
-              )}
-              
-              <CardContent className="p-10 flex flex-col h-full">
-                <div className={`p-4 rounded-2xl w-fit mb-8 bg-black/40 border border-white/5 plan-icon shadow-xl ${plan.color}`}>
-                  <Icon className="w-8 h-8 drop-shadow-[0_0_15px_currentColor]" />
-                </div>
-                
-                <h3 className="text-2xl font-black italic tracking-tight text-text-primary mb-2">{plan.name}</h3>
-                <div className="flex items-baseline gap-2 mb-8">
-                  <span className={`text-4xl font-black uppercase tracking-tighter ${plan.color}`}>{plan.price}</span>
-                  {plan.price !== 'Free' && <span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">/ billed monthly</span>}
-                </div>
-                
-                <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent mb-8" />
-                
-                <ul className="space-y-5 mb-10 flex-1">
-                  {plan.features.map((feature, idx) => (
-                    <li key={idx} className="flex flex-start gap-4 text-sm">
-                      <CheckCircle2 className={`w-5 h-5 shrink-0 transition-colors ${feature.active ? plan.color : 'text-zinc-700'}`} />
-                      <span className={`font-medium tracking-wide ${feature.active ? 'text-text-secondary' : 'text-zinc-600 line-through'}`}>
-                        {feature.name}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-                
-                <Button 
-                  onClick={() => {
-                    if (!plan.active) {
-                      toast.success(`${plan.name} Tier: Pre-registration recorded. Coming Soon!`, {
-                        icon: '🚀',
-                      });
-                    }
-                  }}
-                  className={`w-full py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] shadow-2xl transition-all h-auto flex items-center justify-center gap-3 ${
-                    plan.active 
-                      ? 'bg-white/5 text-text-secondary cursor-default hover:bg-white/5 border border-white/10' 
-                      : plan.highlight
-                        ? 'bg-gradient-to-br from-brand-400 to-brand-600 text-black hover:scale-105 active:scale-95 shadow-brand-500/25'
-                        : 'bg-blue-500 hover:bg-blue-400 text-white hover:scale-105 active:scale-95 shadow-blue-500/25'
-                  }`}
-                  disabled={plan.active}
-                >
-                  {plan.active ? 'Current Deployment' : `Pre-register for ${plan.name}`}
-                  {!plan.active && <ChevronRight className="w-4 h-4" />}
-                </Button>
-              </CardContent>
-            </Card>
-          )
-        })}
+    <div className="space-y-10">
+      <PageHeader eyebrow="Membership" title="Elevate your" accent="financial future."
+        description="Future paid tiers may include deeper AI insights, scenario tools and tax help — coming soon." />
+      <div ref={gridRef} className="grid gap-4 md:grid-cols-3">
+        {PLANS.map((p) => (
+          <div key={p.id} data-plan className="will-change-transform">
+            <Panel glow className={cn('flex h-full flex-col p-6', p.highlight && 'border-brand-500/40 shadow-[var(--shadow-glow)]')}>
+              <div className="flex items-center justify-between">
+                <span className="grid h-10 w-10 place-items-center rounded-xl border border-line bg-white/[0.03] text-brand-300"><p.icon className="h-5 w-5" strokeWidth={1.75} /></span>
+                {p.current ? <Badge tone="pos" dot>Current</Badge> : <Badge tone={p.highlight ? 'gold' : 'neutral'}>Coming soon</Badge>}
+              </div>
+              <h3 className="mt-5 text-lg font-medium">{p.name}</h3>
+              <p className="mt-1"><span className="num text-4xl">{p.price}</span>{p.price !== 'Free' && <span className="text-sm text-fg-faint"> / month</span>}</p>
+              <ul className="mt-6 flex-1 space-y-3">
+                {p.features.map((f) => (
+                  <li key={f.name} className={cn('flex gap-2.5 text-sm', f.active ? 'text-fg-muted' : 'text-fg-faint line-through')}>
+                    <Check className={cn('mt-0.5 h-4 w-4 shrink-0', f.active ? 'text-brand-300' : 'text-fg-faint/50')} />{f.name}
+                  </li>
+                ))}
+              </ul>
+              <Button className="mt-8 w-full" variant={p.highlight ? 'primary' : 'secondary'} disabled={p.current}
+                onClick={() => toast.success(`${p.name}: pre-registration recorded. Coming soon!`)}>
+                {p.current ? 'Current plan' : `Pre-register for ${p.name}`}
+              </Button>
+            </Panel>
+          </div>
+        ))}
       </div>
     </div>
   );

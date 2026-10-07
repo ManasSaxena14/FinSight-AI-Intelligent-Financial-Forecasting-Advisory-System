@@ -1,48 +1,111 @@
 """
-FinSight AI -- Pydantic Schemas (Enhanced)
-==========================================
-CHANGES:
-- Added SavingsRiskResponse schema for new /ml/savings-risk endpoint.
-- Added SpendingPatternResponse schema for new /ml/spending-pattern endpoint.
-- Added CategoryPrediction schema with confidence interval fields.
-- Added enhanced ForecastMonth with month_name and per-category breakdown.
-- ForecastResponse extended to carry full per-month forecast list.
-- All existing schemas are UNCHANGED to preserve backward compatibility.
+FinSight AI -- Pydantic Schemas
+===============================
+Monthly records are keyed by period ("YYYY-MM"); individual transactions are
+the source of truth behind them.
 """
 
-from pydantic import BaseModel, Field, model_validator
-from typing import Dict, List, Optional
-from datetime import datetime
+from datetime import date, datetime
+from typing import Dict, List, Literal, Optional
+
+from pydantic import BaseModel, Field, field_validator, model_validator
+
+from app.ml.common import EXPENSE_COLS, MONTH_ORDER, is_valid_period, make_period
 
 
 # ── Expense Schemas ──────────────────────────────────────────────────────────
 
 class ExpenseCategories(BaseModel):
-    Food:          float = Field(0, ge=0)
-    Travel:        float = Field(0, ge=0)
-    Rent:          float = Field(0, ge=0)
-    Shopping:      float = Field(0, ge=0)
-    Bills:         float = Field(0, ge=0)
-    Entertainment: float = Field(0, ge=0)
+    Food:          float = Field(0, ge=0, le=1e9)
+    Travel:        float = Field(0, ge=0, le=1e9)
+    Rent:          float = Field(0, ge=0, le=1e9)
+    Shopping:      float = Field(0, ge=0, le=1e9)
+    Bills:         float = Field(0, ge=0, le=1e9)
+    Entertainment: float = Field(0, ge=0, le=1e9)
+
 
 class AddExpenseRequest(BaseModel):
-    month:   str = Field(..., pattern="^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)$")
-    income:  float = Field(..., gt=0)
+    """Monthly-totals form. Send `period` ("YYYY-MM"), or `month` + `year`."""
+    period:   Optional[str] = None
+    month:    Optional[str] = Field(None, pattern="^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)$")
+    year:     Optional[int] = Field(None, ge=2000, le=2100)
+    income:   float = Field(0, ge=0, le=1e9)
     expenses: ExpenseCategories
 
     @model_validator(mode="after")
-    def validate_non_empty_expenses(self):
-        if sum(self.expenses.model_dump().values()) <= 0:
-            raise ValueError("At least one expense amount must be greater than 0.")
+    def resolve_period(self):
+        if self.period is None:
+            if self.month is None:
+                raise ValueError("Provide period (YYYY-MM) or month and year.")
+            year = self.year or date.today().year
+            self.period = make_period(year, MONTH_ORDER.index(self.month) + 1)
+        if not is_valid_period(self.period):
+            raise ValueError("period must look like YYYY-MM.")
+        today = date.today()
+        if self.period > make_period(today.year, today.month):
+            raise ValueError("You can't add data for a future month.")
+        if self.income <= 0 and sum(self.expenses.model_dump().values()) <= 0:
+            raise ValueError("Add income or at least one expense greater than 0.")
         return self
 
-class ExpenseRecordResponse(AddExpenseRequest):
+
+class ExpenseRecordResponse(BaseModel):
     id:            str
     user_id:       str
+    period:        str
+    year:          int
+    month:         str
+    income:        float
+    expenses:      Dict[str, float]
     total_expense: float
     savings:       float
+    tx_count:      int = 0
     created_at:    datetime
-    entries:       List[Dict] = []
+    updated_at:    Optional[datetime] = None
+
+
+# ── Transaction Schemas ──────────────────────────────────────────────────────
+
+class TransactionCreate(BaseModel):
+    date:     date
+    type:     Literal["income", "expense"]
+    category: Optional[str] = None
+    amount:   float = Field(..., gt=0, le=1e9)
+    merchant: Optional[str] = Field(None, max_length=80)
+    note:     Optional[str] = Field(None, max_length=200)
+
+    @model_validator(mode="after")
+    def validate_category(self):
+        if self.type == "expense" and self.category not in EXPENSE_COLS:
+            raise ValueError(f"category must be one of {', '.join(EXPENSE_COLS)}.")
+        if self.date > date.today():
+            raise ValueError("Transaction date can't be in the future.")
+        return self
+
+
+class TransactionBatchCreate(BaseModel):
+    transactions: List[TransactionCreate] = Field(..., min_length=1, max_length=500)
+    source: Literal["ai-text", "import", "receipt", "advisor", "voice"] = "import"
+    skip_duplicates: bool = True
+
+
+class TransactionResponse(BaseModel):
+    id:         str
+    date:       str
+    period:     str
+    type:       str
+    category:   str
+    amount:     float
+    merchant:   Optional[str] = None
+    note:       Optional[str] = None
+    source:     Optional[str] = None
+    created_at: datetime
+
+
+class TransactionMutationResponse(BaseModel):
+    transaction: Optional[TransactionResponse] = None
+    month:       Optional[ExpenseRecordResponse] = None
+    deleted_id:  Optional[str] = None
 
 
 # ── Auth Schemas ─────────────────────────────────────────────────────────────
@@ -68,124 +131,78 @@ class UserResponse(BaseModel):
     created_at: datetime
 
 
-# ── ML Prediction & Forecasting Schemas ──────────────────────────────────────
+# ── ML Schemas ───────────────────────────────────────────────────────────────
 
 class PredictionRequest(BaseModel):
     income:            float = Field(0, ge=0)
     expenses:          ExpenseCategories
     previous_expenses: Optional[ExpenseCategories] = None
 
-class PredictionResponse(BaseModel):
-    predicted_total_expense: float
-    projected_savings:       float
-
-class ClassificationResponse(BaseModel):
-    predicted_class:    int
-    confidence_score:   float
-    behavioral_insight: str
-
-class ForecastRequest(PredictionRequest):
-    months: int = Field(3, ge=1, le=12)
-
-class ForecastMonth(BaseModel):
-    """Per-month forecast entry — now includes month name and category breakdown."""
-    month:             int
-    month_name:        Optional[str] = None
-    predicted_expense: float
-    savings:           float
-    categories:        Optional[Dict[str, float]] = None
-
-class ForecastResponse(BaseModel):
-    """
-    Extended forecast response.
-    - predicted_next_month_expense / trend_direction kept for backward compat.
-    - forecast list added for richer frontend rendering.
-    """
-    predicted_next_month_expense: float
-    trend_direction:              str
-    # Enhanced fields (frontend can use these for multi-month charts)
-    forecast:                     Optional[List[ForecastMonth]] = None
-    average_predicted_expense:    Optional[float] = None
-    average_savings:              Optional[float] = None
-
-
-# ── Health & Recommendations Schemas ─────────────────────────────────────────
-
 class HealthScoreResponse(BaseModel):
-    score:           int   = Field(..., ge=0, le=100)
-    status:          str
+    score:            int = Field(..., ge=0, le=100)
+    status:           str
     savings_rate_pct: float
-    feedback:        str
-
-class RecommendationsResponse(BaseModel):
-    recommendations: List[str]
-    alerts:          Optional[List[str]]  = None
-    anomalies:       Optional[List[dict]] = None
-    # New field: overall anomaly score (0-100) from IsolationForest
-    overall_anomaly_score: Optional[int]  = None
-
-
-# ── NEW: Savings Risk Schema ──────────────────────────────────────────────────
-
-class SavingsRiskRequest(BaseModel):
-    income:   float = Field(..., ge=0)
-    expenses: ExpenseCategories
-
-class SavingsRiskResponse(BaseModel):
-    risk_level:      str   # "low" | "medium" | "high"
-    predicted_class: int
-    class_label:     str   # "Good" | "Moderate" | "Poor"
-    probabilities:   Dict[str, float]  # {"Poor": 0.05, "Moderate": 0.20, "Good": 0.75}
-    confidence:      float
-    risk_score:      int   # 0=no risk, 100=max risk
-
-
-# ── NEW: Spending Pattern Schema ─────────────────────────────────────────────
-
-class SpendingPatternResponse(BaseModel):
-    archetype:            str   # "Housing-Heavy", "Foodie", "Balanced", etc.
-    dominant_category:    str
-    dominant_pct:         float
-    essential_ratio:      float
-    discretionary_ratio:  float
-    savings_ratio:        float
-    peer_comparison:      str
+    feedback:         str
 
 
 # ── Premium Feature Schemas ──────────────────────────────────────────────────
 
 class GoalCreate(BaseModel):
-    name:          str   = Field(..., max_length=100)
-    target_amount: float = Field(..., gt=0)
+    name:          str   = Field(..., min_length=1, max_length=100)
+    target_amount: float = Field(..., gt=0, le=1e10)
     target_date:   str   # ISO format YYYY-MM-DD
 
+    @field_validator("target_date")
+    @classmethod
+    def validate_date(cls, value: str) -> str:
+        try:
+            parsed = date.fromisoformat(value)
+        except ValueError as exc:
+            raise ValueError("target_date must be YYYY-MM-DD") from exc
+        if parsed <= date.today():
+            raise ValueError("target_date must be in the future.")
+        return value
+
 class GoalResponse(GoalCreate):
-    id:                       str
-    user_id:                  str
-    current_savings:          float
-    progress_percentage:      float
+    id:                        str
+    user_id:                   str
+    current_savings:           float
+    progress_percentage:       float
     available_savings_balance: float = 0.0
-    is_on_track:              bool
-    days_remaining:           Optional[int]   = None
-    required_monthly_saving:  Optional[float] = None
+    is_on_track:               bool
+    days_remaining:            Optional[int]   = None
+    required_monthly_saving:   Optional[float] = None
+    monthly_savings_capacity:  Optional[float] = None
+    track_reason:              Optional[str]   = None
+
+    @field_validator("target_date")
+    @classmethod
+    def validate_date(cls, value: str) -> str:
+        # Stored goals may already be past their date; don't reject them on read.
+        return value
 
 class GoalContribution(BaseModel):
-    amount: float = Field(..., gt=0)
+    amount: float = Field(..., gt=0, le=1e10)
 
 class GoalDeleteResponse(BaseModel):
     message:    str
     deleted_id: str
 
+class ChatTurn(BaseModel):
+    role: str
+    text: str = Field("", max_length=4000)
+
 class ChatMessage(BaseModel):
-    message: str
-    context: dict | None = None
-    history: List[Dict[str, str]] | None = None
+    message: str = Field(..., min_length=1, max_length=2000)
+    context: Optional[dict] = None  # ignored: context is built server-side from the user's data
+    history: Optional[List[ChatTurn]] = None
 
 class ChatResponse(BaseModel):
-    reply: str
+    reply:  str
+    source: str = "llm"  # "llm" | "fallback"
 
 class ScenarioRequest(BaseModel):
-    current_income:    float
+    current_income:    float = Field(..., ge=0, le=1e9)
     proposed_expenses: Dict[str, float]
 
 class ScenarioResponse(BaseModel):
@@ -202,22 +219,26 @@ class SmartSavingsTip(BaseModel):
     tip:              str
     potential_saving: float
     priority:         str  # "high", "medium", "low"
+    key:              Optional[str] = None
+    feedback:         Optional[str] = None  # "up" | "down" | None
 
 class SmartSavingsResponse(BaseModel):
-    tips:                    List[SmartSavingsTip]
+    tips:                     List[SmartSavingsTip]
     monthly_saving_potential: float
     annual_saving_potential:  float
-    summary:                 str
+    summary:                  str
+    hidden_count:             int = 0
 
 class BudgetLiveResponse(BaseModel):
-    total_income:   float
-    total_expense:  float
-    total_savings:  float
-    savings_rate:   float
-    health_score:   int
-    health_status:  str
-    last_updated:   str
-    trend:          str  # "up", "down", "stable"
+    total_income:  float
+    total_expense: float
+    total_savings: float
+    savings_rate:  float
+    health_score:  int
+    health_status: str
+    last_updated:  str
+    trend:         str  # "up", "down", "stable"
+    period:        Optional[str] = None
 
 
 # ── Notifications Schema ─────────────────────────────────────────────────────

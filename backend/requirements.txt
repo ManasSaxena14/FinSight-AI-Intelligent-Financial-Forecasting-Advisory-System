@@ -1,26 +1,34 @@
-# FinSight AI — Backend Dependencies
+# FinSight AI — backend dependencies (pinned to the versions tested; Python 3.14)
 
-# Web Framework
-fastapi
-uvicorn[standard]
-gunicorn
+# Web framework & server
+fastapi==0.135.3
+starlette==1.0.0
+uvicorn[standard]==0.44.0
+gunicorn==26.2.0
 
 # MongoDB
-motor
-pymongo
+motor==3.7.1
+pymongo==4.16.0
+certifi==2026.2.25
 
 # Authentication
-python-jose[cryptography]
-passlib[bcrypt]
+python-jose[cryptography]==3.5.0
+passlib[bcrypt]==1.7.4
+bcrypt==5.0.0
 
 # Data & ML
-pandas
-numpy
-scikit-learn
+pandas==3.0.2
+numpy==2.4.4
+scikit-learn==1.8.0
+scipy==1.17.1
+joblib==1.5.3
+
+# AI & documents
+groq==1.1.2
+pypdf==6.19.0
 
 # Utilities
-python-dotenv
-python-multipart
-pydantic
-pydantic-settings
-groq
+python-dotenv==1.2.2
+python-multipart==0.0.24
+pydantic==2.12.5
+pydantic-settings==2.13.1

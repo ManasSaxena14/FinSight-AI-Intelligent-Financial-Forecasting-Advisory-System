@@ -1,11 +1,11 @@
-import { useState, useRef, useEffect } from 'react';
+import { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import gsap from 'gsap';
 import toast from 'react-hot-toast';
+import { ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { Card, CardContent } from '../components/Card';
-import { Input } from '../components/Input';
-import { Button } from '../components/Button';
+import AuthShell from '../components/AuthShell';
+import { Button, Field } from '../components/ui';
+import { gsap } from '../lib/motion';
 
 export default function Register() {
   const [name, setName] = useState('');
@@ -13,134 +13,51 @@ export default function Register() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  
+  const [leaving, setLeaving] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
   const formRef = useRef(null);
 
-  useEffect(() => {
-    // Subtle fade-in and slide-up animation
-    gsap.fromTo(
-      formRef.current,
-      { y: 30, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.6, ease: 'power2.out' }
-    );
-  }, []);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    const regToast = toast.loading('Initializing secure vault...', {
-      style: { border: '1px solid rgba(212, 175, 55, 0.2)' }
-    });
-
+    if (password.length < 6) {
+      setError('Use at least 6 characters for your password.');
+      return;
+    }
+    setIsLoading(true);
     const result = await register(name, email, password);
-    
+    setIsLoading(false);
     if (result.success) {
-      toast.success('Vault Created Successfully', { id: regToast });
-      navigate('/');
+      toast.success('Account created');
+      setLeaving(true);
     } else {
-      setError(result.message);
-      toast.error(result.message, { id: regToast });
-      setIsLoading(false);
-      gsap.fromTo(formRef.current, 
-        { x: -10 }, 
-        { x: 10, duration: 0.1, yoyo: true, repeat: 3, onComplete: () => gsap.set(formRef.current, {x: 0}) }
-      );
+      setError(typeof result.message === 'string' ? result.message : 'Could not create your account.');
+      gsap.fromTo(formRef.current, { x: -8 }, { x: 0, duration: 0.6, ease: 'elastic.out(1, 0.3)' });
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-bg-base py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      <div className="absolute inset-0 bg-noise opacity-[0.02] pointer-events-none" />
-
-      <div className="w-full max-w-md space-y-12 relative z-10" ref={formRef}>
-        <div className="text-center">
-          <div className="mx-auto flex justify-center mb-10">
-            <img src="/MAIN_LOGO.png" alt="FinSight AI Logo" className="h-40 w-auto object-contain drop-shadow-[0_0_20px_rgba(212,175,55,0.3)] hover:scale-105 transition-transform duration-500" />
-          </div>
-          <h2 className="text-4xl font-black tracking-tight text-text-primary mb-3">
-            Create account
-          </h2>
-          <p className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.4em]">
-            Your data stays private
-          </p>
-        </div>
-
-        <div className="glass-card border border-white/5 p-10 sm:p-12 rounded-[2.5rem] shadow-2xl relative overflow-hidden bg-black/40 backdrop-blur-xl">
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-500/10 to-transparent" />
-          
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            {error && (
-              <div className="rounded-2xl bg-rose-500/10 border border-rose-500/20 p-5 animate-in fade-in slide-in-from-top-2 duration-300">
-                <div className="text-[10px] font-black text-rose-400 uppercase tracking-[0.2em] text-center">{error}</div>
-              </div>
-            )}
-            
-            <div className="space-y-6">
-              <Input
-                label="Username"
-                id="name"
-                name="name"
-                type="text"
-                autoComplete="name"
-                required
-                value={name}
-                placeholder="Username"
-                onChange={(e) => setName(e.target.value)}
-                className="h-14 rounded-xl bg-white/[0.03] border-white/10 focus:border-brand-500/40"
-              />
-
-              <Input
-                label="Email Address"
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                placeholder="authority@finsight.ai"
-                onChange={(e) => setEmail(e.target.value)}
-                className="h-14 rounded-xl bg-white/[0.03] border-white/10 focus:border-brand-500/40"
-              />
-
-              <Input
-                label="Password"
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                required
-                value={password}
-                placeholder="••••••••"
-                onChange={(e) => setPassword(e.target.value)}
-                className="h-14 rounded-xl bg-white/[0.03] border-white/10 focus:border-brand-500/40"
-              />
-            </div>
-
-            <Button type="submit" variant="primary" className="w-full h-14 rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 text-black font-black uppercase tracking-[0.2em] text-[10px] shadow-2xl shadow-brand-500/10 transition-all hover:scale-[1.02] active:scale-[0.98]" isLoading={isLoading}>
-              Create account
-            </Button>
-          </form>
-
-          <div className="mt-10 text-center border-t border-white/5 pt-10">
-            <p className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.2em]">
-              Already have an account?{' '}
-              <Link to="/login" className="text-brand-400 hover:text-brand-300 transition-colors ml-2 underline underline-offset-4 decoration-brand-500/30">
-                Sign in
-              </Link>
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-center gap-6 opacity-30">
-          <div className="h-px w-8 bg-text-tertiary" />
-          <p className="text-[9px] text-text-tertiary font-black uppercase tracking-[0.5em]">
-            Data encrypted in transit
-          </p>
-          <div className="h-px w-8 bg-text-tertiary" />
-        </div>
-      </div>
-    </div>
+    <AuthShell
+      leaving={leaving}
+      onLeft={() => navigate('/')}
+      title="Create your account"
+      subtitle="Free to start. Your data stays yours."
+      footer={<>Already have an account? <Link to="/login" className="text-brand-300 hover:text-brand-200">Sign in</Link></>}
+    >
+      <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
+        <Field label="Name" name="name" autoComplete="name" required minLength={2} maxLength={50} value={name}
+          onChange={(e) => setName(e.target.value)} placeholder="Your name" />
+        <Field label="Email" name="email" type="email" autoComplete="email" required value={email}
+          onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
+        <Field label="Password" name="password" type="password" autoComplete="new-password" required value={password}
+          onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" />
+        {error && <p role="alert" className="rounded-xl border border-neg/30 bg-neg/10 px-3 py-2 text-sm text-neg">{error}</p>}
+        <Button type="submit" size="lg" className="relative w-full overflow-hidden" isLoading={isLoading || leaving} magnet>
+          <span data-sheen aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/60 to-transparent" />
+          Create account <ArrowRight className="h-4 w-4" />
+        </Button>
+      </form>
+    </AuthShell>
   );
 }

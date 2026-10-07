@@ -1,293 +1,194 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
+import { CheckCircle2, ChevronDown, Clock, Dices, IndianRupee, Plus, Target, Trash2, X } from 'lucide-react';
+import GoalPlanner from './GoalPlanner';
 import { premiumService } from '../api/premiumService';
-import { Card, CardContent, CardHeader, CardTitle } from './Card';
-import { Button } from './Button';
-import { Input } from './Input';
-import { Target, PlusCircle, CheckCircle2, Trash2, IndianRupee } from 'lucide-react';
+import { inr, todayISO } from '../lib/format';
+import { cn } from '../lib/cn';
+import { gsap } from '../lib/motion';
+import { Badge, Button, EmptyState, Field, Meter, Panel, Ring, Skeleton, useCollapse } from './ui';
 
-const MotionDiv = motion.div;
-const MotionForm = motion.form;
+const errorMessage = (err, fallback) => {
+  const detail = err?.response?.data?.detail;
+  if (typeof detail === 'string') return detail;
+  if (Array.isArray(detail) && detail[0]?.msg) return detail[0].msg.replace(/^Value error, /, '');
+  return fallback;
+};
 
-export default function GoalTracker() {
-  const [goals, setGoals] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAdding, setIsAdding] = useState(false);
-  const [activeContribute, setActiveContribute] = useState(null);
-  const [contributeAmount, setContributeAmount] = useState('');
+function NewGoalForm({ open, onClose, onCreated }) {
+  const { ref, mounted } = useCollapse(open);
+  const [form, setForm] = useState({ name: '', target_amount: '', target_date: '' });
+  const [busy, setBusy] = useState(false);
+  const tomorrow = todayISO(new Date(Date.now() + 86400000));
 
-  // Form State
-  const [newGoal, setNewGoal] = useState({ name: '', target_amount: '', target_date: '' });
-
-  const fetchGoals = async () => {
-    setIsLoading(true);
-    try {
-      const data = await premiumService.getGoals();
-      setGoals(data);
-    } catch (err) {
-      toast.error("Failed to load goals");
-      console.error("Failed to load goals", err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchGoals();
-  }, []);
-
-  const handleCreateGoal = async (e) => {
+  const submit = async (e) => {
     e.preventDefault();
+    setBusy(true);
     try {
-      const payload = {
-        name: newGoal.name,
-        target_amount: parseFloat(newGoal.target_amount),
-        target_date: newGoal.target_date
-      };
-      await premiumService.createGoal(payload);
-      setIsAdding(false);
-      setNewGoal({ name: '', target_amount: '', target_date: '' });
+      await premiumService.createGoal({ ...form, target_amount: parseFloat(form.target_amount) });
       toast.success('Goal created');
-      fetchGoals(); // refresh the list
+      setForm({ name: '', target_amount: '', target_date: '' });
+      onCreated();
+      onClose();
     } catch (err) {
-      const msg = err.response?.data?.detail || "Failed to create goal";
-      toast.error(msg);
-      console.error("Failed to create goal", err);
+      toast.error(errorMessage(err, 'Could not create the goal'));
+    } finally {
+      setBusy(false);
     }
   };
 
-  const handleDeleteGoal = async (goalId) => {
-    if (!window.confirm("Delete this goal?")) return;
-    try {
-      // optimistic UI removal
-      setGoals(goals.filter(g => g.id !== goalId));
-      await premiumService.deleteGoal(goalId);
-      toast.success('Goal deleted');
-    } catch (err) {
-      toast.error('Failed to delete objective');
-      console.error("Failed to delete goal", err);
-      // fallback
-      fetchGoals();
-    }
-  };
-
-  const handleContribute = async (e, goalId) => {
-    e.preventDefault();
-    const amount = parseFloat(contributeAmount);
-    if (!amount || isNaN(amount) || amount <= 0) {
-      toast.error("Please enter a valid contribution amount");
-      return;
-    }
-
-    const available = goals[0]?.available_savings_balance ?? 0;
-    if (amount > available) {
-      toast.error(`Insufficient savings. Max available: ₹${available.toLocaleString()}`);
-      return;
-    }
-
-    try {
-      await premiumService.contributeToGoal(goalId, amount);
-      toast.success('Contribution saved');
-      setActiveContribute(null);
-      setContributeAmount('');
-      fetchGoals();
-    } catch (err) {
-      const msg = err?.response?.data?.detail || "Failed to contribute to goal";
-      toast.error(msg);
-      console.error("Failed to contribute to goal", err);
-    }
-  };
-
-  if (isLoading && goals.length === 0) {
-    return (
-      <Card className="dash-card border-none bg-black/20 shadow-2xl rounded-[2.5rem] overflow-hidden relative p-20 text-center animate-pulse">
-        <div className="flex flex-col items-center gap-4">
-          <Target className="w-12 h-12 text-brand-500/20" />
-          <span className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.4em] italic">Loading goals…</span>
+  if (!mounted) return null;
+  return (
+    <div ref={ref} className="overflow-hidden">
+      <form onSubmit={submit} className="panel mb-4 grid gap-4 p-5 sm:grid-cols-[1.4fr_1fr_1fr_auto] sm:items-end">
+        <Field label="Goal" name="goal-name" required maxLength={100} value={form.name} placeholder="Emergency fund, Goa trip…"
+          onChange={(e) => setForm({ ...form, name: e.target.value })} />
+        <Field label="Target" name="goal-target" type="number" min="1" required prefix="₹" value={form.target_amount}
+          onChange={(e) => setForm({ ...form, target_amount: e.target.value })} />
+        <Field label="By" name="goal-date" type="date" min={tomorrow} required value={form.target_date}
+          onChange={(e) => setForm({ ...form, target_date: e.target.value })} />
+        <div className="flex gap-2">
+          <Button type="submit" isLoading={busy}>Create</Button>
+          <Button type="button" variant="ghost" size="icon" onClick={onClose} aria-label="Cancel"><X className="h-4 w-4" /></Button>
         </div>
-      </Card>
-    );
-  }
+      </form>
+    </div>
+  );
+}
+
+function GoalCard({ goal, available, onChanged }) {
+  const [amount, setAmount] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [planOpen, setPlanOpen] = useState(false);
+  const planCollapse = useCollapse(planOpen);
+  const done = goal.progress_percentage >= 100;
+  const color = done ? '#d4af37' : goal.is_on_track ? '#34d399' : '#fbbf24';
+
+  const contribute = async (e) => {
+    e.preventDefault();
+    const value = parseFloat(amount);
+    if (!value || value <= 0) return;
+    setBusy(true);
+    try {
+      await premiumService.contributeToGoal(goal.id, value);
+      toast.success(`${inr(value)} added to ${goal.name}`);
+      setAmount('');
+      onChanged();
+    } catch (err) {
+      toast.error(errorMessage(err, 'Could not add to this goal'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const remove = async () => {
+    if (!window.confirm(`Delete "${goal.name}"?`)) return;
+    try {
+      await premiumService.deleteGoal(goal.id);
+      toast.success('Goal deleted');
+      onChanged();
+    } catch {
+      toast.error('Could not delete the goal');
+    }
+  };
 
   return (
-    <Card className="dash-card border-none bg-black/20 shadow-2xl rounded-[2.5rem] overflow-hidden relative group">
-      <div className="absolute -right-20 -top-20 w-80 h-80 bg-brand-500/5 blur-[120px] rounded-full pointer-events-none group-hover:bg-brand-500/10 transition-colors duration-1000" />
-      <CardHeader className="flex flex-row items-center justify-between py-8 px-10 border-b border-white/5 bg-transparent relative z-10">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-brand-500/10 rounded-2xl border border-brand-500/20">
-            <Target className="w-5 h-5 text-brand-400 drop-shadow-[0_0_8px_rgba(212,175,55,0.6)]" />
-          </div>
-          <CardTitle className="text-xs font-black tracking-[0.2em] text-text-primary uppercase italic">Financial Goals</CardTitle>
+    <Panel glow className="flex flex-col p-5" data-goal>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate text-[15px] font-medium text-fg">{goal.name}</p>
+          <p className="mt-0.5 flex items-center gap-1.5 text-xs text-fg-faint">
+            <Clock className="h-3 w-3" />
+            {goal.days_remaining > 0 ? `${goal.days_remaining} days left` : 'Deadline passed'} · {new Date(goal.target_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+          </p>
         </div>
-        <button 
-          onClick={() => setIsAdding(!isAdding)} 
-          className="text-brand-400 hover:text-brand-300 transition-all text-[10px] font-black uppercase tracking-[0.1em] flex items-center gap-2 group"
-        >
-          {isAdding ? "Cancel" : <><PlusCircle className="w-4 h-4 group-hover:scale-110 transition-transform"/> New Goal</>}
+        <button onClick={remove} aria-label="Delete goal" className="grid h-8 w-8 place-items-center rounded-lg text-fg-faint hover:bg-neg/10 hover:text-neg">
+          <Trash2 className="h-3.5 w-3.5" />
         </button>
-      </CardHeader>
-      
-      <CardContent className="p-8 relative z-10">
-        <AnimatePresence>
-          {isAdding && (
-            <MotionForm 
-              initial={{ height: 0, opacity: 0, marginBottom: 0 }}
-              animate={{ height: 'auto', opacity: 1, marginBottom: 40 }}
-              exit={{ height: 0, opacity: 0, marginBottom: 0, overflow: 'hidden' }}
-              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              onSubmit={handleCreateGoal} 
-              className="p-8 bg-black/40 rounded-3xl space-y-6 border border-white/5 shadow-2xl relative group origin-top"
-            >
-              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-500/20 to-transparent" />
-              <Input 
-                label="Goal Name" 
-                placeholder="e.g. New Car, Dream House" 
-                value={newGoal.name} 
-                onChange={(e) => setNewGoal({ ...newGoal, name: e.target.value })} 
-                required 
-                className="bg-black/20"
-              />
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <Input 
-                  label="Target Amount (₹)" 
-                  type="number" 
-                  min="1" 
-                  value={newGoal.target_amount} 
-                  onChange={(e) => setNewGoal({ ...newGoal, target_amount: e.target.value })} 
-                  required 
-                  className="bg-black/20"
-                />
-                <Input 
-                  label="Target Date" 
-                  type="date" 
-                  value={newGoal.target_date} 
-                  onChange={(e) => setNewGoal({ ...newGoal, target_date: e.target.value })} 
-                  required 
-                  className="bg-black/20"
-                />
-              </div>
-              <Button type="submit" className="w-full bg-gradient-to-br from-brand-400 to-brand-600 text-black shadow-2xl shadow-brand-500/20 h-12 rounded-xl uppercase font-black tracking-widest text-[10px]">Create Goal</Button>
-            </MotionForm>
+      </div>
+
+      <div className="mt-5 flex items-center gap-5">
+        <Ring value={goal.progress_percentage} size={92} stroke={7} color={color}>
+          <div><p className="num text-lg">{Math.round(goal.progress_percentage)}%</p></div>
+        </Ring>
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <p className="num text-xl text-fg">{inr(goal.current_savings)}</p>
+          <p className="text-xs text-fg-faint">of {inr(goal.target_amount)}</p>
+          {done ? <Badge tone="gold"><CheckCircle2 className="h-3 w-3" /> Reached</Badge>
+            : <Badge tone={goal.is_on_track ? 'pos' : 'warn'} dot>{goal.is_on_track ? 'On track' : 'Behind'}</Badge>}
+        </div>
+      </div>
+
+      {!done && goal.track_reason && <p className="mt-4 text-[13px] leading-relaxed text-fg-muted">{goal.track_reason}</p>}
+      <Meter value={goal.progress_percentage} className="mt-4" color={done ? 'bg-brand-400' : goal.is_on_track ? 'bg-pos' : 'bg-warn'} />
+
+      {!done && (
+        <>
+          <button type="button" onClick={() => setPlanOpen((o) => !o)}
+            className="mt-4 flex w-full items-center justify-between rounded-xl border border-ai/25 bg-ai/[0.05] px-3 py-2 text-[13px] text-ai hover:bg-ai/10">
+            <span className="flex items-center gap-2"><Dices className="h-4 w-4" /> Will I make it? Simulate</span>
+            <ChevronDown className={cn('h-4 w-4 transition-transform', planOpen && 'rotate-180')} />
+          </button>
+          {planCollapse.mounted && (
+            <div ref={planCollapse.ref} className="overflow-hidden">
+              <div className="pt-4"><GoalPlanner goalId={goal.id} target={goal.target_amount} /></div>
+            </div>
           )}
-        </AnimatePresence>
+        </>
+      )}
 
-        {goals.length === 0 && !isAdding ? (
-          <MotionDiv 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            className="text-center py-12 text-text-tertiary"
-          >
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-2">No active goals yet.</p>
-            <p className="text-[9px] font-medium tracking-widest opacity-50 uppercase">Set your first financial goal to start tracking progress.</p>
-          </MotionDiv>
-        ) : (
-          <div className="space-y-10">
-            {goals.length > 0 && (
-              <div className="px-1 pb-1">
-                <p className="text-[10px] text-text-tertiary font-black uppercase tracking-[0.2em]">
-                  Available to allocate: <span className="text-brand-400">₹{(goals[0].available_savings_balance ?? 0).toLocaleString()}</span>
-                </p>
-              </div>
-            )}
-            <AnimatePresence>
-              {goals.map(goal => (
-                <MotionDiv 
-                  key={goal.id}
-                  layout
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, filter: 'blur(5px)' }}
-                  transition={{ duration: 0.4 }}
-                  className="relative group/goal"
-                >
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h4 className="font-black text-text-primary text-sm tracking-tight flex items-center gap-2 italic">
-                        {goal.name} 
-                        {goal.progress_percentage >= 100 && <CheckCircle2 className="w-4 h-4 text-brand-400 drop-shadow-[0_0_10px_rgba(212,175,55,0.8)]" />}
-                      </h4>
-                      <p className="text-[10px] text-text-tertiary mt-1 font-bold uppercase tracking-widest">Target: {new Date(goal.target_date).toLocaleDateString()}</p>
-                      {goal.days_remaining !== null && (
-                        <p className={`text-[9px] font-bold uppercase tracking-widest mt-1 ${goal.is_on_track ? 'text-text-tertiary' : 'text-rose-500'}`}>
-                          {goal.days_remaining > 0 ? `${goal.days_remaining} Days Remaining` : 'Deadline Passed'} 
-                          {goal.required_monthly_saving > 0 && ` • ~₹${goal.required_monthly_saving}/mo needed`}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex gap-4 items-start">
-                      <div className="text-right">
-                        <span className="text-sm font-black text-text-primary tracking-tight italic">₹{goal.current_savings.toLocaleString()}</span>
-                        <span className="text-[10px] text-text-tertiary font-bold tracking-widest"> / ₹{goal.target_amount.toLocaleString()}</span>
-                      </div>
-                      <div className="flex items-center gap-2 opacity-0 group-hover/goal:opacity-100 transition-opacity">
-                        <button 
-                          onClick={() => setActiveContribute(activeContribute === goal.id ? null : goal.id)}
-                          className="p-1.5 rounded-lg bg-black/20 hover:bg-brand-500/10 hover:text-brand-400 text-text-tertiary border border-white/5 transition-colors"
-                          title="Contribute"
-                        >
-                          <IndianRupee className="w-3.5 h-3.5" />
-                        </button>
-                        <button 
-                          onClick={() => handleDeleteGoal(goal.id)}
-                          className="p-1.5 rounded-lg bg-black/20 hover:bg-rose-500/10 hover:text-rose-500 text-text-tertiary border border-white/5 transition-colors"
-                          title="Delete Goal"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <AnimatePresence>
-                    {activeContribute === goal.id && (
-                       <MotionForm 
-                          initial={{ height: 0, opacity: 0, marginBottom: 0 }}
-                          animate={{ height: 'auto', opacity: 1, marginBottom: 16 }}
-                          exit={{ height: 0, opacity: 0, marginBottom: 0, overflow: 'hidden' }}
-                          transition={{ duration: 0.3 }}
-                          onSubmit={(e) => handleContribute(e, goal.id)} 
-                          className="flex items-center gap-3 origin-top"
-                       >
-                          <div className="relative flex-1">
-                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary font-bold">₹</span>
-                            <input
-                              type="number"
-                              min="1"
-                              step="0.01"
-                              placeholder="Amount"
-                              value={contributeAmount}
-                              onChange={e => setContributeAmount(e.target.value)}
-                              className="w-full pl-7 pr-3 py-2 bg-black/40 border border-white/10 rounded-lg text-sm focus:outline-none focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/50"
-                              required
-                            />
-                          </div>
-                          <Button type="submit" className="py-2 px-4 h-auto text-[10px] bg-brand-500 hover:bg-brand-400 text-black rounded-lg uppercase tracking-widest font-bold">Add</Button>
-                          <button type="button" onClick={() => setActiveContribute(null)} className="text-[10px] text-text-tertiary uppercase tracking-widest font-bold hover:text-text-secondary px-2">Cancel</button>
-                       </MotionForm>
-                    )}
-                  </AnimatePresence>
-
-                  <div className="w-full bg-black/30 rounded-full h-2.5 overflow-hidden shadow-inner border border-white/5 relative">
-                    <div 
-                      className="h-full rounded-full transition-all duration-1000 bg-gradient-to-r from-brand-600 via-brand-400 to-brand-600 relative overflow-hidden"
-                      style={{ width: `${Math.max(2, Math.min(100, goal.progress_percentage))}%` }}
-                    >
-                      <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_25%,rgba(255,255,255,0.2)_50%,transparent_75%)] bg-[length:200%_100%] animate-shimmer" />
-                      <div className="absolute inset-0 shadow-[inset_0_0_10px_rgba(212,175,55,1)]" />
-                    </div>
-                  </div>
-                  <div className="flex justify-between mt-3 px-1">
-                    <span className="text-[10px] text-text-tertiary font-black tracking-[0.2em]">{goal.progress_percentage}% complete</span>
-                    <span className={`text-[10px] tracking-[0.3em] font-black uppercase ${goal.progress_percentage >= 100 || goal.is_on_track ? 'text-brand-400' : 'text-rose-500'}`}>
-                      {goal.progress_percentage >= 100 ? 'Done' : goal.is_on_track ? 'On track' : 'Behind'}
-                    </span>
-                  </div>
-                </MotionDiv>
-              ))}
-            </AnimatePresence>
+      {!done && (
+        <form onSubmit={contribute} className="mt-4 flex gap-2">
+          <div className="relative flex-1">
+            <IndianRupee className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-fg-faint" />
+            <input type="number" min="1" step="any" value={amount} onChange={(e) => setAmount(e.target.value)}
+              placeholder={`Up to ${inr(available)}`} className="field h-9 pl-8 text-[13px]" aria-label={`Add savings to ${goal.name}`} />
           </div>
-        )}
-      </CardContent>
-    </Card>
+          <Button type="submit" size="sm" variant="secondary" className="h-9" isLoading={busy} disabled={!amount}>Add</Button>
+        </form>
+      )}
+    </Panel>
+  );
+}
+
+export default function GoalTracker() {
+  const [goals, setGoals] = useState(null);
+  const [adding, setAdding] = useState(false);
+  const gridRef = useRef(null);
+
+  const load = useCallback(() => premiumService.getGoals().then(setGoals).catch(() => setGoals([])), []);
+  useEffect(() => { load(); }, [load]);
+
+  useLayoutEffect(() => {
+    if (!gridRef.current) return;
+    gsap.fromTo(gridRef.current.querySelectorAll('[data-goal]'), { opacity: 0, y: 20 }, { opacity: 1, y: 0, stagger: 0.07, duration: 0.8 });
+  }, [goals?.length]);
+
+  if (goals === null) {
+    return <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-72" />)}</div>;
+  }
+
+  const available = goals[0]?.available_savings_balance ?? 0;
+  const capacity = goals[0]?.monthly_savings_capacity;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-2">
+          <span className="chip">Unallocated savings <span className="num text-fg">{inr(available)}</span></span>
+          {capacity != null && <span className="chip">Recent monthly savings <span className="num text-fg">{inr(capacity)}</span></span>}
+        </div>
+        {!adding && <Button size="sm" onClick={() => setAdding(true)}><Plus className="h-4 w-4" /> New goal</Button>}
+      </div>
+      <NewGoalForm open={adding} onClose={() => setAdding(false)} onCreated={load} />
+      {goals.length === 0 && !adding ? (
+        <EmptyState icon={Target} title="No goals yet" description="Set a target and a date. We'll check it against what you actually save each month."
+          action={<Button onClick={() => setAdding(true)}><Plus className="h-4 w-4" /> Create a goal</Button>} />
+      ) : (
+        <div ref={gridRef} className={cn('grid gap-4 md:grid-cols-2 xl:grid-cols-3')}>
+          {goals.map((g) => <GoalCard key={g.id} goal={g} available={available} onChanged={load} />)}
+        </div>
+      )}
+    </div>
   );
 }

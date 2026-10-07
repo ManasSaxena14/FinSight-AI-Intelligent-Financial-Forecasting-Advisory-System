@@ -18,7 +18,9 @@ class DatabaseManager:
     db: Any = None
 
     # Motor client options — fail within ~10s instead of hanging (common Atlas/DNS issue)
-    _CLIENT_KWARGS = {"serverSelectionTimeoutMS": 10_000, "connectTimeoutMS": 10_000}
+    # tz_aware: datetimes come back as UTC-aware, so the API serialises them with "+00:00"
+    # and browsers don't misread them as local time.
+    _CLIENT_KWARGS = {"serverSelectionTimeoutMS": 10_000, "connectTimeoutMS": 10_000, "tz_aware": True}
 
     @classmethod
     async def connect_to_database(cls, uri: str = None):

@@ -1,10 +1,10 @@
 import React, { Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import ProtectedRoute from './components/ProtectedRoute';
+import ProtectedRoute, { FullScreenLoader } from './components/ProtectedRoute';
 import Layout from './components/Layout';
 
+const Landing = React.lazy(() => import('./pages/Landing'));
 const Login = React.lazy(() => import('./pages/Login'));
 const Register = React.lazy(() => import('./pages/Register'));
 const Dashboard = React.lazy(() => import('./pages/Dashboard'));
@@ -16,76 +16,47 @@ const Profile = React.lazy(() => import('./pages/Profile'));
 const Goals = React.lazy(() => import('./pages/Goals'));
 const HowItWorks = React.lazy(() => import('./pages/HowItWorks'));
 
-const PageLoader = () => (
-  <div className="flex h-screen w-full items-center justify-center bg-[#0a0a0a]">
-    <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#d4af37] border-t-transparent"></div>
-  </div>
-);
-
 function App() {
   return (
     <BrowserRouter>
-      <Toaster 
-        position="top-right"
+      <Toaster
+        position="top-center"
         toastOptions={{
-          className: 'premium-toast',
-          duration: 4000,
+          duration: 3500,
           style: {
-            background: 'rgba(17, 17, 17, 0.8)',
-            color: '#ffffff',
-            backdropFilter: 'blur(20px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            borderRadius: '24px',
-            padding: '16px 24px',
-            fontSize: '13px',
-            fontWeight: '900',
-            letterSpacing: '0.05em',
-            textTransform: 'uppercase',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 20px rgba(212, 175, 55, 0.05)',
-            fontFamily: 'Outfit, system-ui, sans-serif',
+            background: 'rgba(17, 19, 24, 0.92)',
+            color: '#eceef1',
+            backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: '14px',
+            padding: '10px 14px',
+            fontSize: '14px',
+            fontFamily: 'Geist, system-ui, sans-serif',
+            boxShadow: '0 20px 40px -12px rgba(0,0,0,0.7)',
           },
-          success: {
-            iconTheme: {
-              primary: '#d4af37',
-              secondary: '#111111',
-            },
-            style: {
-              border: '1px solid rgba(212, 175, 55, 0.2)',
-            }
-          },
-          error: {
-            iconTheme: {
-              primary: '#ef4444',
-              secondary: '#111111',
-            },
-            style: {
-              border: '1px solid rgba(239, 68, 68, 0.2)',
-            }
-          },
+          success: { iconTheme: { primary: '#34d399', secondary: '#08090c' } },
+          error: { iconTheme: { primary: '#f87171', secondary: '#08090c' } },
         }}
       />
-      <Suspense fallback={<PageLoader />}>
+      <Suspense fallback={<FullScreenLoader />}>
         <Routes>
-          {/* Public Routes */}
+          <Route path="/welcome" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
-          {/* Protected Routes enclosed by Dashboard Layout */}
           <Route element={<ProtectedRoute />}>
             <Route element={<Layout />}>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/add-expense" element={<AddExpense />} />
-              <Route path="/analytics" element={<Analytics />} />
-              <Route path="/advisor" element={<Advisor />} />
-              <Route path="/plans" element={<Plans />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/goals" element={<Goals />} />
-              <Route path="/how-it-works" element={<HowItWorks />} />
+              <Route path="/" element={<Suspense fallback={null}><Dashboard /></Suspense>} />
+              <Route path="/add-expense" element={<Suspense fallback={null}><AddExpense /></Suspense>} />
+              <Route path="/analytics" element={<Suspense fallback={null}><Analytics /></Suspense>} />
+              <Route path="/advisor" element={<Suspense fallback={null}><Advisor /></Suspense>} />
+              <Route path="/plans" element={<Suspense fallback={null}><Plans /></Suspense>} />
+              <Route path="/profile" element={<Suspense fallback={null}><Profile /></Suspense>} />
+              <Route path="/goals" element={<Suspense fallback={null}><Goals /></Suspense>} />
+              <Route path="/how-it-works" element={<Suspense fallback={null}><HowItWorks /></Suspense>} />
             </Route>
           </Route>
 
-          {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

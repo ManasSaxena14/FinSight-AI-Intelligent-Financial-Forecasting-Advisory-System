@@ -2,8 +2,7 @@
 FinSight AI — Main FastAPI Application
 =======================================
 Entry point for the backend server.
-Provides a health-check route and will later host
-all API routers (auth, expenses, predictions, etc.).
+Hosts the auth, expenses/transactions, ML and premium (AI) routers.
 """
 
 from fastapi import FastAPI, Request
@@ -14,9 +13,15 @@ from contextlib import asynccontextmanager
 import logging
 
 from app.config import settings
-from app.routes import ml, expenses, auth, premium
+from app.routes import ml, expenses, auth, premium, advisor, ai
 from app.db import DatabaseManager
+from app.ml.population import load_population_model
+from app.rag.knowledge_base import get_knowledge_base
+from app.ml import registry
+from app.services.ledger import ensure_indexes, migrate_legacy_records
 
+# Plain structured-ish logs to stdout (Render/Docker collect them). Gunicorn/uvicorn keep their own handlers.
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -30,8 +35,14 @@ async def lifespan(app: FastAPI):
     Production (DEBUG=False) fails fast so bad deploys are obvious.
     """
     settings.validate_startup()
+    # Build the peer model once per process (fits the IsolationForest here, not per request).
+    load_population_model()
+    get_knowledge_base()  # index the RAG corpus once per process
+    registry.build()      # log what's running
     try:
         await DatabaseManager.connect_to_database()
+        await ensure_indexes(DatabaseManager.db)
+        await migrate_legacy_records(DatabaseManager.db)
     except Exception:
         logger.exception("MongoDB connection failed at startup")
         if not settings.DEBUG:
@@ -92,7 +103,10 @@ async def global_exception_handler(request: Request, exc: Exception):
 app.include_router(auth.router)
 app.include_router(ml.router)
 app.include_router(expenses.router)
+app.include_router(expenses.tx_router)
 app.include_router(premium.router)
+app.include_router(advisor.router)
+app.include_router(ai.router)
 
 # ---------------------------------------------------------------------------
 # Health Check

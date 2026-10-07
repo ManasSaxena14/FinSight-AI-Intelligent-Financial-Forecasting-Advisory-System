@@ -1,96 +1,218 @@
 @import "tailwindcss";
 
+/* ── Design tokens ─────────────────────────────────────────────────────────
+   Obsidian surfaces, a single gold accent, semantic green/red, and a cool
+   "AI" violet used only for model-generated content. */
 @theme {
-  --color-brand-50: #fdfaf0;
-  --color-brand-100: #f9f1d4;
-  --color-brand-400: #e5c35c;
-  --color-brand-500: #d4af37;
-  --color-brand-600: #b69119;
-  --color-brand-900: #4a3b0a;
-  --color-brand-950: #2c2306;
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-display: "Instrument Serif", ui-serif, Georgia, serif;
 
-  --color-bg-base: #0a0a0a;   /* charcoal base */
-  --color-bg-panel: #111111;  /* charcoal panel */
-  --color-bg-elevated: #1a1a1a; /* deep gray */
-  
-  --color-text-primary: #f5f5f5; /* off-white */
-  --color-text-secondary: #a0a0a0; /* medium gray */
-  --color-text-tertiary: #A1A1AA; /* significantly lighter gray for contrast */
-  
-  --color-border-subtle: #1f1f1f; /* charcoal border */
-  --color-border-glow: rgba(212, 175, 55, 0.4); /* gold-500 with opacity */
+  --color-ink-950: #050608;
+  --color-ink-900: #08090c;
+  --color-ink-850: #0c0e12;
+  --color-ink-800: #111318;
+  --color-ink-750: #161920;
+  --color-ink-700: #1d2129;
+
+  --color-fg: #eceef1;
+  --color-fg-muted: #a3a9b3;
+  --color-fg-faint: #6f7682;
+
+  --color-line: rgb(255 255 255 / 0.07);
+  --color-line-strong: rgb(255 255 255 / 0.12);
+
+  --color-brand-50: #fdf9ec;
+  --color-brand-100: #f8eecb;
+  --color-brand-200: #f0dc95;
+  --color-brand-300: #e8c967;
+  --color-brand-400: #ddb94a;
+  --color-brand-500: #d4af37;
+  --color-brand-600: #b08e22;
+  --color-brand-700: #86691a;
+  --color-brand-900: #3b2f0c;
+
+  --color-pos: #34d399;
+  --color-neg: #f87171;
+  --color-warn: #fbbf24;
+  --color-ai: #a78bfa;
+  --color-info: #7dd3fc;
+
+  --radius-xl2: 1.25rem;
+  --radius-xl3: 1.75rem;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --shadow-panel: 0 1px 0 0 rgb(255 255 255 / 0.04) inset, 0 24px 48px -24px rgb(0 0 0 / 0.6);
+  --shadow-glow: 0 0 0 1px rgb(212 175 55 / 0.35), 0 10px 40px -10px rgb(212 175 55 / 0.45);
 }
 
-/* Base styles for a premium luxury fintech app */
 @layer base {
+  html {
+    color-scheme: dark;
+    -webkit-tap-highlight-color: transparent;
+  }
   body {
-    @apply bg-bg-base text-text-primary antialiased selection:bg-brand-500 selection:text-black;
-    font-family: 'Outfit', system-ui, sans-serif;
+    @apply bg-ink-900 text-fg antialiased;
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: rgb(212 175 55 / 0.35);
+    color: #fff;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-brand-400);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] { -moz-appearance: textfield; }
+  input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.8); cursor: pointer; }
+
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: rgb(255 255 255 / 0.08);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover { background-color: rgb(212 175 55 / 0.35); }
+}
+
+@layer components {
+  /* Surfaces */
+  .panel {
+    @apply relative rounded-xl3 border border-line bg-ink-850/80 backdrop-blur-xl;
+    box-shadow: var(--shadow-panel);
+  }
+  .panel-hover {
+    transition: border-color 0.4s var(--ease-out-expo), transform 0.4s var(--ease-out-expo), background-color 0.4s;
+  }
+  .panel-hover:hover {
+    @apply border-line-strong bg-ink-800/80;
+  }
+  .panel-inset {
+    @apply rounded-xl2 border border-line bg-white/[0.02];
+  }
+
+  /* Gradient hairline border that follows the pointer (set --mx/--my via JS) */
+  .spotlight {
+    background-image: radial-gradient(
+      420px circle at var(--mx, 50%) var(--my, 0%),
+      rgb(212 175 55 / 0.10),
+      transparent 45%
+    );
+  }
+
+  /* Typography */
+  .eyebrow {
+    @apply text-[11px] font-medium uppercase tracking-[0.18em] text-fg-faint;
+  }
+  .display {
+    font-family: var(--font-display);
+    font-weight: 400;
     letter-spacing: -0.01em;
   }
-  
-  .italic {
-    font-family: 'Cinzel', serif;
-    letter-spacing: 0.05em;
+  .num {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
   }
-  
-  /* Custom scrollbar - Luxury Dark Variant */
-  ::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
+  .text-gold-gradient {
+    background: linear-gradient(100deg, #f8eecb 0%, #d4af37 45%, #b08e22 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
-  ::-webkit-scrollbar-track {
-    background: transparent;
+
+  /* Form controls */
+  .field {
+    @apply h-11 w-full rounded-xl border border-line bg-white/[0.03] px-3.5 text-sm text-fg placeholder:text-fg-faint outline-none transition;
   }
-  ::-webkit-scrollbar-thumb {
-    @apply bg-white/10 rounded-full hover:bg-brand-500/40 transition-colors;
+  .field:hover { @apply border-line-strong; }
+  .field:focus { @apply border-brand-500/60 bg-white/[0.05]; box-shadow: 0 0 0 4px rgb(212 175 55 / 0.10); }
+  .field-label { @apply mb-1.5 block text-xs font-medium text-fg-muted; }
+
+  .range {
+    @apply h-1.5 w-full cursor-pointer appearance-none rounded-full bg-white/10;
+    background-image: linear-gradient(var(--color-brand-500), var(--color-brand-500));
+    background-repeat: no-repeat;
+  }
+  .range::-webkit-slider-thumb {
+    @apply h-4 w-4 appearance-none rounded-full border-2 border-ink-900 bg-brand-400;
+    box-shadow: 0 0 0 4px rgb(212 175 55 / 0.2);
+    transition: transform 0.2s;
+  }
+  .range::-webkit-slider-thumb:hover { transform: scale(1.2); }
+  .range::-moz-range-thumb {
+    @apply h-4 w-4 rounded-full border-2 border-ink-900 bg-brand-400;
+  }
+
+  /* Chips */
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-line bg-white/[0.03] px-2.5 py-1 text-[11px] font-medium text-fg-muted;
   }
 }
 
-/* Premium Luxury Glassmorphism utilities */
 @layer utilities {
-  .glass {
-    @apply bg-bg-panel/70 backdrop-blur-2xl border border-white/5 shadow-2xl shadow-black/60;
+  .bg-grid {
+    background-image:
+      linear-gradient(rgb(255 255 255 / 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(255 255 255 / 0.035) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse at 50% 0%, black 20%, transparent 70%);
   }
-  
-  .glass-card {
-    @apply bg-bg-panel/40 backdrop-blur-xl border border-white/5 shadow-2xl transition-all duration-500 ease-out;
-  }
-  
-  .glass-card:hover {
-    @apply border-brand-500/20 shadow-brand-500/5 -translate-y-1;
-  }
-
-  .text-glow {
-    text-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
-  }
-  
-  .border-glow {
-    box-shadow: 0 0 20px rgba(212, 175, 55, 0.15);
-  }
-
-  .bg-noise {
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-    opacity: 0.02;
+  .bg-noise::after {
+    content: "";
+    position: absolute;
+    inset: 0;
     pointer-events: none;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
-
-  @keyframes shimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
-  }
-
-  .animate-shimmer {
+  .shimmer {
+    background: linear-gradient(90deg, rgb(255 255 255 / 0.03) 0%, rgb(255 255 255 / 0.08) 50%, rgb(255 255 255 / 0.03) 100%);
     background-size: 200% 100%;
-    animation: shimmer 3s linear infinite;
+    animation: shimmer 1.6s linear infinite;
   }
-
-  @keyframes pulsing-placeholder {
-    0%, 100% { opacity: 0.05; }
-    50% { opacity: 0.15; }
+  @keyframes shimmer {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
   }
+  .caret::after {
+    content: "";
+    display: inline-block;
+    width: 0.5ch;
+    height: 1em;
+    margin-left: 2px;
+    vertical-align: -0.15em;
+    background: var(--color-brand-400);
+    animation: blink 1s steps(1) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+  @keyframes gate {
+    0% { transform: translateX(-120%); }
+    100% { transform: translateX(380%); }
+  }
+  @keyframes scrollhint {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(200%); }
+  }
+  .scrollbar-none { scrollbar-width: none; }
+  .scrollbar-none::-webkit-scrollbar { display: none; }
+}
 
-  .pulsing-placeholder::placeholder {
-    animation: pulsing-placeholder 3s ease-in-out infinite;
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
