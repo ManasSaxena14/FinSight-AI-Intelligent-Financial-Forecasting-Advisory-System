@@ -40,7 +40,7 @@ function useConfirmLogout() {
         <p className="text-sm text-fg">Sign out of FinSight?</p>
         <div className="flex gap-2">
           <button
-            onClick={() => { toast.dismiss(t.id); logout(); navigate('/login'); }}
+            onClick={() => { toast.dismiss(t.id); logout(); navigate('/welcome'); }}
             className="h-8 flex-1 rounded-lg bg-neg/90 text-xs font-medium text-white hover:bg-neg"
           >
             Sign out

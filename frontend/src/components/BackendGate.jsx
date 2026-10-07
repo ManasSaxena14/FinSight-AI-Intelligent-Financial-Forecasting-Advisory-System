@@ -61,6 +61,16 @@ export default function BackendGate({ children }) {
         writeStamp();
         setFailed(false);
         setReady(true);
+        try {
+          const token = localStorage.getItem('token');
+          if (!token || window.location.pathname === '/login' || window.location.pathname === '/register') {
+            if (window.location.pathname !== '/welcome') {
+              window.location.replace('/welcome');
+            }
+          }
+        } catch {
+          /* storage unavailable */
+        }
         return;
       }
       if (ready) {

@@ -38,9 +38,9 @@ apiClient.interceptors.response.use(
       // If we get an unauthorized error, the token is invalid or expired
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      // Redirect to login only if not already there
-      if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
-        window.location.href = '/login';
+      // Redirect to welcome only if not already on a public page
+      if (window.location.pathname !== '/welcome' && window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+        window.location.href = '/welcome';
       }
     }
     return Promise.reject(error);
@@ -68,7 +68,7 @@ export async function streamEvents(path, body, { onEvent, signal } = {}) {
   if (response.status === 401) {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.href = '/login';
+    window.location.href = '/welcome';
     return;
   }
   if (!response.ok || !response.body) {

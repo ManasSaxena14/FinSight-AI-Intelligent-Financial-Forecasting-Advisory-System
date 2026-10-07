@@ -25,7 +25,7 @@ export default function Profile() {
   const signOut = () => {
     logout();
     toast.success('Signed out');
-    navigate('/login');
+    navigate('/welcome');
   };
 
   if (!user) return null;
