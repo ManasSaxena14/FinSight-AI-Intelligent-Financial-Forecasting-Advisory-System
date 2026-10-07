@@ -112,7 +112,10 @@ export default function AuthShell({ title, subtitle, children, footer, leaving =
 
       {/* Form side */}
       <section className="relative z-10 flex items-center justify-center px-4 py-12 sm:px-8">
-        <Link to="/welcome" className="absolute left-4 top-5 flex items-center gap-1.5 text-sm text-fg-faint transition hover:text-fg sm:left-8">
+        <Link
+          to="/welcome"
+          className="absolute left-4 top-5 flex items-center gap-2 rounded-full border border-white/20 bg-white/[0.12] px-4 py-2 text-sm font-semibold text-white shadow-lg backdrop-blur-md transition-all duration-200 hover:border-brand-400/70 hover:bg-brand-500/20 hover:shadow-[0_0_20px_0_rgba(99,102,241,0.4)] sm:left-8"
+        >
           <ArrowLeft className="h-4 w-4" /> Home
         </Link>
         <div className="w-full max-w-[420px] [perspective:1200px]">
