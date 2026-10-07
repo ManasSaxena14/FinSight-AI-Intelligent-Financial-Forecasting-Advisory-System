@@ -5,7 +5,7 @@ import os
 
 from app.rag.knowledge_base import get_knowledge_base
 
-CASES = json.load(open(os.path.join(os.path.dirname(__file__), "..", "evals", "retrieval_cases.json")))
+CASES = json.load(open(os.path.join(os.path.dirname(__file__), "retrieval_cases.json")))
 
 
 def evaluate(k: int = 3) -> dict:
