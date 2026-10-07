@@ -1,0 +1,43 @@
+# Render Blueprint — FinSight AI backend (FastAPI)
+# Deploy: Render dashboard → New → Blueprint → pick this repo. Secrets marked `sync: false`
+# are asked for on first deploy (never commit them).
+services:
+  - type: web
+    name: finsight-ai-api
+    runtime: python
+    rootDir: backend
+    plan: free
+    region: singapore
+    buildCommand: pip install -r requirements.txt
+    # One worker keeps memory within the free tier (each worker builds the ML/RAG indexes).
+    # Long timeout so streaming advisor answers (SSE) aren't cut off.
+    startCommand: gunicorn app.main:app -c gunicorn.conf.py
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.14.2
+      - key: ENV
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: MONGODB_URI
+        sync: false
+      - key: DATABASE_NAME
+        value: finsight_ai
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: JWT_EXPIRATION_MINUTES
+        value: "1440"
+      - key: GROQ_API_KEY
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false   # JSON list, e.g. ["https://fin-sight-ai-intelligent-financial.vercel.app"]
+      - key: RATE_LIMITS_ENABLED
+        value: "true"
+      - key: DIGEST_CRON_SECRET
+        generateValue: true
+      - key: WEB_CONCURRENCY
+        value: "1"

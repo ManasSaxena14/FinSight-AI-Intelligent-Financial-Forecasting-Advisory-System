@@ -1,299 +1,173 @@
-import { useState, useEffect, useRef } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
-import gsap from 'gsap';
-import { Bot, Target, Calculator, Lightbulb, Sparkles, ChevronRight } from 'lucide-react';
-import GoalTracker from '../components/GoalTracker';
-import ScenarioAnalyzer from '../components/ScenarioAnalyzer';
-import SmartSavings from '../components/SmartSavings';
-import LiveBudgetTracker from '../components/LiveBudgetTracker';
-import { expenseService } from '../api/expenseService';
-import { premiumService } from '../api/premiumService';
-import { cn } from '../utils/cn';
+import { BookOpen, BrainCircuit, Check, Languages, MessageSquare, Pencil, Plus, Trash2, Wrench, X } from 'lucide-react';
+import { advisorService, aiService } from '../api/aiService';
+import AgentChat from '../components/advisor/AgentChat';
+import { Badge, Button, Panel } from '../components/ui';
+import { cn } from '../lib/cn';
+import { gsap, splitReveal } from '../lib/motion';
 
-const TABS = [
-  { id: 'overview',   label: 'Overview',         icon: Sparkles,    desc: 'Budget status and monthly summary' },
-  { id: 'goals',      label: 'Financial Goals',  icon: Target,      desc: 'Set and track savings targets' },
-  { id: 'savings',    label: 'Smart Savings',    icon: Lightbulb,   desc: 'Ideas to save more' },
-  { id: 'scenario',   label: 'What-if',          icon: Calculator,  desc: 'Try different spending scenarios' },
+const CoreOrb = lazy(() => import('../three/CoreOrb'));
+
+const LANGS = [
+  { id: 'auto', label: 'Auto' },
+  { id: 'en', label: 'English' },
+  { id: 'hi', label: 'हिन्दी' },
+  { id: 'hinglish', label: 'Hinglish' },
 ];
 
+function timeAgo(iso) {
+  const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+}
+
+function ConversationItem({ convo, active, onSelect, onDelete, onRename }) {
+  const [editing, setEditing] = useState(false);
+  const [title, setTitle] = useState(convo.title);
+  return (
+    <li className={cn('group rounded-xl border transition', active ? 'border-line-strong bg-white/[0.05]' : 'border-transparent hover:bg-white/[0.03]')}>
+      {editing ? (
+        <form className="flex items-center gap-1 p-1.5" onSubmit={(e) => { e.preventDefault(); onRename(title); setEditing(false); }}>
+          <input autoFocus value={title} maxLength={80} onChange={(e) => setTitle(e.target.value)} className="field h-8 flex-1 px-2 text-[13px]" aria-label="Conversation title" />
+          <button type="submit" className="grid h-7 w-7 place-items-center rounded-lg text-pos" aria-label="Save title"><Check className="h-3.5 w-3.5" /></button>
+          <button type="button" onClick={() => setEditing(false)} className="grid h-7 w-7 place-items-center rounded-lg text-fg-faint" aria-label="Cancel"><X className="h-3.5 w-3.5" /></button>
+        </form>
+      ) : (
+        <div className="flex items-center gap-1 pr-1">
+          <button onClick={onSelect} className="min-w-0 flex-1 px-3 py-2.5 text-left">
+            <p className="truncate text-[13px] text-fg">{convo.title}</p>
+            <p className="truncate text-[11px] text-fg-faint">{timeAgo(convo.updated_at)} · {convo.preview || `${convo.messages} messages`}</p>
+          </button>
+          <button onClick={() => setEditing(true)} aria-label="Rename" className="grid h-7 w-7 place-items-center rounded-lg text-fg-faint opacity-0 hover:text-fg focus:opacity-100 group-hover:opacity-100"><Pencil className="h-3.5 w-3.5" /></button>
+          <button onClick={onDelete} aria-label="Delete" className="grid h-7 w-7 place-items-center rounded-lg text-fg-faint opacity-0 hover:text-neg focus:opacity-100 group-hover:opacity-100"><Trash2 className="h-3.5 w-3.5" /></button>
+        </div>
+      )}
+    </li>
+  );
+}
+
 export default function Advisor() {
-  const [activeTab, setActiveTab]   = useState('overview');
-  const [latestRecord, setLatest]   = useState(null);
-  const [aiSummary, setAiSummary]   = useState('');
-  const [isLoading, setIsLoading]   = useState(true);
-  const [showAnalysis, setShowAnalysis] = useState(false);
-  const containerRef = useRef(null);
-  const summaryRef = useRef(null);
+  const [thinking, setThinking] = useState(false);
+  const [conversations, setConversations] = useState([]);
+  const [activeId, setActiveId] = useState(null);
+  const [chatKey, setChatKey] = useState(0);
+  const [language, setLanguage] = useState('auto');
+  const rootRef = useRef(null);
+  const titleRef = useRef(null);
+
+  const loadConversations = useCallback(() => advisorService.listConversations().then(setConversations).catch(() => {}), []);
 
   useEffect(() => {
-    const load = async () => {
-      const summaryToast = toast.loading('Consulting AI Advisor...', {
-        style: { border: '1px solid rgba(212, 175, 55, 0.2)' }
-      });
-      try {
-        const expenses = await expenseService.getExpenses();
-        if (expenses.length > 0) {
-          const latest = expenses[0];
-          setLatest(latest);
-          // Fetch AI summary
-          const summaryData = await premiumService.getMonthlySummary({
-            income:   latest.income,
-            expenses: latest.expenses,
-            savings:  latest.savings,
-          }).catch(() => null);
-          if (summaryData) {
-            setAiSummary(summaryData.reply);
-            setShowAnalysis(true);
-            toast.success('AI Briefing Received', { id: summaryToast });
-          } else {
-            toast.dismiss(summaryToast);
-          }
-        } else {
-          setLatest(null);
-          setAiSummary('');
-          setShowAnalysis(false);
-          toast.dismiss(summaryToast);
-        }
-      } catch (err) {
-        console.error('Advisor data load failed:', err);
-        toast.error('Advisor Sync Interrupted', { id: summaryToast });
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    loadConversations();
+    aiService.getPreferences().then((p) => setLanguage(p.language)).catch(() => {});
+  }, [loadConversations]);
 
-    load();
-
-    const handleUpdated = () => {
-      toast.success('Refreshing data with latest entries...', {
-        icon: '🔄',
-        style: { border: '1px solid rgba(59, 130, 246, 0.2)' }
-      });
-      setIsLoading(true);
-      load();
-    };
-
-    window.addEventListener('expenses:updated', handleUpdated);
-    return () => window.removeEventListener('expenses:updated', handleUpdated);
+  useLayoutEffect(() => {
+    let split;
+    const ctx = gsap.context(() => {
+      split = splitReveal(titleRef.current, { delay: 0.05 });
+      gsap.from('[data-advisor-in]', { opacity: 0, y: 24, stagger: 0.08, duration: 1, delay: 0.15 });
+    }, rootRef);
+    return () => { ctx.revert(); split?.revert(); };
   }, []);
 
-  useEffect(() => {
-    if (!isLoading && containerRef.current) {
-      const ctx = gsap.context(() => {
-        // Initial header entry
-        gsap.fromTo(".animate-header", 
-          { y: 20, opacity: 0, filter: 'blur(10px)' },
-          { y: 0, opacity: 1, filter: 'blur(0px)', duration: 0.8, ease: "power3.out" }
-        );
+  const newChat = () => { setActiveId(null); setChatKey((k) => k + 1); };
 
-        // Tab navigation entry
-        gsap.fromTo(".advisor-card",
-          { y: 24, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.55, stagger: 0.08, ease: 'power2.out', delay: 0.2 }
-        );
-      }, containerRef);
-      return () => ctx.revert();
+  const changeLanguage = async (lang) => {
+    setLanguage(lang);
+    try {
+      await aiService.setLanguage(lang);
+      toast.success(`Advisor language: ${LANGS.find((l) => l.id === lang).label}`);
+    } catch {
+      toast.error('Could not save language');
     }
-  }, [isLoading]);
+  };
 
-  // Typing effect for AI summary
-  useEffect(() => {
-    if (showAnalysis && aiSummary && summaryRef.current) {
-      gsap.fromTo(summaryRef.current,
-        { opacity: 0, y: 10 },
-        { opacity: 1, y: 0, duration: 1, ease: "power2.out" }
-      );
+  const remove = async (id) => {
+    try {
+      await advisorService.deleteConversation(id);
+      if (id === activeId) newChat();
+      loadConversations();
+    } catch {
+      toast.error('Could not delete the conversation');
     }
-  }, [showAnalysis, aiSummary]);
+  };
 
-  // Re-animate content when tab changes
-  useEffect(() => {
-    const el = document.getElementById('tab-content');
-    if (el) {
-      gsap.fromTo(el, 
-        { opacity: 0, scale: 0.98, filter: 'blur(4px)' }, 
-        { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 0.5, ease: 'expo.out' }
-      );
+  const rename = async (id, title) => {
+    try {
+      await advisorService.renameConversation(id, title);
+      loadConversations();
+    } catch {
+      toast.error('Could not rename');
     }
-  }, [activeTab]);
+  };
 
   return (
-    <div className="space-y-10 relative min-h-screen" ref={containerRef}>
-      {/* Background Ambience */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-500/5 blur-[150px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/5 blur-[150px] rounded-full pointer-events-none" />
-      <div className="absolute inset-0 bg-noise opacity-[0.02] pointer-events-none" />
-
-      {/* Page Header */}
-      <div className="relative z-10 animate-header">
-        <div className="flex items-center gap-4 mb-3">
-          <div className="relative">
-            <div className="p-3 bg-brand-500/10 rounded-2xl border border-brand-500/20 relative z-10">
-              <Bot className="w-7 h-7 text-brand-400 drop-shadow-[0_0_10px_rgba(212,175,55,0.6)]" />
-            </div>
-            <div className="absolute inset-0 bg-brand-500/20 blur-xl animate-pulse" />
-          </div>
-          <div>
-            <h1 className="text-4xl font-black text-text-primary tracking-tighter italic">
-              AI Advisor
-            </h1>
-            <p className="text-sm text-text-tertiary mt-1 font-medium tracking-wide">
-              Goals, savings tips, what-if scenarios, and your latest numbers in one place.
-            </p>
+    <div ref={rootRef} className="space-y-6">
+      <section className="relative grid items-center gap-4 md:grid-cols-[1fr_auto]">
+        <div className="relative z-10">
+          <p className="eyebrow mb-3" data-advisor-in>AI Advisor</p>
+          <h1 ref={titleRef} className="text-[34px] font-medium leading-[1.03] tracking-[-0.035em] sm:text-[46px]">
+            Ask anything about <span className="display italic text-gold-gradient">your money.</span>
+          </h1>
+          <div className="mt-4 flex flex-wrap gap-2" data-advisor-in>
+            <Badge tone="ai"><BrainCircuit className="h-3 w-3" /> Tool-using agent · GPT-OSS 120B</Badge>
+            <Badge><BookOpen className="h-3 w-3" /> Cites an Indian finance knowledge base</Badge>
+            <Badge><Wrench className="h-3 w-3" /> Proposes, never saves without you</Badge>
           </div>
         </div>
-      </div>
+        <div className="relative hidden h-[150px] w-[220px] md:block" data-advisor-in>
+          <Suspense fallback={null}>
+            <CoreOrb className="absolute inset-0" energy={thinking ? 1 : 0.35} color={thinking ? '#a78bfa' : '#d4af37'} rings={false} />
+          </Suspense>
+        </div>
+      </section>
 
-      {/* Tab Navigation */}
-      <div className="advisor-card flex flex-wrap gap-3 relative z-10">
-        {TABS.map(tab => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-3 px-6 py-3.5 rounded-2xl border text-sm font-black uppercase tracking-wider transition-all duration-500 group relative overflow-hidden ${
-                isActive
-                  ? 'bg-brand-500/15 border-brand-500/40 text-brand-400 shadow-[0_0_30px_rgba(212,175,55,0.1)]'
-                  : 'bg-black/20 border-white/5 text-text-tertiary hover:border-white/10 hover:text-text-secondary hover:bg-white/5'
-              }`}
-            >
-              {isActive && (
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-shimmer" />
-              )}
-              <Icon className={`w-4 h-4 transition-all duration-500 ${isActive ? 'drop-shadow-[0_0_8px_rgba(212,175,55,0.6)] scale-110' : 'group-hover:text-brand-500/60'}`} />
-              <span className="tracking-[0.15em] text-[11px] relative z-10">{tab.label}</span>
-              {isActive && <ChevronRight className="w-3 h-3 opacity-50 relative z-10" />}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Tab Content */}
-      <div id="tab-content" className="relative z-10 space-y-8">
-
-        {/* ── OVERVIEW TAB ─────────────────────────────────────────────────────────── */}
-        {activeTab === 'overview' && (
-          <div className="space-y-8">
-            {/* AI Narrative Summary - ONLY SHOWN ON INPUT */}
-            {isLoading ? (
-              <div className="advisor-card h-40 bg-white/[0.03] rounded-[2.5rem] animate-pulse flex items-center justify-center border border-white/5">
-                <div className="flex flex-col items-center gap-4">
-                  <Sparkles className="w-8 h-8 text-brand-500/30 animate-spin" />
-                  <span className="text-[10px] font-black text-brand-500/40 uppercase tracking-[0.4em]">Loading summary…</span>
-                </div>
-              </div>
-            ) : showAnalysis ? (
-              <div ref={summaryRef} className="advisor-card bg-gradient-to-br from-bg-panel/90 via-black/40 to-bg-panel/90 border border-white/10 rounded-[2.5rem] shadow-3xl p-10 relative overflow-hidden group">
-                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-500/50 to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-1000" />
-                <div className="absolute -right-20 -top-20 w-80 h-80 bg-brand-500/5 blur-[120px] rounded-full pointer-events-none group-hover:bg-brand-500/10 transition-colors duration-1000" />
-                
-                <div className="flex flex-col md:flex-row items-start gap-10 relative z-10">
-                  <div className="relative shrink-0">
-                    <div className="p-5 bg-brand-500/10 rounded-[2.5rem] border border-brand-500/20 shadow-2xl relative z-10 group-hover:scale-105 transition-transform duration-700">
-                      <Sparkles className="h-10 w-10 text-brand-400 drop-shadow-[0_0_15px_rgba(212,175,55,0.5)]" />
-                    </div>
-                    <div className="absolute inset-0 bg-brand-500/20 blur-2xl animate-pulse" />
-                  </div>
-                  <div className="space-y-6">
-                    <div className="flex items-center gap-4">
-                      <div className="h-px w-8 bg-brand-500/30" />
-                      <p className="text-[10px] text-brand-500 font-black uppercase tracking-[0.4em]">Your monthly summary</p>
-                      <div className="h-px flex-1 bg-white/5" />
-                    </div>
-                    <p className="text-text-primary text-xl font-medium leading-relaxed tracking-tight selection:bg-brand-500/30">
-                      {aiSummary}
-                    </p>
-                    <div className="flex items-center gap-6 pt-4">
-                      <div className="flex items-center gap-2">
-                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        <span className="text-[9px] font-black text-text-tertiary uppercase tracking-widest">Powered by AI</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="h-1.5 w-1.5 rounded-full bg-brand-500 animate-pulse" />
-                        <span className="text-[9px] font-black text-text-tertiary uppercase tracking-widest">Based on your data</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="advisor-card bg-black/40 backdrop-blur-md border-2 border-dashed border-white/5 rounded-[3rem] p-20 text-center group hover:border-brand-500/20 transition-all duration-700">
-                <div className="relative w-24 h-24 mx-auto mb-8">
-                  <div className="absolute inset-0 bg-brand-500/10 blur-3xl rounded-full group-hover:bg-brand-500/20 transition-colors" />
-                  <Bot className="w-full h-full text-white/10 group-hover:text-brand-500/30 transition-colors relative z-10" />
-                </div>
-                <h3 className="text-xl font-black text-white/40 tracking-tighter mb-4 group-hover:text-white/60 transition-colors">No spending data yet</h3>
-                <p className="text-text-tertiary text-xs font-black uppercase tracking-[0.2em] max-w-sm mx-auto leading-relaxed">
-                  Add your monthly income and expenses to see a personalized summary here.
-                </p>
-              </div>
-            )}
-
-            {/* Live Budget Tracker - ONLY SHOWN ON DATA */}
-            {showAnalysis && (
-              <div className="advisor-card">
-                <LiveBudgetTracker />
-              </div>
-            )}
-
-            {/* Quick stats row if data exists */}
-            {latestRecord && (
-              <div className="advisor-card grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {[
-                  { label: 'Month',            value: latestRecord.month,                                   unit: '', color: 'text-brand-400' },
-                  { label: 'Income',           value: `₹${latestRecord.income.toLocaleString()}`,           unit: '', color: 'text-emerald-400' },
-                  { label: 'Total spending',   value: `₹${latestRecord.total_expense.toLocaleString()}`,    unit: '', color: 'text-rose-400' },
-                  { label: 'Net savings',      value: `₹${latestRecord.savings.toLocaleString()}`,          unit: '', color: 'text-blue-400' },
-                ].map(stat => (
-                  <div key={stat.label} className="bg-white/[0.02] border border-white/5 rounded-[2rem] p-8 hover:bg-white/[0.04] hover:border-brand-500/20 transition-all duration-500 group">
-                    <p className="text-[9px] text-text-tertiary font-black uppercase tracking-[0.3em] mb-4 group-hover:text-brand-500/60 transition-colors">{stat.label}</p>
-                    <div className="flex items-baseline gap-2">
-                      <p className={cn("text-3xl font-black italic tracking-tighter", stat.color)}>{stat.value}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+      <section className="grid gap-4 lg:grid-cols-[280px_1fr]">
+        <Panel className="flex max-h-[min(760px,calc(100dvh-8rem))] flex-col overflow-hidden" data-advisor-in>
+          <div className="flex items-center justify-between gap-2 border-b border-line p-3">
+            <p className="flex items-center gap-2 pl-1 text-sm text-fg"><MessageSquare className="h-4 w-4 text-fg-faint" /> Conversations</p>
+            <Button size="sm" variant="secondary" onClick={newChat}><Plus className="h-3.5 w-3.5" /> New</Button>
           </div>
-        )}
-
-        {/* ── GOALS TAB ────────────────────────────────────────────────────────────── */}
-        {activeTab === 'goals' && (
-          <div className="advisor-card">
-            <GoalTracker />
+          <ul className="max-h-60 flex-1 space-y-1 overflow-y-auto p-2 lg:max-h-none">
+            {conversations.length === 0 && <li className="px-3 py-6 text-center text-[13px] text-fg-faint">Your chats will be saved here.</li>}
+            {conversations.map((c) => (
+              <ConversationItem key={c.id} convo={c} active={c.id === activeId}
+                onSelect={() => setActiveId(c.id)} onDelete={() => remove(c.id)} onRename={(t) => rename(c.id, t)} />
+            ))}
+          </ul>
+          <div className="border-t border-line p-3">
+            <p className="mb-1.5 flex items-center gap-1.5 text-[11px] text-fg-faint"><Languages className="h-3.5 w-3.5" /> Reply language</p>
+            <div role="radiogroup" aria-label="Reply language" className="grid grid-cols-4 gap-1 rounded-xl border border-line bg-white/[0.02] p-1">
+              {LANGS.map((l) => (
+                <button key={l.id} role="radio" aria-checked={language === l.id} onClick={() => changeLanguage(l.id)}
+                  className={cn('h-7 rounded-lg text-[11.5px] transition', language === l.id ? 'bg-white/[0.08] text-fg' : 'text-fg-muted hover:text-fg')}>
+                  {l.label}
+                </button>
+              ))}
+            </div>
           </div>
-        )}
+        </Panel>
 
-        {/* ── SMART SAVINGS TAB ────────────────────────────────────────────────────── */}
-        {activeTab === 'savings' && (
-          <div className="advisor-card">
-            <SmartSavings />
+        <Panel className="flex h-[min(760px,calc(100dvh-8rem))] flex-col overflow-hidden" data-advisor-in>
+          <div className="flex items-center gap-3 border-b border-line px-5 py-3.5">
+            <span className={`h-2 w-2 rounded-full ${thinking ? 'animate-pulse bg-ai' : 'bg-pos'}`} />
+            <p className="truncate text-sm text-fg">{conversations.find((c) => c.id === activeId)?.title || 'New conversation'}</p>
+            <span className="ml-auto hidden text-xs text-fg-faint sm:block">Enter to send · Shift+Enter for a new line</span>
           </div>
-        )}
-
-        {/* ── SCENARIO / STRESS TEST TAB ───────────────────────────────────────────── */}
-        {activeTab === 'scenario' && (
-          <div className="advisor-card">
-            {latestRecord ? (
-              <ScenarioAnalyzer
-                currentIncome={latestRecord.income}
-                currentExpenses={latestRecord.expenses}
-              />
-            ) : (
-              <div className="bg-black/40 backdrop-blur-md border-2 border-dashed border-white/5 rounded-[3rem] p-20 text-center group hover:border-brand-500/20 transition-all duration-700">
-                <Calculator className="w-16 h-16 text-white/10 mx-auto mb-8 group-hover:text-brand-500/30 transition-colors" />
-                <h3 className="text-xl font-black text-white/40 tracking-tighter mb-4 group-hover:text-white/60 transition-colors">Add data first</h3>
-                <p className="text-text-tertiary text-xs font-black uppercase tracking-[0.2em] max-w-sm mx-auto leading-relaxed">
-                  Add your income and expenses to try “what-if” spending scenarios.
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+          <AgentChat
+            key={chatKey}
+            conversationId={activeId}
+            language={language}
+            onThinking={setThinking}
+            onConversation={(id) => { setActiveId(id); loadConversations(); }}
+            className="min-h-0 flex-1"
+          />
+        </Panel>
+      </section>
     </div>
   );
 }

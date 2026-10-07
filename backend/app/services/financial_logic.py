@@ -1,19 +1,14 @@
 """
-FinSight AI -- Enhanced Financial Business Logic
-=================================================
-CHANGES vs original:
-1. calculate_health_score() — unchanged (already solid).
-2. generate_alerts()        — now includes Rent burden alert and
-                              bills overload alert in addition to overspend & category spikes.
-3. generate_recommendations() — richer, context-aware suggestions:
-   - Tips are more specific (percentage targets, not just generic rules).
-   - Uses dual-layer anomaly_detection (IsolationForest + Z-score).
-   - Adds positive reinforcement when health is good.
-   - Avoids duplicate messages by deduplicating.
+FinSight AI -- Financial Business Logic
+=======================================
+Transparent, rule-based pieces of the product. These are deliberately not ML:
+1. calculate_health_score()   -- 0-100 score from savings rate and category concentration.
+2. generate_alerts()          -- overspending, month-over-month spikes, rent and bills burden.
+3. generate_recommendations() -- specific, deduplicated tips with ₹ targets.
+The ML layer (app/ml) supplies forecasts, risk and anomalies; the LLM only narrates.
 """
 
 from typing import Dict, List, Optional
-from app.ml.advanced_ml import category_wise_prediction, anomaly_detection
 
 
 def calculate_health_score(
@@ -139,14 +134,11 @@ def generate_recommendations(
     income: float, expenses: Dict[str, float]
 ) -> List[str]:
     """
-    Rule-based + ML-enhanced recommendation engine.
-
-    IMPROVEMENTS vs original:
-    - More specific percentage targets (e.g., 'reduce by 10–15%').
-    - Avoids duplication via a seen-set.
-    - Uses dual-layer anomaly detection (IsolationForest + Z-score).
-    - Adds positive reinforcement for savers.
-    - Identifies top-2 overspending categories instead of just top-1.
+    Rule-based recommendation engine.
+    - Specific percentage and ₹ targets (e.g., 'reduce by 10–15%').
+    - Deduplicated via a seen-set.
+    - Positive reinforcement for savers.
+    - Looks at the top-2 spending categories.
     """
     recs = []
     seen = set()

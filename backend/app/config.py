@@ -32,10 +32,18 @@ class Settings(BaseSettings):
     ENV: str = "development"  # development | production
     DEBUG: bool = False
     GROQ_API_KEY: str | None = None
+    # Groq retired the Llama 3.x chat models; override via env if the catalog changes again.
+    GROQ_CHAT_MODEL: str = "openai/gpt-oss-120b"   # advisor chat + summaries
+    GROQ_FAST_MODEL: str = "openai/gpt-oss-20b"    # fallback if the chat model errors; JSON extraction
+    GROQ_VISION_MODEL: str = "qwen/qwen3.8-27b"    # receipt scanning
+    GROQ_SPEECH_MODEL: str = "whisper-large-v3-turbo"  # voice input
+    DIGEST_CRON_SECRET: str | None = None
+    RATE_LIMITS_ENABLED: bool = True          # enables POST /api/ai/digests/run for an external scheduler
     ALLOWED_ORIGINS: List[str] = [
         "https://finsight-ai.vercel.app",
         "https://finsight-ai-frontend.vercel.app",
         "https://finsight-ai-intelligent-financial.vercel.app",
+        "https://fin-sight-ai-intelligent-financial.vercel.app",
         "https://fin-sight-ai-intelligent-financial-forecasting-advis-5gig1yvfz.vercel.app",
         "http://localhost:5173",
         "http://127.0.0.1:5173",

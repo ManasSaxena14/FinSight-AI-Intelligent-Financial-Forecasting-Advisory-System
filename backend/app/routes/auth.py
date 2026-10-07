@@ -1,4 +1,6 @@
 from fastapi import APIRouter, HTTPException, status, Depends
+
+from app.services.rate_limit import limit_by_ip
 import logging
 import uuid
 from datetime import datetime, timezone
@@ -10,7 +12,8 @@ from app.services.auth import get_password_hash, verify_password, create_access_
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 logger = logging.getLogger(__name__)
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(limit_by_ip("register"))])
 async def register(user: UserCreate):
     """
     Register a new user.
@@ -52,7 +55,7 @@ async def register(user: UserCreate):
         created_at=now
     )
 
-@router.post("/login", response_model=Token)
+@router.post("/login", response_model=Token, dependencies=[Depends(limit_by_ip("login"))])
 async def login(user_credentials: UserLogin):
     """
     Authenticate a user and return a JWT access token.

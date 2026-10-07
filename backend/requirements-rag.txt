@@ -1,0 +1,5 @@
+# Optional: semantic (embedding) search for the advisor's knowledge base.
+# Without it, retrieval uses BM25 + heading boosts + acronym expansion only.
+# Needs ~250 MB extra RAM (ONNX runtime + bge-small); downloads the model on first start.
+-r requirements.txt
+fastembed==0.9.0

@@ -1,22 +1,43 @@
 import apiClient from './client';
 
+/** Let every mounted view know the user's data changed. */
+export const notifyExpensesUpdated = () => {
+  try {
+    window.dispatchEvent(new Event('expenses:updated'));
+  } catch {
+    // non-browser environment
+  }
+};
+
 export const expenseService = {
-  /**
-   * Submit a new expense record
-   * @param {Object} payload - { month, income, expenses }
-   * @returns {Promise<Object>} The saved expense record
-   */
-  addExpense: async (payload) => {
-    const response = await apiClient.post('/expenses/add', payload);
-    return response.data;
+  /** Add a month's totals: { period: 'YYYY-MM', income, expenses: {cat: amount} } */
+  addMonthlyTotals: async (payload) => {
+    const { data } = await apiClient.post('/expenses/add', payload);
+    notifyExpensesUpdated();
+    return data;
   },
 
-  /**
-   * Retrieve all expenses for the authenticated user
-   * @returns {Promise<Array>} List of expense records sorted by date descending
-   */
+  /** Monthly records, newest period first. */
   getExpenses: async () => {
-    const response = await apiClient.get('/expenses/get');
-    return response.data;
-  }
+    const { data } = await apiClient.get('/expenses/get');
+    return data;
+  },
+
+  /** { date: 'YYYY-MM-DD', type: 'income'|'expense', category?, amount, merchant?, note? } */
+  addTransaction: async (payload) => {
+    const { data } = await apiClient.post('/transactions', payload);
+    notifyExpensesUpdated();
+    return data;
+  },
+
+  getTransactions: async ({ period, limit = 50 } = {}) => {
+    const { data } = await apiClient.get('/transactions', { params: { period, limit } });
+    return data;
+  },
+
+  deleteTransaction: async (id) => {
+    const { data } = await apiClient.delete(`/transactions/${id}`);
+    notifyExpensesUpdated();
+    return data;
+  },
 };

@@ -1,29 +1,24 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { LogoMark } from './Logo';
+
+export function FullScreenLoader() {
+  return (
+    <div className="grid min-h-dvh place-items-center bg-ink-900">
+      <div className="flex flex-col items-center gap-4">
+        <div className="relative">
+          <span className="absolute inset-0 animate-ping rounded-2xl bg-brand-500/20" />
+          <LogoMark size={52} animate className="relative" />
+        </div>
+        <p className="text-xs text-fg-faint">Loading FinSight…</p>
+      </div>
+    </div>
+  );
+}
 
 export default function ProtectedRoute() {
   const { token, isLoading } = useAuth();
-
-  if (isLoading) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-bg-base relative overflow-hidden">
-        <div className="absolute inset-0 bg-noise opacity-[0.03] pointer-events-none" />
-        <div className="relative">
-          <div className="absolute inset-0 bg-brand-500/20 blur-2xl rounded-full animate-pulse" />
-          <svg className="animate-spin h-10 w-10 text-brand-500 relative z-10" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-10" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-        </div>
-      </div>
-    );
-  }
-
-  // If not authenticated, redirect to login
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
-
-  // Render the child routes
+  if (isLoading) return <FullScreenLoader />;
+  if (!token) return <Navigate to="/welcome" replace />;
   return <Outlet />;
 }
